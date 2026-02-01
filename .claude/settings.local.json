@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet format:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(Select-String -Pattern \"error|빌드\")",
+      "Bash(Select-Object -Last 20)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(Select-String -Pattern \"\\(error|Build succeeded|Build FAILED\\)\")",
+      "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED\")"
+    ]
+  }
+}

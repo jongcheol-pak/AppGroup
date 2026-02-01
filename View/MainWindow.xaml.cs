@@ -1,0 +1,931 @@
+﻿
+using Microsoft.UI;
+using Microsoft.UI.Composition.SystemBackdrops;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using GroupItem = AppGroup.Models.GroupItem;
+using AppGroup.ViewModels;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Streams;
+using WinRT.Interop;
+using WinUIEx;
+
+namespace AppGroup.View {
+/// <summary>
+/// 애플리케이션의 메인 윈도우 클래스입니다.
+/// 그룹 목록 표시, 그룹 관리, 설정, 파일 감시 등의 주요 기능을 담당합니다.
+/// </summary>
+public sealed partial class MainWindow : WinUIEx.WindowEx, IDisposable {
+// Private fields
+// 열려있는 편집 윈도우들을 추적하기 위한 딕셔너리 (GroupId -> Window)
+private readonly Dictionary<int, EditGroupWindow> _openEditWindows = new Dictionary<int, EditGroupWindow>();
+// 백업 및 복원 도우미
+private BackupHelper _backupHelper;
+// 메인 윈도우 뷰모델
+private readonly MainWindowViewModel _viewModel;
+// 설정 파일 변경 감시자
+private FileSystemWatcher _fileWatcher;
+// 로딩 동기화를 위한 락 객체
+private readonly object _loadLock = new object();
+private bool _isLoading = false;
+private string tempIcon;
+private readonly IconHelper _iconHelper;
+// 검색 필터링 디바운스 타이머
+private DispatcherTimer debounceTimer;
+private bool _disposed = false;
+
+    /// <summary>
+    /// MainWindow 생성자
+    /// </summary>
+    public MainWindow() {
+        InitializeComponent();
+
+        _backupHelper = new BackupHelper(this);
+
+        _viewModel = new MainWindowViewModel();
+        if (Content is FrameworkElement rootElement) {
+            rootElement.DataContext = _viewModel;
+        }
+        _iconHelper = new IconHelper();
+
+        // 윈도우 초기 설정
+        this.CenterOnScreen();
+        this.MinHeight = 600;
+        this.MinWidth = 530;
+
+        this.ExtendsContentIntoTitleBar = true;
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "AppGroup.ico");
+
+        this.AppWindow.SetIcon(iconPath);
+
+        // 비동기로 그룹 목록 로드 시작
+        _ = LoadGroupsAsync();
+
+        // 설정 파일 감시 설정
+        SetupFileWatcher();
+
+        ThemeHelper.UpdateTitleBarColors(this);
+        debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        debounceTimer.Tick += FilterGroups;
+
+        // 작업 표시줄 그룹화 ID 설정
+        NativeMethods.SetCurrentProcessExplicitAppUserModelID("AppGroup.Main");
+            
+        this.AppWindow.Closing += AppWindow_Closing;
+        SetWindowIcon();
+
+        // 시작 시 업데이트 확인 (설정된 경우)
+       // _ = CheckForUpdatesOnStartupAsync();
+    }
+
+        private async Task CheckForUpdatesOnStartupAsync() {
+            try {
+                // 창이 완전히 로드되고 설정을 사용할 수 있을 때까지 대기
+                await Task.Delay(2000);
+
+                // 설정을 올바르게 로드 (null일 수 있는 캐시된 값만 가져오지 않음)
+                var settings = await SettingsHelper.LoadSettingsAsync();
+                if (!settings.CheckForUpdatesOnStartup) {
+                    return;
+                }
+
+                var updateInfo = await UpdateChecker.CheckForUpdatesAsync();
+
+                if (updateInfo.UpdateAvailable && this.Content?.XamlRoot != null) {
+                    // 업데이트 알림 표시
+                    await ShowUpdateDialogAsync(updateInfo);
+                }
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"Error checking for updates on startup: {ex.Message}");
+            }
+        }
+
+        private async Task ShowUpdateDialogAsync(UpdateChecker.UpdateInfo updateInfo) {
+            try {
+                if (this.Content?.XamlRoot == null) {
+                    return;
+                }
+
+                var dialog = new ContentDialog {
+                    Title = "업데이트 사용 가능",
+                    Content = $"새 버전의 AppGroup을 사용할 수 있습니다!\n\n" +
+                              $"현재 버전: {updateInfo.CurrentVersion}\n" +
+                              $"최신 버전: {updateInfo.LatestVersion}\n\n" +
+                              "업데이트를 다운로드하시겠습니까?",
+                    PrimaryButtonText = "다운로드",
+                    CloseButtonText = "나중에",
+                    XamlRoot = this.Content.XamlRoot
+                };
+
+                var result = await dialog.ShowAsync();
+                if (result == ContentDialogResult.Primary) {
+                    UpdateChecker.OpenReleasesPage(updateInfo.ReleaseUrl);
+                }
+            }
+            catch (Exception ex) {
+                // 다른 대화 상자가 이미 열려 있으면 대화 상자가 실패할 수 있음 - 이는 예상된 동작임
+                Debug.WriteLine($"Error showing update dialog: {ex.Message}");
+            }
+        }
+
+
+        private void SetWindowIcon() {
+            try {
+                // 윈도우 핸들 가져오기
+                IntPtr hWnd = WindowNative.GetWindowHandle(this);
+
+                // 내장 리소스에서 아이콘 로드 먼저 시도
+                var iconPath = Path.Combine(AppContext.BaseDirectory, "AppGroup.ico");
+
+                if (File.Exists(iconPath)) {
+                    // Win32 API를 사용하여 아이콘 로드 및 설정
+                    IntPtr hIcon = NativeMethods.LoadIcon(iconPath);
+                    if (hIcon != IntPtr.Zero) {
+                        NativeMethods.SendMessage(hWnd, NativeMethods.WM_SETICON, NativeMethods.ICON_SMALL, hIcon);
+                        NativeMethods.SendMessage(hWnd, NativeMethods.WM_SETICON, NativeMethods.ICON_BIG, hIcon);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Failed to set window icon: {ex.Message}");
+            }
+        }
+
+        private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args) {
+            args.Cancel = true;
+            try {
+                var popups = VisualTreeHelper.GetOpenPopupsForXamlRoot(this.Content.XamlRoot);
+                foreach (var popup in popups) {
+                    if (popup.Child is ContentDialog dialog) {
+                        dialog.Hide();
+                    }
+                }
+            }
+            catch {
+                // 폴백 - 일부 대화 상자는 팝업에 없을 수 있음
+            }
+            this.Hide();        // 창 숨기기
+        }
+        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e) {
+            debounceTimer.Stop();
+            debounceTimer.Start();
+        }
+
+        private void FilterGroups(object sender, object e) {
+            debounceTimer.Stop();
+            _viewModel.SearchText = SearchTextBox.Text;
+            _viewModel.ApplyFilter();
+            UpdateGroupCountAndEmptyState();
+        }
+
+        private void UpdateGroupCountAndEmptyState() {
+            var count = _viewModel.FilteredGroupItems.Count;
+            _viewModel.GroupsCountText = count > 1
+                ? count + "개 그룹"
+                : count == 1
+                ? "1개 그룹"
+                : "";
+            _viewModel.EmptyViewVisibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+
+
+
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        
+        /// <summary>
+        /// JSON 파일 변경 시 그룹 아이템을 업데이트합니다.
+        /// </summary>
+        /// <param name="jsonFilePath">JSON 설정 파일 경로</param>
+        public async Task UpdateGroupItemAsync(string jsonFilePath) {
+            await _semaphore.WaitAsync();
+            try {
+                string jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent ?? "{}") ?? new JsonObject();
+                var groupDictionary = jsonObject.AsObject();
+
+                // 딕셔너리의 각 항목 처리
+                var tasks = groupDictionary.Select(async property => {
+                    if (int.TryParse(property.Key, out int groupId)) {
+                        var existingItem = _viewModel.GroupItems.FirstOrDefault(item => item.GroupId == groupId);
+                        if (existingItem != null) {
+                            // 기존 아이템 업데이트 Logic
+                            string newGroupName = property.Value?["groupName"]?.GetValue<string>();
+                            string newGroupIcon = property.Value?["groupIcon"]?.GetValue<string>();
+
+                            existingItem.GroupName = newGroupName;
+                            existingItem.GroupIcon = null; // 아이콘 갱신을 위해 null 할당
+                            existingItem.GroupIcon = IconHelper.FindOrigIcon(newGroupIcon);
+
+                            // 경로 및 아이콘 업데이트
+                            var paths = property.Value?["path"]?.AsObject();
+                            if (paths?.Count > 0) {
+                                var iconTasks = paths
+                                    .Where(p => p.Value != null)
+                                    .Select(async path => {
+                                        string filePath = path.Key;
+                                        string tooltip = path.Value["tooltip"]?.GetValue<string>();
+                                        string args = path.Value["args"]?.GetValue<string>();
+                                        string customIcon = path.Value["icon"]?.GetValue<string>(); // 사용자 지정 아이콘
+
+                                        existingItem.Tooltips[filePath] = tooltip;
+                                        existingItem.Args[filePath] = args;
+                                        existingItem.CustomIcons[filePath] = customIcon;
+
+                                        // 사용자 지정 아이콘이 있으면 사용, 없으면 파일 자체 아이콘 추출
+                                        if (!string.IsNullOrEmpty(customIcon) && File.Exists(customIcon)) {
+                                            return customIcon;
+                                        }
+                                        else {
+                                            string icon;
+                                            if (Path.GetExtension(filePath).Equals(".url", StringComparison.OrdinalIgnoreCase)) {
+                                                icon = await IconHelper.GetUrlFileIconAsync(filePath);
+                                            }
+                                            else {
+                                                icon = await IconCache.GetIconPathAsync(filePath);
+                                            }
+
+                                            return icon;
+                                        }
+                                    })
+                                    .ToList();
+
+                                var iconPaths = await Task.WhenAll(iconTasks);
+                                var validIconPaths = iconPaths.Where(p => !string.IsNullOrEmpty(p)).ToList();
+
+                                // 최대 7개까지만 아이콘 표시
+                                int maxIconsToShow = 7;
+                                existingItem.PathIcons = validIconPaths.Take(maxIconsToShow).ToList();
+                                existingItem.AdditionalIconsCount = Math.Max(0, validIconPaths.Count - maxIconsToShow);
+                            }
+                        }
+                        else {
+                            // 새 아이템 생성
+                            var newItem = await CreateGroupItemAsync(groupId, property.Value);
+                            _viewModel.GroupItems.Add(newItem);
+                        }
+                    }
+                }).ToList();
+
+                await Task.WhenAll(tasks);
+
+                // 루프 외부에서 UI 업데이트 수행 (중복 업데이트 방지)
+                _viewModel.ApplyFilter();
+                UpdateGroupCountAndEmptyState();
+            }
+            finally {
+                _semaphore.Release();
+            }
+        }
+        private bool _isReordering = false;
+
+        // 드래그 중인 파일 추적용 딕셔너리
+        private readonly Dictionary<int, string> _tempDragFiles = new Dictionary<int, string>();
+
+        /// <summary>
+        /// 그룹 이름이 파일 경로에 사용하기에 안전한지 검증합니다.
+        /// 경로 트래버설 공격(../, ..\) 및 잘못된 문자를 방지합니다.
+        /// </summary>
+        /// <param name="groupName">검증할 그룹 이름</param>
+        /// <returns>안전하면 true, 위험하면 false</returns>
+        private static bool IsValidGroupName(string groupName) {
+            if (string.IsNullOrWhiteSpace(groupName)) {
+                return false;
+            }
+
+            // 경로 트래버설 패턴 검사
+            if (groupName.Contains("..") || groupName.Contains("/") || groupName.Contains("\\")) {
+                System.Diagnostics.Debug.WriteLine($"Invalid group name detected (path traversal): {groupName}");
+                return false;
+            }
+
+            // 파일명에 사용할 수 없는 문자 검사
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            if (groupName.IndexOfAny(invalidChars) >= 0) {
+                System.Diagnostics.Debug.WriteLine($"Invalid group name detected (invalid chars): {groupName}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 드래그 시작 시 호출됩니다. 내부 재정렬 및 외부로의 드래그를 처리합니다.
+        /// </summary>
+        private async void GroupListView_DragItemsStarting(object sender, DragItemsStartingEventArgs e) {
+            // 재정렬 중 파일 감시자가 간섭하지 않도록 플래그 설정
+            _isReordering = true;
+
+            // 드래그된 아이템 참조 저장
+            if (e.Items.Count > 0 && e.Items[0] is GroupItem draggedItem) {
+                e.Data.Properties.Add("DraggedGroupId", draggedItem.GroupId);
+
+                // 내부 재정렬을 위한 기본 데이터 설정
+                e.Data.RequestedOperation = DataPackageOperation.Copy | DataPackageOperation.Move | DataPackageOperation.Link;
+
+                // 그룹 이름 보안 검증 (경로 트래버설 공격 방지)
+                if (!IsValidGroupName(draggedItem.GroupName)) {
+                    System.Diagnostics.Debug.WriteLine($"Drag cancelled: invalid group name '{draggedItem.GroupName}'");
+                    return;
+                }
+
+                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
+                // 외부 드롭을 위한 바로가기 파일 준비
+                string shortcutPath = Path.Combine(appDataPath, "Groups", draggedItem.GroupName, $"{draggedItem.GroupName}.lnk");
+                string fullShortcutPath = Path.GetFullPath(shortcutPath);
+                if (File.Exists(fullShortcutPath)) {
+                    try {
+                        // 임시 위치로 복사
+                        string tempDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AppGroup", "DragTemp");
+                        Directory.CreateDirectory(tempDir);
+                        string tempShortcutPath = Path.Combine(tempDir, $"{draggedItem.GroupName}.lnk");
+
+                        if (File.Exists(tempShortcutPath)) {
+                            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                            tempShortcutPath = Path.Combine(tempDir, $"{draggedItem.GroupName}_{timestamp}.lnk");
+                        }
+
+                        File.Copy(fullShortcutPath, tempShortcutPath, true);
+                        _tempDragFiles[draggedItem.GroupId] = tempShortcutPath;
+
+                        // 텍스트 데이터 즉시 설정 (재정렬을 중단하지 않음)
+                        e.Data.SetText(fullShortcutPath);
+
+                        // StorageItems에 SetDataProvider 사용 - 외부 대상이 요청할 때만 데이터 제공
+                        e.Data.SetDataProvider(StandardDataFormats.StorageItems, async (request) => {
+                            var deferral = request.GetDeferral();
+                            try {
+                                var tempFolder = await StorageFolder.GetFolderFromPathAsync(tempDir);
+                                var tempFile = await tempFolder.GetFileAsync(Path.GetFileName(tempShortcutPath));
+                                request.SetData(new List<IStorageItem> { tempFile });
+                                System.Diagnostics.Debug.WriteLine($"Provided storage items for external drop: {tempShortcutPath}");
+                            }
+                            catch (Exception ex) {
+                                System.Diagnostics.Debug.WriteLine($"Error providing storage items: {ex.Message}");
+                            }
+                            finally {
+                                deferral.Complete();
+                            }
+                        });
+
+                        System.Diagnostics.Debug.WriteLine($"Prepared conditional drag data for: {tempShortcutPath}");
+                    }
+                    catch (Exception ex) {
+                        System.Diagnostics.Debug.WriteLine($"Error preparing drag data: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        private async void GroupListView_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args) {
+            try {
+                // 모든 드래그된 항목에 대한 임시 파일 정리
+                foreach (var item in args.Items) {
+                    if (item is GroupItem groupItem && _tempDragFiles.ContainsKey(groupItem.GroupId)) {
+                        string tempFilePath = _tempDragFiles[groupItem.GroupId];
+                        if (!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath)) {
+                            try {
+                                File.Delete(tempFilePath);
+                                System.Diagnostics.Debug.WriteLine($"Cleaned up temp file: {tempFilePath}");
+                            }
+                            catch (Exception cleanupEx) {
+                                System.Diagnostics.Debug.WriteLine($"Error cleaning up temp file: {cleanupEx.Message}");
+                            }
+                        }
+                        _tempDragFiles.Remove(groupItem.GroupId);
+                    }
+                }
+
+                // 재정렬 플래그 초기화
+                _isReordering = false;
+
+                if (args.DropResult == Windows.ApplicationModel.DataTransfer.DataPackageOperation.Move) {
+                    // ListView의 현재 항목 순서 가져오기
+                    var reorderedItems = new List<GroupItem>();
+                    for (int i = 0; i < GroupListView.Items.Count; i++) {
+                        if (GroupListView.Items[i] is GroupItem item) {
+                            reorderedItems.Add(item);
+                        }
+                    }
+
+                    // 새 순서로 JSON 파일 업데이트
+                    await UpdateJsonWithNewOrderAsync(reorderedItems);
+                }
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"Error during drag completion: {ex.Message}");
+                // 올바른 상태를 복원하기 위해 그룹 다시 로드
+                _ = LoadGroupsAsync();
+            }
+        }
+
+        private async Task UpdateJsonWithNewOrderAsync(List<GroupItem> reorderedItems) {
+            try {
+                string jsonFilePath = JsonConfigHelper.GetDefaultConfigPath();
+
+                // 재귀 업데이트를 방지하기 위해 파일 감시자를 일시적으로 비활성화
+                _fileWatcher.EnableRaisingEvents = false;
+
+                // 현재 JSON 콘텐츠 읽기
+                string jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent ?? "{}") ?? new JsonObject();
+                var groupDictionary = jsonObject.AsObject();
+
+                // 정렬된 새 JSON 객체 생성
+                var newJsonObject = new JsonObject();
+
+                // 순서를 보존하기 위해 새 순차 ID 매핑 생성
+                var orderMapping = new Dictionary<int, int>();
+                for (int i = 0; i < reorderedItems.Count; i++) {
+                    int newId = i + 1; // 1부터 시작
+                    int oldId = reorderedItems[i].GroupId;
+                    orderMapping[oldId] = newId;
+                }
+
+                // 새 순서와 ID로 JSON 다시 빌드
+                for (int i = 0; i < reorderedItems.Count; i++) {
+                    var item = reorderedItems[i];
+                    int newId = i + 1;
+                    string oldKey = item.GroupId.ToString();
+                    string newKey = newId.ToString();
+
+                    if (groupDictionary.ContainsKey(oldKey)) {
+                        var groupData = groupDictionary[oldKey];
+                        newJsonObject[newKey] = groupData?.DeepClone();
+                    }
+                }
+
+                // 업데이트된 JSON을 파일에 다시 쓰기
+                string updatedJsonContent = newJsonObject.ToJsonString(new JsonSerializerOptions {
+                    WriteIndented = true
+                });
+
+                await File.WriteAllTextAsync(jsonFilePath, updatedJsonContent);
+
+                // 새 ID와 일치하도록 ObservableCollection의 GroupId 속성 업데이트
+                for (int i = 0; i < reorderedItems.Count; i++) {
+                    reorderedItems[i].GroupId = i + 1;
+                }
+
+                // 파일 쓰기가 완료되도록 잠시 지연
+                await Task.Delay(100);
+
+                // 파일 감시자 다시 활성화
+                _fileWatcher.EnableRaisingEvents = true;
+
+                Debug.WriteLine("JSON file updated with new group order");
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"Error updating JSON with new order: {ex.Message}");
+                // 오류 발생 시 파일 감시자 다시 활성화
+                _fileWatcher.EnableRaisingEvents = true;
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 설정 파일 변경 감시자를 설정합니다.
+        /// </summary>
+        private void SetupFileWatcher() {
+            string jsonFilePath = JsonConfigHelper.GetDefaultConfigPath();
+            string directoryPath = Path.GetDirectoryName(jsonFilePath);
+            string fileName = Path.GetFileName(jsonFilePath);
+
+            _fileWatcher = new FileSystemWatcher(directoryPath, fileName) {
+                NotifyFilter = NotifyFilters.LastWrite
+            };
+
+            // 람다식 대신 명명된 메서드로 이벤트 핸들러 등록 (정확한 해제를 위해)
+            _fileWatcher.Changed += OnFileWatcherChanged;
+            _fileWatcher.EnableRaisingEvents = true;
+        }
+
+        /// <summary>
+        /// 설정 파일 변경 시 호출되는 이벤트 핸들러
+        /// </summary>
+        private void OnFileWatcherChanged(object sender, FileSystemEventArgs e) {
+            // 재정렬 중에는 파일 감시자 업데이트를 스킵하여 충돌 방지
+            if (_isReordering || _disposed) return;
+
+            string jsonFilePath = JsonConfigHelper.GetDefaultConfigPath();
+            DispatcherQueue.TryEnqueue(async () => {
+                if (!_disposed && !IsFileInUse(jsonFilePath)) {
+                    await UpdateGroupItemAsync(jsonFilePath);
+                }
+            });
+        }
+
+        // 선택 사항: 현재 순서를 수동으로 저장하는 메서드 추가
+        private async void SaveCurrentOrder() {
+            var currentItems = _viewModel.GroupItems.ToList();
+            await UpdateJsonWithNewOrderAsync(currentItems);
+        }
+
+
+        private bool IsFileInUse(string filePath) {
+            try {
+                using (FileStream fs = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+                    fs.Close();
+                }
+                return false;
+            }
+            catch (IOException) {
+                return true;
+            }
+        }
+
+        private async void Reload(object sender, RoutedEventArgs e) {
+            _ = LoadGroupsAsync();
+
+
+        }
+
+
+        private readonly SemaphoreSlim _loadingSemaphore = new SemaphoreSlim(1, 1);
+        private readonly CancellationTokenSource _loadCancellationSource = new CancellationTokenSource();
+
+
+
+
+        private async Task<List<GroupItem>> ProcessGroupsInParallelAsync(
+            JsonObject groupDictionary,
+            CancellationToken cancellationToken) {
+            var options = new ParallelOptions {
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                CancellationToken = cancellationToken
+            };
+
+            var newGroupItems = new ConcurrentBag<GroupItem>();
+
+            await Parallel.ForEachAsync(
+                groupDictionary,
+                options,
+                async (property, token) => {
+                    if (int.TryParse(property.Key, out int groupId)) {
+                        try {
+                            var groupItem = await CreateGroupItemAsync(groupId, property.Value);
+                            newGroupItems.Add(groupItem);
+                        }
+                        catch (Exception ex) {
+                            Debug.WriteLine($"Error processing group {groupId}: {ex.Message}");
+                        }
+                    }
+                });
+
+            return newGroupItems
+                 .OrderBy(g => g.GroupId)
+                .ToList();
+        }
+
+        private async Task<List<GroupItem>> ProcessGroupsSequentiallyAsync(
+            JsonObject groupDictionary,
+            CancellationToken cancellationToken) {
+            var newGroupItems = new List<GroupItem>();
+
+            foreach (var property in groupDictionary) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (int.TryParse(property.Key, out int groupId)) {
+                    try {
+                        var groupItem = await CreateGroupItemAsync(groupId, property.Value);
+
+                        newGroupItems.Add(groupItem);
+                    }
+                    catch (Exception ex) {
+                        Debug.WriteLine($"Error processing group {groupId}: {ex.Message}");
+                    }
+                }
+            }
+
+            return newGroupItems
+        .OrderBy(g => g.GroupId)
+        .ToList();
+        }
+
+        private void HandleLoadingError(Exception ex) {
+            Debug.WriteLine($"Critical error loading groups: {ex.Message}");
+
+            DispatcherQueue.TryEnqueue(() => {
+            });
+        }
+        public async Task LoadGroupsAsync() {
+            if (!await _loadingSemaphore.WaitAsync(0)) {
+                return;
+            }
+
+            try {
+                using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_loadCancellationSource.Token);
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(5));
+
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    _viewModel.GroupItems.Clear();
+                });
+
+                string jsonFilePath = JsonConfigHelper.GetDefaultConfigPath();
+                string jsonContent = await File.ReadAllTextAsync(jsonFilePath, cancellationTokenSource.Token)
+                    .ConfigureAwait(false);
+
+                JsonNode jsonObject = JsonNode.Parse(jsonContent ?? "{}") ?? new JsonObject();
+                var groupDictionary = jsonObject.AsObject();
+
+                var processingStrategy = groupDictionary.Count >= 5
+                    ? ProcessGroupsInParallelAsync(groupDictionary, cancellationTokenSource.Token)
+                    : ProcessGroupsSequentiallyAsync(groupDictionary, cancellationTokenSource.Token);
+
+                var updatedGroupItems = await processingStrategy
+                    .ConfigureAwait(false);
+
+                DispatcherQueue.TryEnqueue(async () =>
+                {
+                    _viewModel.GroupItems.Clear();
+                    foreach (var item in updatedGroupItems) {
+                        // Check if the item already exists in GroupItems
+                        if (!_viewModel.GroupItems.Any(existingItem => existingItem.GroupId == item.GroupId)) {
+                            _viewModel.GroupItems.Add(item);
+                            // EmptyViewVisibility는 ViewModel에서 관리
+                        }
+
+
+                    }
+                    _viewModel.ApplyFilter();
+                    UpdateGroupCountAndEmptyState();
+
+
+                });
+            }
+            catch (OperationCanceledException) {
+                Debug.WriteLine("Group loading timed out.");
+            }
+            catch (Exception ex) {
+                HandleLoadingError(ex);
+            }
+            finally {
+                _loadingSemaphore.Release();
+            }
+        }
+
+
+
+        private async Task<GroupItem> CreateGroupItemAsync(int groupId, JsonNode groupNode) {
+            string groupName = groupNode?["groupName"]?.GetValue<string>();
+            string groupIcon = IconHelper.FindOrigIcon(groupNode?["groupIcon"]?.GetValue<string>());
+
+            var groupItem = new GroupItem {
+                GroupId = groupId,
+                GroupName = groupName,
+                GroupIcon = groupIcon,
+                PathIcons = new List<string>(),
+                Tooltips = new Dictionary<string, string>(),
+                Args = new Dictionary<string, string>(),
+                CustomIcons = new Dictionary<string, string>() // 사용자 지정 아이콘 초기화
+            };
+
+            var paths = groupNode?["path"]?.AsObject();
+            if (paths?.Count > 0) {
+                string outputDirectory = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "AppGroup",
+                    "Icons"
+                );
+                Directory.CreateDirectory(outputDirectory);
+
+                var iconTasks = paths
+                    .Where(p => p.Value != null)
+                    .Select(async path => {
+                        string filePath = path.Key;
+                        string tooltip = path.Value["tooltip"]?.GetValue<string>();
+                        string args = path.Value["args"]?.GetValue<string>();
+                        string customIcon = path.Value["icon"]?.GetValue<string>(); // JSON에서 사용자 지정 아이콘 가져오기
+
+                        groupItem.Tooltips[filePath] = tooltip;
+                        groupItem.Args[filePath] = args;
+                        groupItem.CustomIcons[filePath] = customIcon; // 사용자 지정 아이콘 저장
+
+                        // 사용자 지정 아이콘을 사용할 수 있고 존재하는 경우 사용, 그렇지 않으면 캐시된 아이콘 사용
+                        if (!string.IsNullOrEmpty(customIcon) && File.Exists(customIcon)) {
+                            return customIcon;
+                        }
+                        else {
+                            // 존재하지 않는 경우 아이콘 재생성 강제 수행
+                            string cachedIconPath;
+                            if (Path.GetExtension(filePath).Equals(".url", StringComparison.OrdinalIgnoreCase)) {
+                                cachedIconPath = await IconHelper.GetUrlFileIconAsync(filePath);
+                            }
+                            else {
+                                cachedIconPath = await IconCache.GetIconPathAsync(filePath);
+                            }
+                            // 아이콘이 실제로 생성되었는지 확인하기 위한 추가 검증
+                            if (string.IsNullOrEmpty(cachedIconPath) || !File.Exists(cachedIconPath)) {
+                                cachedIconPath = await ReGenerateIconAsync(filePath, outputDirectory);
+                            }
+
+                            return cachedIconPath;
+                        }
+                    })
+                    .ToList();
+
+                var iconPaths = await Task.WhenAll(iconTasks);
+                var validIconPaths = iconPaths.Where(p => !string.IsNullOrEmpty(p) && File.Exists(p)).ToList();
+ 
+                // 아이콘 7개로 제한
+                int maxIconsToShow = 7;
+                groupItem.PathIcons.AddRange(validIconPaths.Take(maxIconsToShow));
+                groupItem.AdditionalIconsCount = Math.Max(0, validIconPaths.Count - maxIconsToShow);
+            }
+
+            return groupItem;
+        }
+        private async Task<string> ReGenerateIconAsync(string filePath, string outputDirectory) {
+            try {
+                // 아이콘 재생성 강제 수행
+                var regeneratedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, outputDirectory, TimeSpan.FromSeconds(2));
+
+                if (regeneratedIconPath != null && File.Exists(regeneratedIconPath)) {
+                    // 캐시 키 계산 및 캐시 업데이트
+                    string cacheKey = IconCache.ComputeFileCacheKey(filePath);
+                    IconCache.IconCacheData.TryAdd(cacheKey, regeneratedIconPath);
+                    IconCache.SaveIconCache();
+
+                    return regeneratedIconPath;
+                }
+            }
+            catch (Exception ex) {
+                Debug.WriteLine($"Icon regeneration failed for {filePath}: {ex.Message}");
+            }
+
+            return null;
+        }
+
+
+
+        private async void ExportBackupButton_Click(object sender, RoutedEventArgs e) {
+            await _backupHelper.ExportBackupAsync();
+        }
+
+        private async void ImportBackupButton_Click(object sender, RoutedEventArgs e) {
+            await _backupHelper.ImportBackupAsync();
+        }
+
+        private void ForceTaskbarUpdate_Click(object sender, RoutedEventArgs e) {
+
+             TaskbarManager.ForceTaskbarUpdateAsync();
+
+        }
+
+        private void AddGroup(object sender, RoutedEventArgs e) {
+            int groupId = JsonConfigHelper.GetNextGroupId();
+            AppPaths.SaveGroupIdToFile(groupId.ToString());
+            EditGroupHelper editGroup = new EditGroupHelper("Edit Group", groupId);
+            editGroup.Activate();
+        }
+
+        private void EditButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is Button button && button.DataContext is GroupItem selectedGroup) {
+                AppPaths.SaveGroupIdToFile(selectedGroup.GroupId.ToString());
+                EditGroupHelper editGroup = new EditGroupHelper("Edit Group", selectedGroup.GroupId);
+                editGroup.Activate();
+            }
+        }
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is GroupItem selectedGroup) {
+                ContentDialog deleteDialog = new ContentDialog {
+                    Title = "삭제",
+                    Content = $"\"{selectedGroup.GroupName}\" 그룹을 삭제하시겠습니까?",
+                    PrimaryButtonText = "삭제",
+                    CloseButtonText = "취소",
+                    DefaultButton = ContentDialogButton.Close,
+                    XamlRoot = this.Content.XamlRoot
+                };
+
+                var result = await deleteDialog.ShowAsync();
+                if (result == ContentDialogResult.Primary) {
+                    string filePath = JsonConfigHelper.GetDefaultConfigPath();
+                    JsonConfigHelper.DeleteGroupFromJson(filePath, selectedGroup.GroupId);
+                    await LoadGroupsAsync();
+                }
+            }
+        }
+
+        // MainWindow.xaml.cs의 MainWindow 클래스에 이 메서드 추가
+
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e) {
+            try {
+                SettingsDialog settingsDialog = new SettingsDialog {
+                    XamlRoot = this.Content.XamlRoot
+                };
+
+                await settingsDialog.ShowAsync();
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Error showing settings dialog: {ex.Message}");
+
+                // Optional: Show an error message to the user
+                ContentDialog errorDialog = new ContentDialog {
+                    Title = "오류",
+                    Content = "설정 창을 열지 못했습니다.",
+                    CloseButtonText = "확인",
+                    XamlRoot = this.Content.XamlRoot
+                };
+
+                await errorDialog.ShowAsync();
+            }
+        }
+        private async void DuplicateButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is GroupItem selectedGroup) {
+                string filePath = JsonConfigHelper.GetDefaultConfigPath();
+                JsonConfigHelper.DuplicateGroupInJson(filePath, selectedGroup.GroupId);
+                await LoadGroupsAsync();
+            }
+        }
+        private void OpenLocationButton_Click(object sender, RoutedEventArgs e) {
+            if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is GroupItem selectedGroup) {
+                JsonConfigHelper.OpenGroupFolder(selectedGroup.GroupId);
+            }
+        }
+
+
+
+
+        private void GroupListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (GroupListView.SelectedItem is GroupItem selectedGroup) {
+                AppPaths.SaveGroupIdToFile(selectedGroup.GroupId.ToString());
+                EditGroupHelper editGroup = new EditGroupHelper("Edit Group", selectedGroup.GroupId);
+                editGroup.Activate();
+            }
+        }
+
+        /// <summary>
+        /// 비관리 리소스를 해제하고 관리 리소스를 삭제합니다.
+        /// </summary>
+        public void Dispose() {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing) {
+            if (_disposed) return;
+
+            if (disposing) {
+                // FileSystemWatcher 정리 - 이벤트 핸들러 명시적 해제
+                if (_fileWatcher != null) {
+                    _fileWatcher.EnableRaisingEvents = false;
+                    _fileWatcher.Changed -= OnFileWatcherChanged;
+                    _fileWatcher.Dispose();
+                    _fileWatcher = null;
+                }
+
+                // SemaphoreSlim 인스턴스 정리
+                _semaphore?.Dispose();
+                _loadingSemaphore?.Dispose();
+
+                // CancellationTokenSource 정리
+                if (_loadCancellationSource != null && !_loadCancellationSource.IsCancellationRequested) {
+                    _loadCancellationSource.Cancel();
+                }
+                _loadCancellationSource?.Dispose();
+
+                // 디바운스 타이머 정리
+                if (debounceTimer != null) {
+                    debounceTimer.Stop();
+                    debounceTimer.Tick -= FilterGroups;
+                    debounceTimer = null;
+                }
+
+                // 편집 윈도우 딕셔너리 정리
+                _openEditWindows?.Clear();
+            }
+
+            _disposed = true;
+        }
+
+        ~MainWindow() {
+            Dispose(disposing: false);
+        }
+    }
+}
