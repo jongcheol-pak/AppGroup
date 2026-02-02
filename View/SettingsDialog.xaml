@@ -118,7 +118,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource SettingsCardStyle}">
+                <Border Style="{StaticResource SettingsCardStyle}" Visibility="Collapsed">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" MinWidth="200"/>
@@ -148,81 +148,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Updates Section -->
-                <TextBlock Text="업데이트" Style="{StaticResource SectionHeaderStyle}" Visibility="Collapsed"/>
-
-                <Border Style="{StaticResource SettingsCardStyle}" Visibility="Collapsed">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="200"/>
-                            <ColumnDefinition Width="50"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                            <TextBlock Text="시작 시 업데이트 확인"
-                                     FontWeight="SemiBold"
-                                     FontSize="14"
-                                     TextWrapping="Wrap"/>
-                            <TextBlock Text="앱 시작 시 자동으로 새 버전 확인"
-                                     FontSize="12"
-                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                     Margin="0,2,0,0"
-                                     TextWrapping="Wrap"/>
-                        </StackPanel>
-
-                        <ToggleSwitch x:Name="UpdateCheckToggle"
-                                     Grid.Column="1"
-                                     IsOn="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
-                                     VerticalAlignment="Center"
-                                     OnContent=""
-                                     OffContent=""
-                                    />
-                    </Grid>
-                </Border>
-
-                <Border Style="{StaticResource SettingsCardStyle}" Visibility="Collapsed">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" MinWidth="200"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="업데이트 확인"
-                                         FontWeight="SemiBold"
-                                         FontSize="14"
-                                         TextWrapping="Wrap"/>
-                                <TextBlock x:Name="UpdateStatusText"
-                                         Text="{Binding UpdateStatusText}"
-                                         FontSize="12"
-                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                         Margin="0,2,0,0"
-                                         TextWrapping="Wrap"/>
-                            </StackPanel>
-
-                            <Button x:Name="CheckUpdateButton"
-                                    Grid.Column="1"
-                                    Content="지금 확인"
-                                    Click="CheckUpdateButton_Click"
-                                    VerticalAlignment="Center"
-                                    Padding="16,8"/>
-                        </Grid>
-
-                        <InfoBar x:Name="UpdateInfoBar"
-                                 IsOpen="{Binding IsUpdateInfoBarOpen, Mode=TwoWay}"
-                                 Severity="Success"
-                                 Title="업데이트 사용 가능"
-                                 Margin="0,12,0,0"
-                                 IsClosable="True"
-                                 Message="{Binding UpdateInfoBarMessage}">
-                            <InfoBar.ActionButton>
-                                <Button Content="다운로드" Click="DownloadUpdate_Click"/>
-                            </InfoBar.ActionButton>
-                        </InfoBar>
-                    </StackPanel>
-                </Border>
-
                 <!-- About Section -->
                 <TextBlock Text="정보" Style="{StaticResource SectionHeaderStyle}"/>
 
@@ -236,9 +161,78 @@
                                  FontSize="12"
                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                  Margin="0,4,0,0"/>
+
+                        <HyperlinkButton NavigateUri="https://github.com/iandiv/AppGroup"      Padding="0"
+      Margin="0,12,0,4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="AppGroup" FontWeight="SemiBold" FontSize="13" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+                        <TextBlock Text="이 앱은 오픈소스 프로젝트 AppGroup를 기반으로 하여 UI 개선 및 기능 추가 등 일부 커스터마이징을 적용한 버전입니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+
                     </StackPanel>
                 </Border>
 
+                <!-- Open Source Licenses -->
+                <TextBlock Text="Open Source Licenses" Style="{StaticResource SectionHeaderStyle}"/>
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel Spacing="8">
+                        <!-- CommunityToolkit.Mvvm -->
+                        <HyperlinkButton NavigateUri="https://github.com/CommunityToolkit/dotnet"
+                                       Padding="0"
+                                       Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="CommunityToolkit.Mvvm" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <!-- Interop.IWshRuntimeLibrary -->
+                        <HyperlinkButton NavigateUri="https://www.nuget.org/packages/Interop.IWshRuntimeLibrary"
+                                       Padding="0"
+                                       Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="Interop.IWshRuntimeLibrary" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Windows Script Host Object Model" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <!-- Microsoft.WindowsAppSDK -->
+                        <HyperlinkButton NavigateUri="https://github.com/microsoft/WindowsAppSDK"
+                                       Padding="0"
+                                       Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="Microsoft.WindowsAppSDK" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <!-- System.Drawing.Common -->
+                        <HyperlinkButton NavigateUri="https://github.com/dotnet/runtime"
+                                       Padding="0"
+                                       Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="System.Drawing.Common" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <!-- WinUIEx -->
+                        <HyperlinkButton NavigateUri="https://github.com/dotMorten/WinUIEx"
+                                       Padding="0"
+                                       Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="WinUIEx" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </HyperlinkButton>
+                    </StackPanel>
+                </Border>
+
+               
             </StackPanel>
         </ScrollViewer>
     </StackPanel>

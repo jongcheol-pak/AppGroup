@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Diagnostics;
@@ -13,7 +13,6 @@ namespace AppGroup.View {
             _viewModel = new SettingsDialogViewModel();
             DataContext = _viewModel;
             _viewModel.InitializeVersionText();
-            _viewModel.UpdateStatusText = "클릭하여 새 버전 확인";
             Loaded += SettingsDialog_Loaded;
             Unloaded += SettingsDialog_Unloaded;
         }
@@ -27,7 +26,6 @@ namespace AppGroup.View {
                 SystemTrayToggle.Toggled -= SystemTrayToggle_Toggled;
                 StartupToggle.Toggled -= StartupToggle_Toggled;
                 GrayscaleIconToggle.Toggled -= GrayScaleToggle_Toggled;
-                UpdateCheckToggle.Toggled -= UpdateCheckToggle_Toggled;
 
                 // Loaded/Unloaded 이벤트 핸들러 해제
                 Loaded -= SettingsDialog_Loaded;
@@ -47,7 +45,6 @@ namespace AppGroup.View {
                 SystemTrayToggle.Toggled += SystemTrayToggle_Toggled;
                 StartupToggle.Toggled += StartupToggle_Toggled;
                 GrayscaleIconToggle.Toggled += GrayScaleToggle_Toggled;
-                UpdateCheckToggle.Toggled += UpdateCheckToggle_Toggled;
 
                 _viewModel.IsLoading = false;
             }
@@ -97,32 +94,6 @@ namespace AppGroup.View {
                 GrayscaleIconToggle.IsOn = !GrayscaleIconToggle.IsOn;
                 _viewModel.IsLoading = false;
             }
-        }
-
-        private async void UpdateCheckToggle_Toggled(object sender, RoutedEventArgs e) {
-            if (_viewModel.IsLoading) return;
-
-            try {
-                await _viewModel.SaveSettingsAsync();
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error saving update check settings: {ex.Message}");
-                _viewModel.IsLoading = true;
-                UpdateCheckToggle.IsOn = !UpdateCheckToggle.IsOn;
-                _viewModel.IsLoading = false;
-            }
-        }
-
-        private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e) {
-            if (_viewModel.IsCheckingForUpdates) return;
-
-            CheckUpdateButton.IsEnabled = false;
-            await _viewModel.CheckForUpdatesAsync();
-            CheckUpdateButton.IsEnabled = true;
-        }
-
-        private void DownloadUpdate_Click(object sender, RoutedEventArgs e) {
-            _viewModel.OpenUpdateReleasePage();
         }
 
         private void CloseDialog(object sender, RoutedEventArgs e) {

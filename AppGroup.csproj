@@ -23,6 +23,16 @@
 <Win32Icon>AppGroup.ico</Win32Icon>
     
   </PropertyGroup>
+
+  <!-- Store 배포용: 인증서 서명 비활성화 (Microsoft가 자동 서명) -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' or '$(Configuration)|$(Platform)'=='Release|x86' or '$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>False</GenerateTestArtifacts>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+  </PropertyGroup>
+
 	<PropertyGroup>
 		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 	</PropertyGroup>
@@ -202,6 +212,13 @@
     <PackageIcon>AppGroup.png</PackageIcon>
     <PackageCertificateThumbprint>97A1342A72F84F6223E0A2E866CFDC3B0608562B</PackageCertificateThumbprint>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
   <ItemGroup>
     <EditorConfigFiles Remove="C:\Users\Ian Divinagracia\source\repos\AppGroup\AppGroup\.editorconfig" />

@@ -1145,10 +1145,12 @@ namespace AppGroup.View
             var settings = await SettingsHelper.LoadSettingsAsync();
             CleanupUISettings();
 
+            // 항상 창을 숨기고 리소스 정리 수행
+            this.DispatcherQueue.TryEnqueue(() => CleanupWindowResources(screenWidth, screenHeight));
+
+            // 아이콘 복원은 조건이 충족될 때만 수행
             if (!string.IsNullOrEmpty(_originalIconPath) && !string.IsNullOrEmpty(_groupFilter))
             {
-                this.DispatcherQueue.TryEnqueue(() => CleanupWindowResources(screenWidth, screenHeight));
-
                 if (settings.UseGrayscaleIcon)
                 {
                     var task = Task.Run(async () => await RestoreOriginalIconAsync());

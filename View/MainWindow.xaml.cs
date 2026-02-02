@@ -96,61 +96,7 @@ private bool _disposed = false;
             
         this.AppWindow.Closing += AppWindow_Closing;
         SetWindowIcon();
-
-        // 시작 시 업데이트 확인 (설정된 경우)
-       // _ = CheckForUpdatesOnStartupAsync();
     }
-
-        private async Task CheckForUpdatesOnStartupAsync() {
-            try {
-                // 창이 완전히 로드되고 설정을 사용할 수 있을 때까지 대기
-                await Task.Delay(2000);
-
-                // 설정을 올바르게 로드 (null일 수 있는 캐시된 값만 가져오지 않음)
-                var settings = await SettingsHelper.LoadSettingsAsync();
-                if (!settings.CheckForUpdatesOnStartup) {
-                    return;
-                }
-
-                var updateInfo = await UpdateChecker.CheckForUpdatesAsync();
-
-                if (updateInfo.UpdateAvailable && this.Content?.XamlRoot != null) {
-                    // 업데이트 알림 표시
-                    await ShowUpdateDialogAsync(updateInfo);
-                }
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error checking for updates on startup: {ex.Message}");
-            }
-        }
-
-        private async Task ShowUpdateDialogAsync(UpdateChecker.UpdateInfo updateInfo) {
-            try {
-                if (this.Content?.XamlRoot == null) {
-                    return;
-                }
-
-                var dialog = new ContentDialog {
-                    Title = "업데이트 사용 가능",
-                    Content = $"새 버전의 AppGroup을 사용할 수 있습니다!\n\n" +
-                              $"현재 버전: {updateInfo.CurrentVersion}\n" +
-                              $"최신 버전: {updateInfo.LatestVersion}\n\n" +
-                              "업데이트를 다운로드하시겠습니까?",
-                    PrimaryButtonText = "다운로드",
-                    CloseButtonText = "나중에",
-                    XamlRoot = this.Content.XamlRoot
-                };
-
-                var result = await dialog.ShowAsync();
-                if (result == ContentDialogResult.Primary) {
-                    UpdateChecker.OpenReleasesPage(updateInfo.ReleaseUrl);
-                }
-            }
-            catch (Exception ex) {
-                // 다른 대화 상자가 이미 열려 있으면 대화 상자가 실패할 수 있음 - 이는 예상된 동작임
-                Debug.WriteLine($"Error showing update dialog: {ex.Message}");
-            }
-        }
 
 
         private void SetWindowIcon() {

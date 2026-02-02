@@ -27,6 +27,7 @@ using Microsoft.Win32;
 
 using AppGroup.Models;
 using AppGroup.ViewModels;
+using System.Threading;
 
 
 namespace AppGroup.View {
@@ -51,6 +52,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
     // 폴더/웹 편집 모드 플래그
     private bool _isEditingFolderWebItem = false;
     private ExeFileModel _editingFolderWebItem = null;
+
+    // 설치된 앱 로딩 취소를 위한 CancellationTokenSource
+    private CancellationTokenSource _appLoadingCts;
 
     private const int DEFAULT_LABEL_SIZE = 12;
     private const string DEFAULT_LABEL_POSITION = "Bottom";
@@ -1785,6 +1789,8 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
 
         private void CloseAllAppsDialog(object sender, RoutedEventArgs e)
         {
+            // 로딩 중인 작업 취소
+            _appLoadingCts?.Cancel();
             AllAppsDialog.Hide();
         }
 
@@ -2223,6 +2229,11 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
 
         private async void AllAppsButton_Click(object sender, RoutedEventArgs e)
         {
+            // 이전 로딩 작업 취소
+            _appLoadingCts?.Cancel();
+            _appLoadingCts = new CancellationTokenSource();
+            var cancellationToken = _appLoadingCts.Token;
+
             try
             {
                 AllAppsDialog.XamlRoot = this.Content.XamlRoot;
@@ -2248,6 +2259,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
 
                 foreach (var appInfo in shellApps)
                 {
+                    // 취소 요청 확인
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        Debug.WriteLine("App loading cancelled");
+                        return;
+                    }
+
                     try
                     {
                         // 중복 이름 건너뛰기
@@ -2269,6 +2287,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                             icon = await GetAppIconFromShellAsync(appInfo.AppUserModelId, appInfo.DisplayName);
                         }
 
+                        // 취소 요청 재확인 (비동기 작업 후)
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            Debug.WriteLine("App loading cancelled after icon extraction");
+                            return;
+                        }
+
                         var app = new InstalledAppModel
                         {
                             DisplayName = appInfo.DisplayName,
@@ -2284,6 +2309,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                     {
                         Debug.WriteLine($"Error processing app {appInfo.DisplayName}: {ex.Message}");
                     }
+                }
+
+                // 취소 요청 확인
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Debug.WriteLine("App loading cancelled before sorting");
+                    return;
                 }
 
                 // 이름순 정렬
@@ -2302,6 +2334,10 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 AllAppsListView.IsEnabled = true;
                 AddSelectedAppsButton.IsEnabled = true;
                 AppSearchTextBox.IsEnabled = true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("App loading operation was cancelled");
             }
             catch (Exception ex)
             {
@@ -2640,6 +2676,11 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             if (_disposed) return;
 
             if (disposing) {
+                // CancellationTokenSource 정리
+                _appLoadingCts?.Cancel();
+                _appLoadingCts?.Dispose();
+                _appLoadingCts = null;
+
                 // FileSystemWatcher 정리
                 if (fileWatcher != null) {
                     fileWatcher.EnableRaisingEvents = false;

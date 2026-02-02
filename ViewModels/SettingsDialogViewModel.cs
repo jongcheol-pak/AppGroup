@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,193 +6,127 @@ using Microsoft.UI.Xaml;
 using Windows.ApplicationModel;
 
 namespace AppGroup.ViewModels {
-    public partial class SettingsDialogViewModel : ObservableObject {
-        private SettingsHelper.AppSettings? _settings;
-        private bool _isLoading = true;
-        private bool _isCheckingForUpdates;
-        private string _updateReleaseUrl = string.Empty;
-        private string _versionText = "";
-        private string _updateStatusText = "";
-        private bool _isUpdateInfoBarOpen;
-        private string _updateInfoBarMessage = "";
+public partial class SettingsDialogViewModel : ObservableObject {
+    private SettingsHelper.AppSettings? _settings;
+    private bool _isLoading = true;
+    private string _versionText = "";
 
-        private bool _showSystemTrayIcon = true;
-        private bool _runAtStartup = true;
-        private bool _useGrayscaleIcon;
-        private bool _checkForUpdatesOnStartup = true;
-        private string _startupStatusMessage = string.Empty;
-        private bool _isStartupBlocked;
+    private bool _showSystemTrayIcon = true;
+    private bool _runAtStartup = true;
+    private bool _useGrayscaleIcon;
+    private string _startupStatusMessage = string.Empty;
+    private bool _isStartupBlocked;
 
-        public bool IsLoading {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
+    public bool IsLoading {
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
+    }
 
-        public bool IsCheckingForUpdates {
-            get => _isCheckingForUpdates;
-            set => SetProperty(ref _isCheckingForUpdates, value);
-        }
+    public string VersionText {
+        get => _versionText;
+        set => SetProperty(ref _versionText, value);
+    }
 
-        public string VersionText {
-            get => _versionText;
-            set => SetProperty(ref _versionText, value);
-        }
+    public bool ShowSystemTrayIcon {
+        get => _showSystemTrayIcon;
+        set => SetProperty(ref _showSystemTrayIcon, value);
+    }
 
-        public string UpdateStatusText {
-            get => _updateStatusText;
-            set => SetProperty(ref _updateStatusText, value);
-        }
+    public bool RunAtStartup {
+        get => _runAtStartup;
+        set => SetProperty(ref _runAtStartup, value);
+    }
 
-        public bool IsUpdateInfoBarOpen {
-            get => _isUpdateInfoBarOpen;
-            set => SetProperty(ref _isUpdateInfoBarOpen, value);
-        }
+    public bool UseGrayscaleIcon {
+        get => _useGrayscaleIcon;
+        set => SetProperty(ref _useGrayscaleIcon, value);
+    }
 
-        public string UpdateInfoBarMessage {
-            get => _updateInfoBarMessage;
-            set => SetProperty(ref _updateInfoBarMessage, value);
-        }
+    /// <summary>
+    /// 시작 프로그램 상태 메시지 (사용자/정책에 의해 차단된 경우 표시)
+    /// </summary>
+    public string StartupStatusMessage {
+        get => _startupStatusMessage;
+        set => SetProperty(ref _startupStatusMessage, value);
+    }
 
-        public bool ShowSystemTrayIcon {
-            get => _showSystemTrayIcon;
-            set => SetProperty(ref _showSystemTrayIcon, value);
-        }
-
-        public bool RunAtStartup {
-            get => _runAtStartup;
-            set => SetProperty(ref _runAtStartup, value);
-        }
-
-        public bool UseGrayscaleIcon {
-            get => _useGrayscaleIcon;
-            set => SetProperty(ref _useGrayscaleIcon, value);
-        }
-
-        public bool CheckForUpdatesOnStartup {
-            get => _checkForUpdatesOnStartup;
-            set => SetProperty(ref _checkForUpdatesOnStartup, value);
-        }
-
-        /// <summary>
-        /// 시작 프로그램 상태 메시지 (사용자/정책에 의해 차단된 경우 표시)
-        /// </summary>
-        public string StartupStatusMessage {
-            get => _startupStatusMessage;
-            set => SetProperty(ref _startupStatusMessage, value);
-        }
-
-        /// <summary>
-        /// 시작 프로그램이 사용자/정책에 의해 차단되었는지 여부
-        /// </summary>
-        public bool IsStartupBlocked {
-            get => _isStartupBlocked;
-            set {
-                if (SetProperty(ref _isStartupBlocked, value)) {
-                    OnPropertyChanged(nameof(StartupStatusVisibility));
-                }
+    /// <summary>
+    /// 시작 프로그램이 사용자/정책에 의해 차단되었는지 여부
+    /// </summary>
+    public bool IsStartupBlocked {
+        get => _isStartupBlocked;
+        set {
+            if (SetProperty(ref _isStartupBlocked, value)) {
+                OnPropertyChanged(nameof(StartupStatusVisibility));
             }
         }
+    }
 
-        /// <summary>
-        /// 시작 프로그램 상태 메시지 표시 여부 (Visibility 바인딩용)
-        /// </summary>
-        public Visibility StartupStatusVisibility =>
-            IsStartupBlocked ? Visibility.Visible : Visibility.Collapsed;
+    /// <summary>
+    /// 시작 프로그램 상태 메시지 표시 여부 (Visibility 바인딩용)
+    /// </summary>
+    public Visibility StartupStatusVisibility =>
+        IsStartupBlocked ? Visibility.Visible : Visibility.Collapsed;
 
-        public void InitializeVersionText() {
-            VersionText = $"버전 {UpdateChecker.GetCurrentVersion()}";
+    public void InitializeVersionText() {
+        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version;
+        if (version != null) {
+            VersionText = $"버전 {version.Major}.{version.Minor}.{version.Build}";
         }
-
-        public async Task LoadCurrentSettingsAsync() {
-            try {
-                _settings = await SettingsHelper.LoadSettingsAsync();
-
-                ShowSystemTrayIcon = _settings.ShowSystemTrayIcon;
-                RunAtStartup = _settings.RunAtStartup;
-                UseGrayscaleIcon = _settings.UseGrayscaleIcon;
-                CheckForUpdatesOnStartup = _settings.CheckForUpdatesOnStartup;
-
-                // 실제 시스템 시작 프로그램 상태와 동기화
-                bool isEnabled = await SettingsHelper.IsInStartupAsync();
-                if (RunAtStartup != isEnabled) {
-                    RunAtStartup = isEnabled;
-                    _settings.RunAtStartup = isEnabled;
-                    await SettingsHelper.SaveSettingsAsync(_settings);
-                }
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error loading settings in dialog: {ex.Message}");
-                _settings = new SettingsHelper.AppSettings();
-                ShowSystemTrayIcon = true;
-                RunAtStartup = true;
-                UseGrayscaleIcon = false;
-                CheckForUpdatesOnStartup = true;
-            }
+        else {
+            VersionText = "버전 Unknown";
         }
+    }
 
-        public async Task SaveSettingsAsync() {
-            try {
-                _settings ??= new SettingsHelper.AppSettings();
+    public async Task LoadCurrentSettingsAsync() {
+        try {
+            _settings = await SettingsHelper.LoadSettingsAsync();
 
-                _settings.ShowSystemTrayIcon = ShowSystemTrayIcon;
-                _settings.RunAtStartup = RunAtStartup;
-                _settings.UseGrayscaleIcon = UseGrayscaleIcon;
-                _settings.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
+            ShowSystemTrayIcon = _settings.ShowSystemTrayIcon;
+            RunAtStartup = _settings.RunAtStartup;
+            UseGrayscaleIcon = _settings.UseGrayscaleIcon;
 
+            // 실제 시스템 시작 프로그램 상태와 동기화
+            bool isEnabled = await SettingsHelper.IsInStartupAsync();
+            if (RunAtStartup != isEnabled) {
+                RunAtStartup = isEnabled;
+                _settings.RunAtStartup = isEnabled;
                 await SettingsHelper.SaveSettingsAsync(_settings);
-
-                try {
-                    ApplySystemTraySettings();
-                    await ApplyStartupSettingsAsync();
-                }
-                catch (Exception ex) {
-                    Debug.WriteLine($"Error applying settings: {ex.Message}");
-                }
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error saving settings: {ex.Message}");
-                throw;
             }
         }
+        catch (Exception ex) {
+            Debug.WriteLine($"Error loading settings in dialog: {ex.Message}");
+            _settings = new SettingsHelper.AppSettings();
+            ShowSystemTrayIcon = true;
+            RunAtStartup = true;
+            UseGrayscaleIcon = false;
+        }
+    }
 
-        public async Task CheckForUpdatesAsync() {
-            if (IsCheckingForUpdates) {
-                return;
-            }
+    public async Task SaveSettingsAsync() {
+        try {
+            _settings ??= new SettingsHelper.AppSettings();
 
-            IsCheckingForUpdates = true;
-            UpdateStatusText = "업데이트 확인 중...";
+            _settings.ShowSystemTrayIcon = ShowSystemTrayIcon;
+            _settings.RunAtStartup = RunAtStartup;
+            _settings.UseGrayscaleIcon = UseGrayscaleIcon;
+
+            await SettingsHelper.SaveSettingsAsync(_settings);
 
             try {
-                var updateInfo = await UpdateChecker.CheckForUpdatesAsync();
-
-                if (!string.IsNullOrEmpty(updateInfo.ErrorMessage)) {
-                    UpdateStatusText = updateInfo.ErrorMessage;
-                }
-                else if (updateInfo.UpdateAvailable) {
-                    UpdateStatusText = $"v{updateInfo.LatestVersion} 사용 가능";
-                    _updateReleaseUrl = updateInfo.ReleaseUrl;
-                    UpdateInfoBarMessage = $"버전 {updateInfo.LatestVersion} 사용 가능 (현재 {updateInfo.CurrentVersion})";
-                    IsUpdateInfoBarOpen = true;
-                }
-                else {
-                    UpdateStatusText = $"최신 버전입니다! (v{updateInfo.CurrentVersion})";
-                }
+                ApplySystemTraySettings();
+                await ApplyStartupSettingsAsync();
             }
             catch (Exception ex) {
-                Debug.WriteLine($"Error checking for updates: {ex}");
-                UpdateStatusText = "업데이트 확인 오류";
-            }
-            finally {
-                IsCheckingForUpdates = false;
+                Debug.WriteLine($"Error applying settings: {ex.Message}");
             }
         }
-
-        public void OpenUpdateReleasePage() {
-            if (!string.IsNullOrEmpty(_updateReleaseUrl)) {
-                UpdateChecker.OpenReleasesPage(_updateReleaseUrl);
-            }
+        catch (Exception ex) {
+            Debug.WriteLine($"Error saving settings: {ex.Message}");
+            throw;
         }
+    }
 
         private void ApplySystemTraySettings() {
             try {
