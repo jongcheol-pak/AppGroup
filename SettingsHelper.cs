@@ -134,6 +134,21 @@ namespace AppGroup {
             return false;
         }
 
+        /// <summary>
+        /// 시작 프로그램 상태 조회 (비동기)
+        /// </summary>
+        public static async Task<StartupTaskState> GetStartupStateAsync() {
+            try {
+                var startupTask = await StartupTask.GetAsync(STARTUP_TASK_ID);
+                System.Diagnostics.Debug.WriteLine($"[SettingsHelper] StartupTask state: {startupTask.State}");
+                return startupTask.State;
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Error getting startup state: {ex.Message}");
+                return StartupTaskState.Disabled;
+            }
+        }
+
         #region 동기 메서드 (레거시 호환용)
 
         /// <summary>

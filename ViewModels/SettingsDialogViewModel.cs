@@ -84,14 +84,44 @@ public partial class SettingsDialogViewModel : ObservableObject {
             _settings = await SettingsHelper.LoadSettingsAsync();
 
             ShowSystemTrayIcon = _settings.ShowSystemTrayIcon;
-            RunAtStartup = _settings.RunAtStartup;
             UseGrayscaleIcon = _settings.UseGrayscaleIcon;
 
-            // 실제 시스템 시작 프로그램 상태와 동기화
-            bool isEnabled = await SettingsHelper.IsInStartupAsync();
-            if (RunAtStartup != isEnabled) {
-                RunAtStartup = isEnabled;
-                _settings.RunAtStartup = isEnabled;
+            // 실제 시스템 시작 프로그램 상태 확인
+            var startupState = await SettingsHelper.GetStartupStateAsync();
+            Debug.WriteLine($"[Settings] Startup state from system: {startupState}");
+
+            // 시스템 상태에 따라 UI 동기화
+            switch (startupState) {
+                case StartupTaskState.Enabled:
+                    RunAtStartup = true;
+                    IsStartupBlocked = false;
+                    StartupStatusMessage = string.Empty;
+                    break;
+
+                case StartupTaskState.DisabledByUser:
+                    RunAtStartup = false;
+                    IsStartupBlocked = true;
+                    StartupStatusMessage = "Windows 설정에서 차단됨. 설정 > 앱 > 시작프로그램에서 허용하세요.";
+                    break;
+
+                case StartupTaskState.DisabledByPolicy:
+                    RunAtStartup = false;
+                    IsStartupBlocked = true;
+                    StartupStatusMessage = "그룹 정책에 의해 차단됨";
+                    break;
+
+                case StartupTaskState.Disabled:
+                default:
+                    // 설정 파일 값 유지 (사용자가 설정한 값)
+                    RunAtStartup = _settings.RunAtStartup;
+                    IsStartupBlocked = false;
+                    StartupStatusMessage = string.Empty;
+                    break;
+            }
+
+            // 설정 파일과 실제 상태가 다르면 동기화
+            if (_settings.RunAtStartup != RunAtStartup) {
+                _settings.RunAtStartup = RunAtStartup;
                 await SettingsHelper.SaveSettingsAsync(_settings);
             }
         }
@@ -99,7 +129,7 @@ public partial class SettingsDialogViewModel : ObservableObject {
             Debug.WriteLine($"Error loading settings in dialog: {ex.Message}");
             _settings = new SettingsHelper.AppSettings();
             ShowSystemTrayIcon = true;
-            RunAtStartup = true;
+            RunAtStartup = false;
             UseGrayscaleIcon = false;
         }
     }
@@ -156,7 +186,9 @@ public partial class SettingsDialogViewModel : ObservableObject {
                 IsStartupBlocked = false;
 
                 if (RunAtStartup) {
+                    Debug.WriteLine("[Settings] Attempting to enable startup...");
                     var result = await SettingsHelper.AddToStartupAsync();
+                    Debug.WriteLine($"[Settings] AddToStartup result: {result}");
 
                     if (result == StartupTaskState.DisabledByUser) {
                         // 사용자가 Windows 설정에서 거부함
@@ -184,12 +216,27 @@ public partial class SettingsDialogViewModel : ObservableObject {
                         return false;
                     }
                     else if (result == StartupTaskState.Enabled) {
+                        Debug.WriteLine("[Settings] Startup enabled successfully");
                         StartupStatusMessage = string.Empty;
                         IsStartupBlocked = false;
                         return true;
                     }
+                    else if (result == StartupTaskState.Disabled) {
+                        // 요청은 했지만 여전히 Disabled 상태 - 재시도 또는 사용자 알림
+                        Debug.WriteLine("[Settings] Startup still disabled after request");
+                        StartupStatusMessage = "시작 프로그램 등록에 실패했습니다. 다시 시도해주세요.";
+                        IsStartupBlocked = true;
+                        RunAtStartup = false;
+
+                        if (_settings != null) {
+                            _settings.RunAtStartup = false;
+                            await SettingsHelper.SaveSettingsAsync(_settings);
+                        }
+                        return false;
+                    }
                 }
                 else {
+                    Debug.WriteLine("[Settings] Disabling startup...");
                     await SettingsHelper.RemoveFromStartupAsync();
                     StartupStatusMessage = string.Empty;
                     IsStartupBlocked = false;
@@ -199,6 +246,8 @@ public partial class SettingsDialogViewModel : ObservableObject {
             }
             catch (Exception ex) {
                 Debug.WriteLine($"Error applying startup settings: {ex.Message}");
+                StartupStatusMessage = $"오류: {ex.Message}";
+                IsStartupBlocked = true;
                 return false;
             }
         }

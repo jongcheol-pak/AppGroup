@@ -50,8 +50,6 @@ private readonly MainWindowViewModel _viewModel;
 private FileSystemWatcher _fileWatcher;
 // 로딩 동기화를 위한 락 객체
 private readonly object _loadLock = new object();
-private bool _isLoading = false;
-private string tempIcon;
 private readonly IconHelper _iconHelper;
 // 검색 필터링 디바운스 타이머
 private DispatcherTimer debounceTimer;

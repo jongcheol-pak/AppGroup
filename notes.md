@@ -2,6 +2,83 @@
 
 ## 최근 변경 사항
 
+### 2026-02-03 - 미사용 코드 삭제 및 빌드 경고 수정
+
+#### 수행한 작업
+
+프로젝트 내에서 더 이상 사용되지 않는 코드를 정리하고 빌드 경고를 수정하였습니다.
+
+#### 1. 삭제된 파일
+| 파일 | 이유 |
+|------|------|
+| `SupportDialogHelper.cs` | notes.md에서 "SupportDialogHelper 관련 코드 삭제" 언급됨, 프로젝트 내 어디에서도 참조 없음 |
+
+#### 2. 삭제된 메서드 (IconHelper.cs)
+| 메서드 | 이유 |
+|--------|------|
+| `PrepareIconWithBackgroundAsync()` | 프로젝트 내 어디에서도 참조 없음 |
+| `GetOriginalIconPath()` | 프로젝트 내 어디에서도 참조 없음 |
+| `CreateIconWithBottomBorderAsync()` | 프로젝트 내 어디에서도 참조 없음 |
+
+#### 3. 삭제된 코드 (EditGroupHelper.cs)
+| 항목 | 이유 |
+|------|------|
+| `groupIdFilePath` 필드 | 클래스 내에서 사용되지 않음 |
+| `logFilePath` 필드 | 클래스 내에서 사용되지 않음 |
+| `UpdateFile()` 메서드 | 클래스 내에서 호출되지 않음 |
+| 생성자 내 주석 처리된 코드 | 불필요한 주석 코드 |
+| 미사용 using 문 | 더 이상 필요하지 않은 네임스페이스 참조 |
+
+#### 4. 빌드 경고 수정
+
+##### CS0626 (DllImport 특성 누락)
+| 파일 | 수정 내용 |
+|------|----------|
+| `NativeMethods.cs` | `MoveWindow` 메서드에 `[DllImport("user32.dll")]` 추가 |
+
+##### CS0169 (미사용 필드)
+| 파일 | 삭제된 필드 |
+|------|------------|
+| `App.xaml.cs` | `hWnd` |
+| `EditGroupWindow.xaml.cs` | `copiedImagePath` |
+| `MainWindow.xaml.cs` | `tempIcon` |
+| `PopupWindow.xaml.cs` | `_oldWndProc`, `_newWndProc` |
+
+##### CS0414 (할당되었지만 미사용 필드)
+| 파일 | 삭제된 필드 |
+|------|------------|
+| `MainWindow.xaml.cs` | `_isLoading` |
+| `PopupWindow.xaml.cs` | `_isGridIcon` |
+
+##### CS0649 (할당되지 않은 필드)
+| 파일 | 수정 내용 |
+|------|----------|
+| `WindowHelper.cs` | `_micaEnabled` 초기값 `false` 지정 |
+| `WindowHelper.cs` | `MINMAXINFO` 구조체에 `#pragma warning disable CS0649` 추가 (Windows API 호환) |
+| `EditGroupWindow.xaml.cs` | `groupIdFilePath` 초기값 `null` 명시 |
+
+#### 변경된 파일
+- `SupportDialogHelper.cs` - 삭제
+- `EditGroupHelper.cs` - 미사용 필드, 메서드, using 문 삭제
+- `IconHelper.cs` - 미사용 메서드 3개 및 사용 예시 주석 삭제
+- `NativeMethods.cs` - DllImport 특성 추가
+- `App.xaml.cs` - 미사용 필드 삭제
+- `View/EditGroupWindow.xaml.cs` - 미사용 필드 삭제, 필드 초기값 지정
+- `View/MainWindow.xaml.cs` - 미사용 필드 삭제
+- `View/PopupWindow.xaml.cs` - 미사용 필드 삭제
+- `WindowHelper.cs` - 필드 초기값 지정, pragma 경고 억제 추가
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 656개 → 616개 (40개 감소)
+
+#### 참고: 남은 경고
+- 대부분 nullable 관련 경고 (CS8600, CS8601, CS8603, CS8625 등)
+- 이 경고들은 코드 전반에 걸친 nullable 리팩토링이 필요하여 현재 작업 범위에서 제외
+
+---
+
 ### 2026-02-01 - 메모리 누수 및 리소스 관리 개선
 
 #### 수정된 이슈

@@ -29,7 +29,6 @@ namespace AppGroup {
         // 그룹 편집 윈도우 인스턴스
         private EditGroupWindow? editWindow;
 
-        private nint hWnd;
         private bool useFileMode = false;
         // LaunchAll 명령의 데드락 방지를 위한 지연 실행용 필드
         private string? _pendingLaunchAllGroupName = null;

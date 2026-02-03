@@ -80,38 +80,6 @@ namespace AppGroup
         }
 
         /// <summary>
-        /// 백업 목적을 위해 _bg 접미사가 붙은 아이콘 파일 복사본을 생성합니다.
-        /// 실제 배경 추가는 CreateGridIconAsync의 수정된 버전에서 처리됩니다.
-        /// </summary>
-        public static async Task<string> PrepareIconWithBackgroundAsync(string originalIconPath)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(originalIconPath) || !File.Exists(originalIconPath))
-                {
-                    return originalIconPath;
-                }
-
-                string directory = Path.GetDirectoryName(originalIconPath);
-                string filenameWithoutExtension = Path.GetFileNameWithoutExtension(originalIconPath);
-                string extension = Path.GetExtension(originalIconPath);
-
-                // _bg 접미사가 붙은 새 파일 이름 생성
-                string newIconPath = Path.Combine(directory, $"{filenameWithoutExtension}_bg{extension}");
-
-                // 지금은 원본 파일만 복사 - 배경은 CreateSingleIconWithBackground에서 추가함
-                File.Copy(originalIconPath, newIconPath, true);
-
-                return newIconPath;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error preparing icon with background: {ex.Message}");
-                return originalIconPath;
-            }
-        }
-
-        /// <summary>
         /// 아이콘 파일의 배경 버전을 제거합니다 (PNG 및 ICO 모두).
         /// </summary>
         /// <param name="iconWithBackgroundPath">배경이 있는 아이콘 경로</param>
@@ -141,35 +109,7 @@ namespace AppGroup
             }
         }
 
-        /// <summary>
-        /// 배경 버전 경로에서 원본 아이콘 경로를 가져옵니다.
-        /// </summary>
-        /// <param name="iconWithBackgroundPath">배경이 있는 아이콘 경로</param>
-        /// <returns>원본 아이콘 경로</returns>
-        public static string GetOriginalIconPath(string iconWithBackgroundPath)
-        {
-            if (string.IsNullOrEmpty(iconWithBackgroundPath))
-            {
-                return iconWithBackgroundPath;
-            }
-
-            if (iconWithBackgroundPath.Contains("_bg"))
-            {
-                return iconWithBackgroundPath.Replace("_bg", "");
-            }
-
-            return iconWithBackgroundPath;
-        }
-
-        /// <summary>
-        /// Creates a single icon with white background using the same System.Drawing approach as CreateGridIconAsync
-        /// Add this method to your existing class that contains CreateGridIconAsync
-        /// </summary>
-        /// <summary>
-        /// Creates a single icon with white background using the same System.Drawing approach as CreateGridIconAsync
-        /// Add this method to your existing class that contains CreateGridIconAsync
-        /// </summary>
-        // 옵션 1: PNG 아이콘을 흑백(그레이스케일)으로 변환
+        // PNG 아이콘을 흑백(그레이스케일)으로 변환
         public static async Task<string> CreateBlackWhiteIconAsync(string originalIconPath)
         {
             try
@@ -238,103 +178,6 @@ namespace AppGroup
             }
         }
 
-        // 옵션 2: PNG 아이콘에 하단 테두리 추가
-        public static async Task<string> CreateIconWithBottomBorderAsync(string originalIconPath, System.Drawing.Color borderColor = default, int borderHeight = 10)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(originalIconPath) || !File.Exists(originalIconPath))
-                {
-                    Console.WriteLine("Invalid path or file doesn't exist");
-                    return originalIconPath;
-                }
-
-                // 색상이 지정되지 않은 경우 기본값은 흰색 테두리
-                if (borderColor == default)
-                {
-                    borderColor = System.Drawing.Color.White;
-                }
-
-                string directory = Path.GetDirectoryName(originalIconPath);
-                string filenameWithoutExtension = Path.GetFileNameWithoutExtension(originalIconPath);
-
-                Console.WriteLine($"Adding bottom border to PNG: {originalIconPath}");
-                Console.WriteLine($"Border color: {borderColor}, Height: {borderHeight}px");
-
-                string pngPath;
-                // using 블록으로 Bitmap 리소스 해제 보장
-                using (var originalBitmap = new System.Drawing.Bitmap(originalIconPath))
-                {
-                    Console.WriteLine($"PNG loaded: {originalBitmap.Width}x{originalBitmap.Height}");
-
-                    // 하단 테두리를 위한 추가 높이로 새 비트맵 생성
-                    int newWidth = originalBitmap.Width;
-                    int newHeight = originalBitmap.Height + borderHeight;
-
-                    using (var newBitmap = new System.Drawing.Bitmap(newWidth, newHeight))
-                    {
-                        using (var graphics = System.Drawing.Graphics.FromImage(newBitmap))
-                        {
-                            // 고품질 렌더링 설정
-                            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
-
-                            // 먼저 전체 이미지를 투명 배경으로 채움
-                            graphics.Clear(System.Drawing.Color.Transparent);
-
-                            // 상단에 원본 PNG 그리기
-                            graphics.DrawImage(originalBitmap, 0, 0, originalBitmap.Width, originalBitmap.Height);
-
-                            // 하단 테두리 그리기
-                            using (var borderBrush = new System.Drawing.SolidBrush(borderColor))
-                            {
-                                graphics.FillRectangle(borderBrush, 0, originalBitmap.Height, newWidth, borderHeight);
-                            }
-                        }
-
-                        // PNG로 저장
-                        pngPath = Path.Combine(directory, $"{filenameWithoutExtension}_border.png");
-                        newBitmap.Save(pngPath, System.Drawing.Imaging.ImageFormat.Png);
-                        Console.WriteLine($"Border PNG saved to: {pngPath}");
-                    }
-                }
-
-                // 기존 메서드를 사용하여 PNG를 ICO로 변환
-                string icoPath = Path.Combine(directory, $"{filenameWithoutExtension}_border.ico");
-                bool iconSuccess = await ConvertToIco(pngPath, icoPath);
-
-                if (iconSuccess)
-                {
-                    Console.WriteLine($"Border ICO created successfully: {icoPath}");
-                    return icoPath;
-                }
-                else
-                {
-                    Console.WriteLine("Failed to convert PNG to ICO, returning PNG path");
-                    return pngPath;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating icon with border: {ex.Message}");
-                return originalIconPath;
-            }
-        }
-
-        // 사용 예시:
-        // 
-        // 옵션 1 - PNG를 흑백으로 변환:
-        // string bwIconPath = await CreateBlackWhiteIconAsync("C:\\path\\to\\icon.png");
-        //
-        // 옵션 2 - 흰색 하단 테두리 추가 (기본 10px):
-        // string borderIconPath = await CreateIconWithBottomBorderAsync("C:\\path\\to\\icon.png");
-        //
-        // 옵션 2 - 빨간색 하단 테두리 추가 (20px):
-        // string redBorderIconPath = await CreateIconWithBottomBorderAsync("C:\\path\\to\\icon.png", System.Drawing.Color.Red, 20);
-        //
-        // 옵션 2 - 검은색 하단 테두리 추가 (15px):
-        // string blackBorderIconPath = await CreateIconWithBottomBorderAsync("C:\\path\\to\\icon.png", System.Drawing.Color.Black, 15);
         private static async Task<Bitmap> ExtractWindowsAppIconAsync(string shortcutPath, string outputDirectory)
         {
             dynamic shell = null;

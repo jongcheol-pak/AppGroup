@@ -159,7 +159,8 @@ namespace AppGroup {
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
 
-        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
         [DllImport("user32.dll")]
@@ -400,6 +401,15 @@ namespace AppGroup {
         public const int WM_SETICON = 0x0080;
         public const int ICON_SMALL = 0;
         public const int ICON_BIG = 1;
+
+        // MessageBox 상수
+        public const uint MB_OK = 0x00000000;
+        public const uint MB_ICONERROR = 0x00000010;
+        public const uint MB_ICONWARNING = 0x00000030;
+        public const uint MB_ICONINFORMATION = 0x00000040;
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);

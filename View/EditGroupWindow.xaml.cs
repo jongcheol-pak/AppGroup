@@ -39,15 +39,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
     private readonly EditGroupViewModel _viewModel;
     private bool regularIcon = true;
     private string? lastSelectedItem;
-    private string? copiedImagePath;
     private string tempIcon;
     private string? groupName;
     private FileSystemWatcher fileWatcher;
-    private string groupIdFilePath;
+    private string? groupIdFilePath = null;
     private int? lastGroupId = null;
     private ExeFileModel CurrentItem { get; set; }
     private string originalItemIconPath = null;
-    private bool _isDialogRepositioning = false;
 
     // 폴더/웹 편집 모드 플래그
     private bool _isEditingFolderWebItem = false;

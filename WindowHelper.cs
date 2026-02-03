@@ -19,9 +19,7 @@ namespace AppGroup {
         private SystemBackdropConfiguration _configurationSource;
         private MicaBackdrop _micaBackdrop;
         private DesktopAcrylicController _acrylicController;
-        private bool _micaEnabled;
-        private bool _extendContent;
-        private bool _canMaximize;
+        private bool _micaEnabled = false;
         private bool _centerWindow;
         private int _minWidth = 0;
         private int _minHeight = 0;
@@ -44,6 +42,8 @@ namespace AppGroup {
 
         private const int WM_GETMINMAXINFO = 0x0024;
 
+        // Windows API 호환을 위한 구조체 - 모든 필드 필요
+#pragma warning disable CS0649
         private struct MINMAXINFO {
             public System.Drawing.Point ptReserved;
             public System.Drawing.Point ptMaxSize;
@@ -51,6 +51,7 @@ namespace AppGroup {
             public System.Drawing.Point ptMinTrackSize;
             public System.Drawing.Point ptMaxTrackSize;
         }
+#pragma warning restore CS0649
    
 
 

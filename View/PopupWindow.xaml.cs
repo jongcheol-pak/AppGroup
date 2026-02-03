@@ -78,8 +78,6 @@ namespace AppGroup.View
         // Add these constants to PopupWindow class
 
         private IntPtr _hwnd;
-        private IntPtr _oldWndProc;
-        private NativeMethods.WndProcDelegate _newWndProc; // Keep reference to prevent GC
 
 
         // Static JSON options to prevent redundant creation
@@ -729,9 +727,7 @@ namespace AppGroup.View
         }
 
         // Add these fields to your PopupWindow class
-        //private string _originalIconPath;
         private string _currentGridIconPath;
-        private bool _isGridIcon = false;
 
         // Add this method to PopupWindow class
         private async Task CreateGridIconFromReorder()
@@ -1101,9 +1097,9 @@ namespace AppGroup.View
 
             if (item != null)
             {
-                MenuFlyout flyout = CreateItemFlyout();
-                flyout.ShowAt(_gridView, e.GetPosition(_gridView));
                 _clickedItem = item;
+                MenuFlyout flyout = CreateItemFlyout(item);
+                flyout.ShowAt(_gridView, e.GetPosition(_gridView));
             }
         }
 
@@ -1323,6 +1319,21 @@ namespace AppGroup.View
         {
             try
             {
+                // explorer.exe 특수 처리: 새 창 열기
+                string fileName = Path.GetFileName(path);
+                if (fileName.Equals("explorer.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    // explorer.exe는 직접 실행 (args가 없으면 새 창 열기)
+                    ProcessStartInfo explorerPsi = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = string.IsNullOrEmpty(args) ? "shell:MyComputerFolder" : args,
+                        UseShellExecute = true
+                    };
+                    Process.Start(explorerPsi);
+                    return;
+                }
+
                 // cmd.exe /c start를 통해 실행하면 Job Object에서 분리됨
                 string arguments = string.IsNullOrEmpty(args)
                     ? $"/c start \"\" \"{path}\""
@@ -1443,38 +1454,45 @@ namespace AppGroup.View
         {
             try
             {
+                // Check if this is a Windows Store app or special shell path
+                if (path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+                {
+                    ShowErrorDialog("Windows Store 앱의 파일 위치는 열 수 없습니다.\n(Windows Store apps do not have accessible file locations)");
+                    return;
+                }
+
                 string directory = Path.GetDirectoryName(path);
+
+                if (string.IsNullOrEmpty(directory))
+                {
+                    ShowErrorDialog($"경로에서 디렉터리를 확인할 수 없습니다: {path}");
+                    return;
+                }
 
                 if (Directory.Exists(directory))
                 {
-                    Process.Start("explorer.exe", directory);
+                    Process.Start("explorer.exe", $"/select,\"{path}\"");
                 }
                 else
                 {
-                    throw new Exception("Directory does not exist.");
+                    ShowErrorDialog($"디렉터리가 존재하지 않습니다: {directory}");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to open file location {path}: {ex.Message}");
-                ShowErrorDialog($"Failed to open file location {path}: {ex.Message}");
+                ShowErrorDialog($"파일 위치 열기 실패: {ex.Message}");
             }
         }
 
         // UI Helpers
         private void ShowErrorDialog(string message)
         {
-            ContentDialog dialog = new ContentDialog
-            {
-                Title = "오류",
-                Content = message,
-                CloseButtonText = "확인",
-                XamlRoot = this.Content.XamlRoot
-            };
-            _ = dialog.ShowAsync();
+            // 네이티브 MessageBox 사용 (별도 창으로 표시)
+            NativeMethods.MessageBox(_hwnd, message, "오류", NativeMethods.MB_OK | NativeMethods.MB_ICONERROR);
         }
 
-        private MenuFlyout CreateItemFlyout()
+        private MenuFlyout CreateItemFlyout(PopupItem item)
         {
             MenuFlyout flyout = new MenuFlyout();
 
@@ -1494,13 +1512,17 @@ namespace AppGroup.View
             runAsAdminItem.Click += RunAsAdminItem_Click;
             flyout.Items.Add(runAsAdminItem);
 
-            MenuFlyoutItem fileLocationItem = new MenuFlyoutItem
+            // Shell 프로토콜이 아닌 경우에만 "파일 위치 열기" 메뉴 표시
+            if (!item.Path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
             {
-                Text = "파일 위치 열기",
-                Icon = new FontIcon { Glyph = "\ued43" }
-            };
-            fileLocationItem.Click += OpenFileLocation_Click;
-            flyout.Items.Add(fileLocationItem);
+                MenuFlyoutItem fileLocationItem = new MenuFlyoutItem
+                {
+                    Text = "파일 위치 열기",
+                    Icon = new FontIcon { Glyph = "\ued43" }
+                };
+                fileLocationItem.Click += OpenFileLocation_Click;
+                flyout.Items.Add(fileLocationItem);
+            }
 
             flyout.Items.Add(new MenuFlyoutSeparator());
 
