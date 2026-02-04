@@ -99,6 +99,8 @@
     <None Remove="View\MainWindow.xaml" />
     <None Remove="View\PopupWindow.xaml" />
     <None Remove="View\SettingsDialog.xaml" />
+    <None Remove="View\StartMenuSettingsDialog.xaml" />
+    <None Remove="View\StartMenuPopupWindow.xaml" />
   </ItemGroup>
 	<PropertyGroup>
 		<RunMakePri>false</RunMakePri>
@@ -181,6 +183,16 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="View\PopupWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="View\StartMenuSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="View\StartMenuPopupWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

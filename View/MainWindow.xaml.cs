@@ -922,6 +922,25 @@ private bool _disposed = false;
         }
 
         /// <summary>
+        /// 시작 메뉴 설정 버튼 클릭 이벤트 핸들러
+        /// </summary>
+        private async void StartMenuSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dialog = new StartMenuSettingsDialog
+                {
+                    XamlRoot = this.Content.XamlRoot
+                };
+                await dialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시작 메뉴 설정 다이얼로그 표시 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 시작 메뉴 검색 텍스트 변경 이벤트 핸들러
         /// </summary>
         private void StartMenuSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)

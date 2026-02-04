@@ -2,6 +2,95 @@
 
 ## 최근 변경 사항
 
+### 2026-02-04 - StartMenuPopupWindow 빌드 오류 수정
+
+#### 문제점
+- `StartMenuPopupWindow.xaml.cs`에서 `InitializeComponent`, `MainGrid`, `FolderItemsControl`가 현재 컨텍스트에 없다는 CS0103 오류 발생
+
+#### 원인 분석
+- `AppGroup.csproj`에서 `StartMenuPopupWindow.xaml`의 빌드 액션이 충돌 (이전 StartMenuSettingsDialog와 동일한 패턴)
+  - `<Page Update>` (194-197번 줄)에서 Page로 등록
+  - `<Page Remove>` (233번 줄)에서 Page에서 제거
+  - `<None Update>` (257-259번 줄)에서 None으로 재등록
+
+#### 수정 내용
+- `AppGroup.csproj`에서 충돌하는 항목 제거:
+  - `<Page Remove="View\StartMenuPopupWindow.xaml" />` 삭제
+  - `<None Update="View\StartMenuPopupWindow.xaml">` 삭제
+
+#### 변경된 파일
+- `AppGroup.csproj` - 충돌하는 빌드 액션 항목 제거
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+
+#### 참고: 동일 실수 방지
+- Visual Studio에서 XAML 파일을 추가하거나 이동할 때 `.csproj`에 `Page Remove` + `None Update` 항목이 자동 생성되는 경우가 있음
+- 새 XAML 파일 추가 후 빌드 실패 시 `.csproj`에서 해당 파일의 빌드 액션 충돌 여부를 확인할 것
+
+---
+
+### 2026-02-04 - StartMenuSettingsDialog 빌드 오류 수정
+
+#### 문제점
+- `StartMenuSettingsDialog.xaml.cs`에서 `InitializeComponent`, `TrayClickActionComboBox`, `ShowFolderPathToggle`, `ShowFolderIconToggle`가 현재 컨텍스트에 없다는 CS0103 오류 7개 발생
+
+#### 원인 분석
+- `AppGroup.csproj`에서 `StartMenuSettingsDialog.xaml`의 빌드 액션이 충돌하는 설정으로 인해 잘못 처리됨
+  - `<Page Update>` (189-192번 줄)에서 Page로 등록
+  - `<Page Remove>` (227번 줄)에서 Page에서 제거
+  - `<None Update>` (251-253번 줄)에서 None으로 재등록
+- None 빌드 액션은 XAML 컴파일러가 처리하지 않으므로 `InitializeComponent()`와 `x:Name` 컨트롤 코드가 생성되지 않음
+
+#### 수정 내용
+- `AppGroup.csproj`에서 충돌하는 항목 제거:
+  - `<Page Remove="View\StartMenuSettingsDialog.xaml" />` 삭제
+  - `<None Update="View\StartMenuSettingsDialog.xaml">` 삭제
+- 기존 `<Page Update>` (189-192번 줄)가 정상 적용되어 XAML 컴파일 수행
+
+#### 변경된 파일
+- `AppGroup.csproj` - 충돌하는 빌드 액션 항목 제거
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+
+#### 참고: 동일 실수 방지
+- XAML 파일의 빌드 액션은 `Page`여야 XAML 컴파일러가 `InitializeComponent()`와 `x:Name` 컨트롤을 생성함
+- `.csproj` 파일에서 동일 파일에 대해 `Page Update`와 `Page Remove`가 동시에 존재하면 `Remove`가 우선 적용되어 컴파일되지 않음
+
+---
+
+### 2026-02-05 - 시작 메뉴 설정 ContentDialog 추가
+
+#### 문제점/요청
+- 시작 메뉴 탭의 설정 버튼 클릭 시 ContentDialog 팝업 표시
+
+#### 수정 내용
+- **새 파일 생성:**
+  - `View/StartMenuSettingsDialog.xaml` - 시작 메뉴 설정 다이얼로그 UI
+  - `View/StartMenuSettingsDialog.xaml.cs` - 다이얼로그 로직
+- **수정된 파일:**
+  - `View/MainWindow.xaml` - 시작 메뉴 탭 설정 버튼에 `Click="StartMenuSettingsButton_Click"` 추가
+  - `View/MainWindow.xaml.cs` - `StartMenuSettingsButton_Click` 이벤트 핸들러 추가
+  - `SettingsHelper.cs` - `AppSettings` 클래스에 시작 메뉴 관련 속성 추가
+    - `TrayClickAction` (트레이 클릭 동작)
+    - `ShowFolderPath` (폴더 경로 표시 여부)
+    - `ShowFolderIcon` (폴더 아이콘 표시 여부)
+  - `AppGroup.csproj` - `StartMenuSettingsDialog.xaml` 페이지 등록
+
+#### 설정 항목
+- 트레이 아이콘 클릭 시 동작 (폴더 목록 / 메인 창 열기)
+- 폴더 경로 표시 여부
+- 폴더 아이콘 표시 여부
+
+#### 검증 결과
+- 빌드: Visual Studio에서 빌드 필요 (dotnet CLI 빌드 시 XAML 컴파일러 이슈)
+- 파일 생성 완료
+
+---
+
 ### 2026-02-05 - 설정 화면을 NavigationView로 통합
 
 #### 문제점/요청

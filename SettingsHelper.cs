@@ -17,6 +17,13 @@ namespace AppGroup {
             public bool ShowSystemTrayIcon { get; set; } = true;
             public bool RunAtStartup { get; set; } = true;
             public bool UseGrayscaleIcon { get; set; } = false;
+            
+            // 시작 메뉴 설정
+            public string TrayClickAction { get; set; } = "FolderList";
+            public bool ShowFolderPath { get; set; } = true;
+            public bool ShowFolderIcon { get; set; } = true;
+            public bool ShowStartMenuPopup { get; set; } = true;
+            public int FolderColumnCount { get; set; } = 1;
         }
 
         private static AppSettings _currentSettings;

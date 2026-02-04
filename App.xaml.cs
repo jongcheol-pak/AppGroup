@@ -28,10 +28,13 @@ namespace AppGroup {
         private PopupWindow? popupWindow;
         // 그룹 편집 윈도우 인스턴스
         private EditGroupWindow? editWindow;
+        // 시작 메뉴 팝업 윈도우 인스턴스
+        private StartMenuPopupWindow? startMenuPopupWindow;
 
         private bool useFileMode = false;
         // LaunchAll 명령의 데드락 방지를 위한 지연 실행용 필드
         private string? _pendingLaunchAllGroupName = null;
+
 
         /// <summary>
         /// App 클래스의 생성자입니다.
@@ -487,6 +490,13 @@ namespace AppGroup {
                 if (popupHWnd != IntPtr.Zero) {
                     NativeMethods.ShowWindow(popupHWnd, NativeMethods.SW_HIDE);
                 }
+
+                // 시작 메뉴 팝업 윈도우 생성 (숨김 상태)
+                startMenuPopupWindow = new StartMenuPopupWindow();
+                IntPtr startMenuPopupHWnd = WindowNative.GetWindowHandle(startMenuPopupWindow);
+                if (startMenuPopupHWnd != IntPtr.Zero) {
+                    NativeMethods.ShowWindow(startMenuPopupHWnd, NativeMethods.SW_HIDE);
+                }
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Failed to create windows: {ex.Message}");
@@ -604,10 +614,40 @@ namespace AppGroup {
                 HideMainWindow();
                 HidePopupWindow();
                 HideEditWindow();
+                HideStartMenuPopupWindow();
                 System.Diagnostics.Debug.WriteLine("All windows hidden for silent mode");
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide all windows: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 팝업 윈도우를 표시합니다.
+        /// </summary>
+        private void ShowStartMenuPopupWindow() {
+            try {
+                startMenuPopupWindow?.ShowPopup();
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Failed to show start menu popup window: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 팝업 윈도우를 숨깁니다.
+        /// </summary>
+        private void HideStartMenuPopupWindow() {
+            try {
+                if (startMenuPopupWindow != null) {
+                    IntPtr hwnd = WindowNative.GetWindowHandle(startMenuPopupWindow);
+                    if (hwnd != IntPtr.Zero) {
+                        NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Failed to hide start menu popup window: {ex.Message}");
             }
         }
 
@@ -622,11 +662,37 @@ namespace AppGroup {
                     },
                     exitCallback: () => {
                         KillAppGroup();
+                    },
+                    trayClickCallback: async () => {
+                        await HandleTrayClickAsync();
                     }
                 );
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize system tray: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 트레이 아이콘 클릭 시 동작을 처리합니다.
+        /// </summary>
+        private async Task HandleTrayClickAsync() {
+            try {
+                var settings = await SettingsHelper.LoadSettingsAsync();
+                
+                if (settings.ShowStartMenuPopup) {
+                    // 시작 메뉴 팝업 표시
+                    ShowStartMenuPopupWindow();
+                }
+                else {
+                    // 메인 창 표시
+                    ShowAppGroup();
+                }
+            }
+            catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine($"Failed to handle tray click: {ex.Message}");
+                // 오류 시 기본 동작으로 메인 창 표시
+                ShowAppGroup();
             }
         }
 

@@ -6,68 +6,71 @@ using Microsoft.UI.Xaml;
 using WinRT.Interop;
 
 namespace AppGroup {
+/// <summary>
+/// 시스템 트레이 아이콘을 관리하는 클래스입니다.
+/// 네이티브 Win32 API를 사용하여 트레이 아이콘을 생성, 관리, 제거합니다.
+/// </summary>
+public class SystemTrayManager {
+    private static IntPtr windowHandle;
+    private static IntPtr hIcon;
+    private static IntPtr hMenu;
+    private static NativeMethods.WndProcDelegate wndProcDelegate;
+    private static Action onShowCallback;
+    private static Action onExitCallback;
+    private static Func<System.Threading.Tasks.Task> onTrayClickCallback;
+    private static bool isInitialized = false;
+    private static bool isVisible = false;
+    private static bool isCleanedUp = false;
+
+    // TaskbarCreated 메시지 ID 저장을 위한 필드
+    private static int WM_TASKBARCREATED;
+
     /// <summary>
-    /// 시스템 트레이 아이콘을 관리하는 클래스입니다.
-    /// 네이티브 Win32 API를 사용하여 트레이 아이콘을 생성, 관리, 제거합니다.
+    /// SystemTrayManager를 초기화합니다.
     /// </summary>
-    public class SystemTrayManager {
-        private static IntPtr windowHandle;
-        private static IntPtr hIcon;
-        private static IntPtr hMenu;
-        private static NativeMethods.WndProcDelegate wndProcDelegate;
-        private static Action onShowCallback;
-        private static Action onExitCallback;
-        private static bool isInitialized = false;
-        private static bool isVisible = false;
-        private static bool isCleanedUp = false;
+    /// <param name="showCallback">아이콘 더블 클릭 또는 '설정' 메뉴 선택 시 호출될 콜백</param>
+    /// <param name="exitCallback">'종료' 메뉴 선택 시 호출될 콜백</param>
+    /// <param name="trayClickCallback">트레이 아이콘 클릭 시 호출될 콜백 (시작 메뉴 팝업용)</param>
+    public static void Initialize(Action showCallback, Action exitCallback, Func<System.Threading.Tasks.Task> trayClickCallback = null) {
+        onShowCallback = showCallback;
+        onExitCallback = exitCallback;
+        onTrayClickCallback = trayClickCallback;
+        isInitialized = true;
 
-        // TaskbarCreated 메시지 ID 저장을 위한 필드
-        private static int WM_TASKBARCREATED;
+        // TaskbarCreated 메시지 등록 (탐색기 재시작 감지용)
+        WM_TASKBARCREATED = NativeMethods.RegisterWindowMessage("TaskbarCreated");
 
-        /// <summary>
-        /// SystemTrayManager를 초기화합니다.
-        /// </summary>
-        /// <param name="showCallback">아이콘 더블 클릭 또는 '설정' 메뉴 선택 시 호출될 콜백</param>
-        /// <param name="exitCallback">'종료' 메뉴 선택 시 호출될 콜백</param>
-        public static void Initialize(Action showCallback, Action exitCallback) {
-            onShowCallback = showCallback;
-            onExitCallback = exitCallback;
-            isInitialized = true;
+        // 설정에 따라 트레이 아이콘 표시 여부 결정
+        _ = InitializeBasedOnSettingsAsync();
+    }
 
-            // TaskbarCreated 메시지 등록 (탐색기 재시작 감지용)
-            WM_TASKBARCREATED = NativeMethods.RegisterWindowMessage("TaskbarCreated");
-
-            // 설정에 따라 트레이 아이콘 표시 여부 결정
-            _ = InitializeBasedOnSettingsAsync();
-        }
-
-        /// <summary>
-        /// 설정 값을 비동기적으로 로드하고 트레이 아이콘 표시 여부를 초기화합니다.
-        /// </summary>
-        private static async System.Threading.Tasks.Task InitializeBasedOnSettingsAsync() {
-            try {
-                var settings = await SettingsHelper.LoadSettingsAsync();
-                if (settings.ShowSystemTrayIcon) {
-                    ShowSystemTray();
-                }
-            }
-            catch (Exception ex) {
-                Debug.WriteLine($"Error loading settings for system tray: {ex.Message}");
-                // 오류 발생 시 기본적으로 시스템 트레이 표시
+    /// <summary>
+    /// 설정 값을 비동기적으로 로드하고 트레이 아이콘 표시 여부를 초기화합니다.
+    /// </summary>
+    private static async System.Threading.Tasks.Task InitializeBasedOnSettingsAsync() {
+        try {
+            var settings = await SettingsHelper.LoadSettingsAsync();
+            if (settings.ShowSystemTrayIcon) {
                 ShowSystemTray();
             }
         }
+        catch (Exception ex) {
+            Debug.WriteLine($"Error loading settings for system tray: {ex.Message}");
+            // 오류 발생 시 기본적으로 시스템 트레이 표시
+            ShowSystemTray();
+        }
+    }
 
-        /// <summary>
-        /// 시스템 트레이 아이콘을 표시합니다.
-        /// </summary>
-        public static void ShowSystemTray() {
-            if (!isInitialized) return;
+    /// <summary>
+    /// 시스템 트레이 아이콘을 표시합니다.
+    /// </summary>
+    public static void ShowSystemTray() {
+        if (!isInitialized) return;
 
-            if (!isVisible) {
-                InitializeSystemTray();
-                isVisible = true;
-            }
+        if (!isVisible) {
+            InitializeSystemTray();
+            isVisible = true;
+        }
         }
 
         /// <summary>
@@ -227,6 +230,16 @@ namespace AppGroup {
         /// </summary>
         private static void HandleTrayIconMessage(IntPtr lParam) {
             switch (lParam.ToInt32()) {
+                case (int)NativeMethods.WM_LBUTTONUP:
+                    // 클릭 시 시작 메뉴 팝업 또는 메인 창 표시
+                    if (onTrayClickCallback != null) {
+                        _ = onTrayClickCallback.Invoke();
+                    }
+                    else {
+                        onShowCallback?.Invoke();
+                    }
+                    break;
+
                 case (int)NativeMethods.WM_LBUTTONDBLCLK:
                     // 더블 클릭 시 메인 창 표시
                     onShowCallback?.Invoke();
