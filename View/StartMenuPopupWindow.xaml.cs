@@ -189,7 +189,7 @@ namespace AppGroup.View
                 var rowPanel = new StackPanel
                 {
                     Orientation = Orientation.Horizontal,
-                    HorizontalAlignment = HorizontalAlignment.Center
+                    HorizontalAlignment = HorizontalAlignment.Left
                 };
 
                 for (int col = 0; col < _columnCount; col++)

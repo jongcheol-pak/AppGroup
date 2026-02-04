@@ -31,10 +31,10 @@
         <!-- 폴더 목록 영역 -->
         <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
                     VerticalScrollBarVisibility="Auto" Margin="5">
-            <ItemsControl x:Name="FolderItemsControl">
+            <ItemsControl x:Name="FolderItemsControl" HorizontalAlignment="Left">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel x:Name="FolderPanel"/>
+                        <StackPanel x:Name="FolderPanel" HorizontalAlignment="Left"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
