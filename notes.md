@@ -2,6 +2,36 @@
 
 ## 최근 변경 사항
 
+### 2026-02-05 - 설정 화면을 NavigationView로 통합
+
+#### 문제점/요청
+- ContentDialog로 표시되던 설정 화면을 왼쪽 NavigationView에 통합
+- 왼쪽 메뉴에 설정 버튼 추가
+
+#### 수정 내용
+- `View/MainWindow.xaml`:
+  - `NavigationView.FooterMenuItems`에 설정 메뉴 항목 추가 (Tag="Settings")
+  - `SettingsContent` Grid 추가 (설정 UI 콘텐츠)
+  - 작업 표시줄 탭 헤더의 설정 버튼 제거
+- `View/MainWindow.xaml.cs`:
+  - `NavView_SelectionChanged`에 Settings 탭 처리 로직 추가
+  - `LoadSettingsAsync`, `SettingsStartupToggle_Toggled`, `SettingsSystemTrayToggle_Toggled` 메서드 추가
+  - `_settingsViewModel`, `_isSettingsLoading` 필드 추가
+
+#### 변경된 파일
+- `View/MainWindow.xaml` - NavigationView 설정 탭 및 콘텐츠 추가
+- `View/MainWindow.xaml.cs` - 설정 로드 및 토글 이벤트 핸들러 추가
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+
+#### 참고: 기존 SettingsDialog.xaml은 유지됨
+- 기존 `SettingsDialog.xaml` 및 `SettingsDialogViewModel.cs`는 삭제하지 않고 유지
+- `SettingsDialogViewModel`을 MainWindow에서도 재사용하여 로직 중복 방지
+
+---
+
 ### 2026-02-04 - 왼쪽 메뉴바 UI 수정
 
 #### 문제점/요청

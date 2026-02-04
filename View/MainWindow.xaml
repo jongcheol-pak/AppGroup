@@ -133,6 +133,14 @@
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Tag="Settings" Height="60">
+                    <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE713;" HorizontalAlignment="Center" FontSize="18"/>
+                        <TextBlock Text="설정" HorizontalAlignment="Center" FontSize="12"/>
+                    </StackPanel>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
             <Grid>
                 <Grid x:Name="TaskbarContent" Visibility="Visible" Padding="20,32,20,6">
@@ -173,7 +181,6 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Button Grid.Column="0" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="Reload" ToolTipService.ToolTip="새로 고침">
                                     <FontIcon Glyph="&#xe72c;" FontSize="17" />
@@ -181,10 +188,7 @@
                                 <Button Grid.Column="1" Padding="10" Background="Transparent" BorderThickness="0" Click="AddGroup" ToolTipService.ToolTip="그룹 추가">
                                     <FontIcon Glyph="&#xe710;" FontSize="17" />
                                 </Button>
-                                <Button Grid.Column="2" Padding="10" Background="Transparent" BorderThickness="0" Click="SettingsButton_Click" ToolTipService.ToolTip="설정">
-                                    <FontIcon Glyph="&#xE713;" FontSize="17" />
-                                </Button>
-                                <Button Grid.Column="3" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
+                                <Button Grid.Column="2" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
                                     <Grid>
                                         <FontIcon Glyph="&#xe712;" FontSize="17">
                                             <FontIcon.RenderTransform>
@@ -396,6 +400,118 @@
                     </Grid>
                 </Grid>
             </Grid>
+
+                <!-- 설정 콘텐츠 영역 -->
+                <Grid x:Name="SettingsContent" Visibility="Collapsed" Padding="20,32,20,6">
+                    <Grid.Resources>
+                        <Style x:Key="SettingsCardStyle" TargetType="Border">
+                            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+                            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="CornerRadius" Value="5"/>
+                            <Setter Property="Padding" Value="20,16"/>
+                            <Setter Property="Margin" Value="0,0,0,2"/>
+                        </Style>
+                        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}"/>
+                            <Setter Property="Margin" Value="0,20,0,12"/>
+                        </Style>
+                    </Grid.Resources>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,6">
+                        <StackPanel Spacing="0" Margin="0,0,0,30">
+                            <!-- Application Section -->
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="200"/>
+                                            <ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                            <TextBlock Text="시작 시 실행" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                            <TextBlock Text="Windows 시작 시 자동으로 앱 실행" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleSwitch x:Name="SettingsStartupToggle" Grid.Column="1" IsOn="{Binding RunAtStartup, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock x:Name="SettingsStartupStatusText" Text="{Binding StartupStatusMessage}" FontSize="12" Foreground="{ThemeResource SystemFillColorCautionBrush}" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="{Binding StartupStatusVisibility}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- System Tray Section -->
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" MinWidth="200"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <TextBlock Text="시스템 트레이 아이콘 표시" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                        <TextBlock Text="시스템 트레이에 앱 아이콘 표시" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="SettingsSystemTrayToggle" Grid.Column="1" IsOn="{Binding ShowSystemTrayIcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- About Section -->
+                            <TextBlock Text="정보" Style="{StaticResource SectionHeaderStyle}"/>
+
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="AppGroup" FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock x:Name="SettingsVersionText" Text="{Binding VersionText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                                    <HyperlinkButton NavigateUri="https://github.com/iandiv/AppGroup" Padding="0" Margin="0,12,0,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="AppGroup" FontWeight="SemiBold" FontSize="13" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                    <TextBlock Text="이 앱은 오픈소스 프로젝트 AppGroup를 기반으로 하여 UI 개선 및 기능 추가 등 일부 커스터마이징을 적용한 버전입니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Open Source Licenses -->
+                            <TextBlock Text="Open Source Licenses" Style="{StaticResource SectionHeaderStyle}"/>
+
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <StackPanel Spacing="8">
+                                    <HyperlinkButton NavigateUri="https://github.com/CommunityToolkit/dotnet" Padding="0" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Text="CommunityToolkit.Mvvm" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                    <HyperlinkButton NavigateUri="https://www.nuget.org/packages/Interop.IWshRuntimeLibrary" Padding="0" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Text="Interop.IWshRuntimeLibrary" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="Windows Script Host Object Model" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                    <HyperlinkButton NavigateUri="https://github.com/microsoft/WindowsAppSDK" Padding="0" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Text="Microsoft.WindowsAppSDK" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                    <HyperlinkButton NavigateUri="https://github.com/dotnet/runtime" Padding="0" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Text="System.Drawing.Common" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                    <HyperlinkButton NavigateUri="https://github.com/dotMorten/WinUIEx" Padding="0" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Text="WinUIEx" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </HyperlinkButton>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </NavigationView>
     </Grid>

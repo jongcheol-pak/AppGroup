@@ -903,11 +903,20 @@ private bool _disposed = false;
                 {
                     if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Visible;
                     if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Collapsed;
+                    if (SettingsContent != null) SettingsContent.Visibility = Visibility.Collapsed;
                 }
                 else if (tag == "StartMenu")
                 {
                     if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Collapsed;
                     if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Visible;
+                    if (SettingsContent != null) SettingsContent.Visibility = Visibility.Collapsed;
+                }
+                else if (tag == "Settings")
+                {
+                    if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Collapsed;
+                    if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Collapsed;
+                    if (SettingsContent != null) SettingsContent.Visibility = Visibility.Visible;
+                    _ = LoadSettingsAsync();
                 }
             }
         }
@@ -1343,6 +1352,94 @@ private bool _disposed = false;
         }
 
         #endregion
+
+        #endregion
+
+        #region 설정 관련 메서드
+
+        private SettingsDialogViewModel _settingsViewModel;
+        private bool _isSettingsLoading = false;
+
+        /// <summary>
+        /// 설정 탭이 선택될 때 설정을 비동기로 로드합니다.
+        /// </summary>
+        private async Task LoadSettingsAsync()
+        {
+            if (_isSettingsLoading) return;
+
+            try
+            {
+                _isSettingsLoading = true;
+
+                // ViewModel 초기화 (최초 한 번만)
+                if (_settingsViewModel == null)
+                {
+                    _settingsViewModel = new SettingsDialogViewModel();
+                    _settingsViewModel.InitializeVersionText();
+
+                    // 이벤트 핸들러 등록 (최초 한 번만)
+                    SettingsStartupToggle.Toggled += SettingsStartupToggle_Toggled;
+                    SettingsSystemTrayToggle.Toggled += SettingsSystemTrayToggle_Toggled;
+                }
+
+                // 설정 콘텐츠의 DataContext 설정
+                if (SettingsContent != null)
+                {
+                    SettingsContent.DataContext = _settingsViewModel;
+                }
+
+                // 설정 로드
+                await _settingsViewModel.LoadCurrentSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"설정 로드 오류: {ex.Message}");
+            }
+            finally
+            {
+                _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// 시작 시 실행 토글 변경 이벤트 핸들러
+        /// </summary>
+        private async void SettingsStartupToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_isSettingsLoading || _settingsViewModel == null) return;
+
+            try
+            {
+                await _settingsViewModel.SaveSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시작 프로그램 설정 저장 오류: {ex.Message}");
+                _isSettingsLoading = true;
+                SettingsStartupToggle.IsOn = !SettingsStartupToggle.IsOn;
+                _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// 시스템 트레이 아이콘 토글 변경 이벤트 핸들러
+        /// </summary>
+        private async void SettingsSystemTrayToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_isSettingsLoading || _settingsViewModel == null) return;
+
+            try
+            {
+                await _settingsViewModel.SaveSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시스템 트레이 설정 저장 오류: {ex.Message}");
+                _isSettingsLoading = true;
+                SettingsSystemTrayToggle.IsOn = !SettingsSystemTrayToggle.IsOn;
+                _isSettingsLoading = false;
+            }
+        }
 
         #endregion
     }
