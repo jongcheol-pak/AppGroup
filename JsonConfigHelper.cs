@@ -499,5 +499,207 @@ namespace AppGroup
                 Debug.WriteLine($"Error opening group folder: {ex.Message}");
             }
         }
+
+        #region 시작 메뉴 관련 메서드
+
+        /// <summary>
+        /// 시작 메뉴 설정 파일 경로를 반환합니다.
+        /// %LocalAppData%\AppGroup\startmenu.json
+        /// </summary>
+        public static string GetStartMenuConfigPath()
+        {
+            return GetDefaultConfigPath("startmenu.json");
+        }
+
+        /// <summary>
+        /// 다음 시작 메뉴 폴더 ID를 가져옵니다.
+        /// </summary>
+        public static int GetNextStartMenuFolderId()
+        {
+            string jsonFilePath = GetStartMenuConfigPath();
+            if (!File.Exists(jsonFilePath))
+            {
+                return 1;
+            }
+
+            string jsonContent = File.ReadAllText(jsonFilePath);
+            JsonNode jsonObject = JsonNode.Parse(jsonContent) ?? new JsonObject();
+
+            if (jsonObject.AsObject().Any())
+            {
+                int maxFolderId = jsonObject.AsObject()
+                    .Select(property => int.Parse(property.Key))
+                    .Max();
+                return maxFolderId + 1;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 JSON 파일에 새 폴더를 추가합니다.
+        /// </summary>
+        public static void AddStartMenuFolder(string folderPath, string folderName)
+        {
+            try
+            {
+                string filePath = GetStartMenuConfigPath();
+                string directory = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                if (!File.Exists(filePath))
+                {
+                    File.WriteAllText(filePath, "{}");
+                }
+
+                string jsonContent = ReadJsonFromFile(filePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent) ?? new JsonObject();
+
+                int folderId = GetNextStartMenuFolderId();
+
+                JsonObject newFolder = new JsonObject
+                {
+                    { "folderName", folderName },
+                    { "folderPath", folderPath }
+                };
+
+                jsonObject[folderId.ToString()] = newFolder;
+
+                File.WriteAllText(filePath, JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"시작 메뉴 폴더 추가 오류: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 JSON 파일에서 폴더를 삭제합니다.
+        /// </summary>
+        public static void DeleteStartMenuFolder(int folderId)
+        {
+            try
+            {
+                string filePath = GetStartMenuConfigPath();
+                if (!File.Exists(filePath))
+                {
+                    return;
+                }
+
+                string jsonContent = ReadJsonFromFile(filePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent) ?? new JsonObject();
+
+                if (jsonObject.AsObject().ContainsKey(folderId.ToString()))
+                {
+                    jsonObject.AsObject().Remove(folderId.ToString());
+                    File.WriteAllText(filePath, JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"시작 메뉴 폴더 삭제 오류: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 JSON 파일에서 폴더 정보를 업데이트합니다.
+        /// </summary>
+        public static void UpdateStartMenuFolder(int folderId, string folderName, string folderPath, string folderIcon = null)
+        {
+            try
+            {
+                string filePath = GetStartMenuConfigPath();
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException("시작 메뉴 설정 파일을 찾을 수 없습니다.");
+                }
+
+                string jsonContent = ReadJsonFromFile(filePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent) ?? new JsonObject();
+
+                if (jsonObject.AsObject().ContainsKey(folderId.ToString()))
+                {
+                    JsonObject folderData = new JsonObject
+                    {
+                        { "folderName", folderName },
+                        { "folderPath", folderPath }
+                    };
+
+                    if (!string.IsNullOrEmpty(folderIcon))
+                    {
+                        folderData["folderIcon"] = folderIcon;
+                    }
+
+                    jsonObject[folderId.ToString()] = folderData;
+
+                    File.WriteAllText(filePath, JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true }));
+                }
+                else
+                {
+                    throw new KeyNotFoundException($"폴더 ID {folderId}를 찾을 수 없습니다.");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"시작 메뉴 폴더 업데이트 오류: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 JSON 파일에서 모든 폴더를 읽어옵니다.
+        /// </summary>
+        public static async Task<List<Models.StartMenuItem>> LoadStartMenuFoldersAsync()
+        {
+            try
+            {
+                string filePath = GetStartMenuConfigPath();
+                if (!File.Exists(filePath))
+                {
+                    return new List<Models.StartMenuItem>();
+                }
+
+                string jsonContent = await File.ReadAllTextAsync(filePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent) ?? new JsonObject();
+
+                var folders = new List<Models.StartMenuItem>();
+                foreach (var property in jsonObject.AsObject())
+                {
+                    if (int.TryParse(property.Key, out int folderId))
+                    {
+                        string folderName = property.Value?["folderName"]?.GetValue<string>() ?? string.Empty;
+                        string folderPath = property.Value?["folderPath"]?.GetValue<string>() ?? string.Empty;
+                        string folderIcon = property.Value?["folderIcon"]?.GetValue<string>() ?? string.Empty;
+
+                        // 커스텀 아이콘이 없거나 파일이 존재하지 않으면 기본 아이콘 사용
+                        if (string.IsNullOrEmpty(folderIcon) || !File.Exists(folderIcon))
+                        {
+                            folderIcon = "/Assets/icon/folder_3.png";
+                        }
+
+                        folders.Add(new Models.StartMenuItem
+                        {
+                            FolderId = folderId,
+                            FolderName = folderName,
+                            FolderPath = folderPath,
+                            FolderIcon = folderIcon
+                        });
+                    }
+                }
+
+                return folders.OrderBy(f => f.FolderId).ToList();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시작 메뉴 폴더 로드 오류: {ex.Message}");
+                return new List<Models.StartMenuItem>();
+            }
+        }
+
+        #endregion
     }
 }

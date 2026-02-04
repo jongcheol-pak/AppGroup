@@ -33,13 +33,14 @@ App Group lets you **organize, customize, and launch** your apps. Create groups,
 
 ---
 
-## Key Features  
+## Key Features
 
-### Group Management  
+### Group Management
 - **Create, edit, delete** , and **duplicate**  groups
-- **"Edit this Group"** option in jumplist  
-- **"Launch All"** option in jumplist  
+- **"Edit this Group"** option in jumplist
+- **"Launch All"** option in jumplist
 - **Browse installed apps**: Select apps from a list of installed Windows applications
+- **Start Menu**: Drag & drop folders to create a custom start menu
 
 ### Appearance & Customization  
 - **Custom icons**: Use a **Single icon** or a **Grid icon**  

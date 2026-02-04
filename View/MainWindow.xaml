@@ -9,202 +9,394 @@
     Title="App Group" >
 
     <Window.SystemBackdrop>
-
         <MicaBackdrop />
     </Window.SystemBackdrop>
     <Grid Background="{ThemeResource DesktopAcrylicTransparentBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Padding="40,50,35,0">
-
-            <Grid  Background="{ThemeResource DesktopAcrylicTransparentBrush}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-
-                </Grid.ColumnDefinitions>
-                <StackPanel Spacing="5"  VerticalAlignment="Center">
-                    <TextBlock FontSize="25" Margin="0,0,0,0" FontWeight="SemiBold" >앱 그룹</TextBlock>
-                </StackPanel>
-                <Grid Grid.Column="1" Width="220" VerticalAlignment="Top">
-
-
-                    <TextBox Grid.Column="0"   x:Name="SearchTextBox" Height="35" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" PlaceholderText="그룹 검색..." Padding="40,7,0,0" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding SearchText, Mode=TwoWay}" TextChanged="SearchTextBox_TextChanged" VerticalAlignment="Center"/>
-                    <FontIcon Glyph="&#xe71e;" FontSize="16" Margin="10,0,0,0"  HorizontalAlignment="Left" />
-
-                </Grid>
-            </Grid>
-
-
-        </StackPanel>
-        <StackPanel Grid.Row="1" Padding="35,20,35,0" >
-            <Grid   >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="GroupsCount" Grid.Column="0" FontWeight="SemiBold" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding GroupsCountText}"/>
-
-                <!--<Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="ExportBackupButton_Click">
-                    <FontIcon Glyph="&#xede1;"  FontSize="15"  />
-
-                </Button>
-                <Button Grid.Column="2" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="ImportBackupButton_Click">
-                    <FontIcon Glyph="&#xe8b5;"  FontSize="15"  />
-
-                </Button>-->
-                <Grid Grid.Column="1" ColumnSpacing="0" Padding="1" CornerRadius="5" >
+        <!-- 시작 메뉴 폴더 수정 다이얼로그 -->
+        <ContentDialog x:Name="EditStartMenuDialog">
+            <ContentDialog.Resources>
+                <Thickness x:Key="ContentDialogPadding">0,0,0,-5</Thickness>
+            </ContentDialog.Resources>
+            <StackPanel Spacing="10" VerticalAlignment="Center" Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondaryBrush}" CornerRadius="5" HorizontalAlignment="Stretch">
+                <Grid Padding="10,0,5,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" MinWidth="250"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="Reload" ToolTipService.ToolTip="새로 고침">
-                        <FontIcon Glyph="&#xe72c;"  FontSize="17"  />
-                    </Button>
-                    <Button Grid.Column="1" Padding="10"  Background="Transparent"  BorderThickness="0"    Click="AddGroup" ToolTipService.ToolTip="그룹 추가">
-                        <FontIcon Glyph="&#xe710;"  FontSize="17"  />
-                    </Button>
-                    <Button Grid.Column="2" Padding="10"  Background="Transparent"  BorderThickness="0"    Click="SettingsButton_Click" ToolTipService.ToolTip="설정">
-                        <FontIcon Glyph="&#xE713;"  FontSize="17"  />
-                    </Button>
-                    <Button Grid.Column="3" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
-                        <Grid>
-                            <FontIcon Glyph="&#xe712;" FontSize="17">
-                                <FontIcon.RenderTransform>
-                                    <RotateTransform Angle="90" CenterX="9.5" CenterY="8.5"/>
-                                </FontIcon.RenderTransform>
-                            </FontIcon>
-                        </Grid>
-
-
-                        <Button.Flyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem Text="가져오기"  Icon="Download"  Click="ImportBackupButton_Click"/>
-
-
-                                <MenuFlyoutItem Text="내보내기" Icon="Upload" Click="ExportBackupButton_Click"/>
-                                <MenuFlyoutSeparator/>
-                               
-
-                                <MenuFlyoutItem Text="작업 표시줄 강제 업데이트"  Icon="Sync"  Click="ForceTaskbarUpdate_Click"/>
-
-                            </MenuFlyout>
-                        </Button.Flyout>
-
+                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">폴더 수정</TextBlock>
+                    <Button Click="CloseEditStartMenuDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
+                        <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
                 </Grid>
-            </Grid>
-        </StackPanel>
-        <ScrollViewer Grid.Row="2" Padding="20,0,20,6" CornerRadius="5">
-            <StackPanel Margin="0,0,0,30" >
-                <ListView x:Name="GroupListView"
-                           ItemsSource="{Binding FilteredGroupItems}"
-                           CanDragItems="True"
-                  AllowDrop="True"
-                  CanReorderItems="True"
-                            DragItemsStarting="GroupListView_DragItemsStarting"
-                  DragItemsCompleted="GroupListView_DragItemsCompleted"
-                          SelectionMode="None"
-                          CornerRadius="10"
-                          SelectionChanged="GroupListView_SelectionChanged" >
-                    <ListView.Resources>
-                        <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">False</x:Boolean>
-                    </ListView.Resources>
-                    <ListView.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel/>
-                        </ItemsPanelTemplate>
-                    </ListView.ItemsPanel>
-
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,1,0,0" HorizontalAlignment="Stretch" CornerRadius="5"  Padding="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"  Background="{ThemeResource CardBackgroundFillColorDefault}">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                <StackPanel Spacing="0" Padding="15,0,15,15">
+                    <StackPanel Spacing="3">
+                        <StackPanel CornerRadius="5" Padding="10" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="5">
+                                    <Button x:Name="BrowseFolderIconButton" Padding="5" Click="BrowseFolderIcon_Click">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Image x:Name="FolderIconPreview" Width="50" Height="50" Stretch="Uniform"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="ResetFolderIconButton" Click="ResetFolderIcon_Click" HorizontalAlignment="Center">
+                                        <TextBlock Text="초기화" FontSize="12" Opacity="0.7"/>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <StackPanel CornerRadius="5" Padding="5" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                        <TextBlock Margin="5,0,0,0" Opacity="0.8" FontSize="12">폴더 이름</TextBlock>
+                                        <TextBox x:Name="FolderNameTextBox" FontWeight="SemiBold" PlaceholderText="폴더 이름 입력" BorderBrush="Transparent" Background="Transparent"/>
+                                    </StackPanel>
+                                    <StackPanel CornerRadius="5" Padding="5" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                        <TextBlock Margin="5,0,0,0" Opacity="0.8" FontSize="12">폴더 경로</TextBlock>
+                                        <TextBlock x:Name="FolderPathTextBlock" FontWeight="SemiBold" Opacity="0.7" Margin="5,5,5,5" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                    <Grid Margin="0,10,0,0">
+                        <Button HorizontalAlignment="Right" Click="SaveFolderEdit_Click" Style="{StaticResource AccentButtonStyle}">저장</Button>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </ContentDialog>
+
+        <!-- 시작 메뉴 폴더 아이콘 선택 다이얼로그 -->
+        <ContentDialog x:Name="FolderIconDialog">
+            <ContentDialog.Resources>
+                <Thickness x:Key="ContentDialogPadding">0,0,0,0</Thickness>
+            </ContentDialog.Resources>
+            <StackPanel Spacing="10" VerticalAlignment="Center" Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondaryBrush}" CornerRadius="5" HorizontalAlignment="Stretch">
+                <Grid Padding="10,0,5,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" MinWidth="250"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">아이콘 선택</TextBlock>
+                    <Button Click="CloseFolderIconDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
+                        <FontIcon Glyph="&#xe711;" FontSize="15"/>
+                    </Button>
+                </Grid>
+                <StackPanel x:Name="FolderIconDialogContentPanel" Spacing="0" Padding="15,0,15,15">
+                    <StackPanel x:Name="FolderIconSelectionOptionsPanel" Spacing="0">
+                        <Button BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" FontSize="12" Padding="5" Click="FolderRegularIconClick" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                            <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xe91b;" FontSize="25"/>
+                                <StackPanel>
+                                    <TextBlock FontSize="16" FontWeight="SemiBold">일반 아이콘</TextBlock>
+                                    <TextBlock FontSize="13">디렉터리에서 아이콘 선택</TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" FontSize="12" Padding="5" Click="FolderResourceIconClick" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                            <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE8B9;" FontSize="25"/>
+                                <StackPanel>
+                                    <TextBlock FontSize="16" FontWeight="SemiBold">리소스 아이콘</TextBlock>
+                                    <TextBlock FontSize="13">앱 리소스에서 아이콘 선택</TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <GridView x:Name="FolderResourceIconGridView" Visibility="Collapsed" SelectionMode="Single" SelectionChanged="FolderResourceIcon_SelectionChanged" Height="300" Width="450">
+                        <GridView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Padding="10">
+                                    <Image Source="{Binding}" Width="50" Height="50" Stretch="Uniform"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+                </StackPanel>
+            </StackPanel>
+        </ContentDialog>
+
+        <!-- NavigationView 영역 -->
+        <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="75">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Tag="Taskbar" Height="60" Margin="0,32,0,0">
+                    <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE76F;" HorizontalAlignment="Center" FontSize="18"/>
+                        <TextBlock Text="작업" HorizontalAlignment="Center" FontSize="12"/>
+                    </StackPanel>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="StartMenu" Height="60">
+                    <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE74C;" HorizontalAlignment="Center" FontSize="18"/>
+                        <TextBlock Text="시작" HorizontalAlignment="Center" FontSize="12"/>
+                    </StackPanel>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid x:Name="TaskbarContent" Visibility="Visible" Padding="20,32,20,6">
+                    <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 헤더 영역 -->
+                    <StackPanel Grid.Row="0" Padding="20,0,20,0">
+                        <Grid Background="{ThemeResource DesktopAcrylicTransparentBrush}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">앱을 그룹으로 지정해서 작업 표시줄에 고정할 수 있습니다.</TextBlock>
+                            
+                            <Grid Grid.Row="1" Margin="0,24,0,0" VerticalAlignment="Top">
+                                <TextBox x:Name="SearchTextBox" Height="35" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" PlaceholderText="그룹 검색..." Padding="40,7,0,0" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding SearchText, Mode=TwoWay}" TextChanged="SearchTextBox_TextChanged" VerticalAlignment="Center"/>
+                                <FontIcon Glyph="&#xe71e;" FontSize="16" Margin="10,0,0,0" HorizontalAlignment="Left" />
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- 탭 헤더 컨트롤 영역 -->
+                    <StackPanel Grid.Row="1" Padding="20,20,20,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="GroupsCount" Grid.Column="0" FontWeight="SemiBold" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding GroupsCountText}"/>
+                            <Grid Grid.Column="1" ColumnSpacing="0" Padding="1" CornerRadius="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
-                                    <StackPanel Spacing="5" VerticalAlignment="Center" Padding="6"  Orientation="Vertical" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"  Background="{ThemeResource CardBackgroundFillColorDefault}"   CornerRadius="5">
-                                        <StackPanel CornerRadius="4" >
-                                            <Image Source="{Binding GroupIcon}" Width="35" Height="35"  Stretch="Uniform"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                    <StackPanel Spacing="0"  Orientation="Vertical">
-                                        <TextBlock Text="{Binding GroupName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <StackPanel CornerRadius="5" Orientation="Horizontal"  >
-                                            <ItemsControl ItemsSource="{Binding PathIcons}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"  Background="{ThemeResource CardBackgroundFillColorDefault}" Margin="1" CornerRadius="2" Padding="3">
-                                                            <Image Source="{Binding}" Width="15" Height="15"/>
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal"/>
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                            </ItemsControl>
-                                            <TextBlock Text="{Binding AdditionalIconsText}" FontSize="11" VerticalAlignment="Center" Margin="5,0,0,5"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </StackPanel>
-
-
-                                <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditButton_Click" ToolTipService.ToolTip="그룹 편집">
-                                    <FontIcon Glyph="&#xe70f;"  FontSize="15"   />
+                                <Button Grid.Column="0" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="Reload" ToolTipService.ToolTip="새로 고침">
+                                    <FontIcon Glyph="&#xe72c;" FontSize="17" />
                                 </Button>
-
-                                <Button Grid.Column="2" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
-                                    <FontIcon Glyph="&#xe712;"  FontSize="15"   />
+                                <Button Grid.Column="1" Padding="10" Background="Transparent" BorderThickness="0" Click="AddGroup" ToolTipService.ToolTip="그룹 추가">
+                                    <FontIcon Glyph="&#xe710;" FontSize="17" />
+                                </Button>
+                                <Button Grid.Column="2" Padding="10" Background="Transparent" BorderThickness="0" Click="SettingsButton_Click" ToolTipService.ToolTip="설정">
+                                    <FontIcon Glyph="&#xE713;" FontSize="17" />
+                                </Button>
+                                <Button Grid.Column="3" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
+                                    <Grid>
+                                        <FontIcon Glyph="&#xe712;" FontSize="17">
+                                            <FontIcon.RenderTransform>
+                                                <RotateTransform Angle="90" CenterX="9.5" CenterY="8.5"/>
+                                            </FontIcon.RenderTransform>
+                                        </FontIcon>
+                                    </Grid>
                                     <Button.Flyout>
                                         <MenuFlyout>
-                                            <MenuFlyoutItem Text="파일 위치 열기"  Icon="Folder"  Click="OpenLocationButton_Click"   />
-
-
-                                            <MenuFlyoutItem Text="복제" Icon="Copy" Click="DuplicateButton_Click"/>
-
-                                            <MenuFlyoutItem Text="삭제"  Icon="Delete"  Click="DeleteButton_Click"/>
-
-
-
+                                            <MenuFlyoutItem Text="가져오기" Icon="Download" Click="ImportBackupButton_Click"/>
+                                            <MenuFlyoutItem Text="내보내기" Icon="Upload" Click="ExportBackupButton_Click"/>
+                                            <MenuFlyoutSeparator/>
+                                            <MenuFlyoutItem Text="작업 표시줄 강제 업데이트" Icon="Sync" Click="ForceTaskbarUpdate_Click"/>
                                         </MenuFlyout>
                                     </Button.Flyout>
-
                                 </Button>
                             </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <Grid VerticalAlignment="Stretch" Height="350" x:Name="EmptyView" Visibility="{Binding EmptyViewVisibility}">
-
-                    <StackPanel Orientation="Vertical"  VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <Image Source="/Assets/tm.png" Height="60" Margin="0,0,0,20" />
-                        <StackPanel Spacing="10">
-                            <TextBlock HorizontalAlignment="Center"  FontSize="20" FontWeight="Bold">그룹이 없습니다!</TextBlock>
-                            <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="Normal">+ 버튼을 클릭하여 그룹을 만드세요</TextBlock>
-
-                        </StackPanel>
-
+                        </Grid>
                     </StackPanel>
+
+
+                    <ScrollViewer Grid.Row="2" Padding="0,10,0,6" CornerRadius="5">
+                        <StackPanel Margin="0,0,0,30">
+                            <ListView x:Name="GroupListView"
+                   ItemsSource="{Binding FilteredGroupItems}"
+                   CanDragItems="True"
+                   AllowDrop="True"
+                   CanReorderItems="True"
+                   DragItemsStarting="GroupListView_DragItemsStarting"
+                   DragItemsCompleted="GroupListView_DragItemsCompleted"
+                   SelectionMode="None"
+                   CornerRadius="10"
+                   SelectionChanged="GroupListView_SelectionChanged">
+                                <ListView.Resources>
+                                    <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">False</x:Boolean>
+                                </ListView.Resources>
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel/>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,1,0,0" HorizontalAlignment="Stretch" CornerRadius="5" Padding="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                                                <StackPanel Spacing="5" VerticalAlignment="Center" Padding="6" Orientation="Vertical" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}" CornerRadius="5">
+                                                    <StackPanel CornerRadius="4">
+                                                        <Image Source="{Binding GroupIcon}" Width="35" Height="35" Stretch="Uniform"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Spacing="0" Orientation="Vertical">
+                                                    <TextBlock Text="{Binding GroupName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <StackPanel CornerRadius="5" Orientation="Horizontal">
+                                                        <ItemsControl ItemsSource="{Binding PathIcons}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <StackPanel BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}" Margin="1" CornerRadius="2" Padding="3">
+                                                                        <Image Source="{Binding}" Width="15" Height="15"/>
+                                                                    </StackPanel>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                        </ItemsControl>
+                                                        <TextBlock Text="{Binding AdditionalIconsText}" FontSize="11" VerticalAlignment="Center" Margin="5,0,0,5"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditButton_Click" ToolTipService.ToolTip="그룹 수정">
+                                                <FontIcon Glyph="&#xe70f;" FontSize="15" />
+                                            </Button>
+
+                                            <Button Grid.Column="2" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
+                                                <FontIcon Glyph="&#xe712;" FontSize="15" />
+                                                <Button.Flyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="파일 위치 열기" Icon="Folder" Click="OpenLocationButton_Click"/>
+                                                        <MenuFlyoutItem Text="복제" Icon="Copy" Click="DuplicateButton_Click"/>
+                                                        <MenuFlyoutItem Text="삭제" Icon="Delete" Click="DeleteButton_Click"/>
+                                                    </MenuFlyout>
+                                                </Button.Flyout>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Grid VerticalAlignment="Stretch" Height="350" x:Name="EmptyView" Visibility="{Binding EmptyViewVisibility}">
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Image Source="/Assets/tm.png" Height="60" Margin="0,0,0,20" />
+                                    <StackPanel Spacing="10">
+                                        <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="Bold">그룹이 없습니다!</TextBlock>
+                                        <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="Normal">+ 버튼을 클릭하여 그룹을 만드세요</TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                    </Grid>
                 </Grid>
 
+                <Grid x:Name="StartMenuContent" Visibility="Collapsed" Padding="20,0,20,6">
+                    <Grid VerticalAlignment="Stretch" Margin="0,32,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-            </StackPanel>
-        </ScrollViewer>
+                        <!-- 시작 메뉴 검색 및 추가 버튼 -->
+                        <StackPanel Grid.Row="0" Margin="20,0,20,0" Orientation="Vertical">
+                            <TextBlock FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">트레이 아이콘을 클릭하면 등록된 폴더가 표시됩니다.</TextBlock>
+
+                            <Grid Margin="0,24,0,0">                             
+                                <TextBox x:Name="StartMenuSearchTextBox" Height="35" VerticalContentAlignment="Center" PlaceholderText="폴더 검색..." Padding="40,7,10,0"   BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding StartMenuSearchText, Mode=TwoWay}" TextChanged="StartMenuSearchTextBox_TextChanged"/>
+                                <FontIcon Glyph="&#xe71e;" FontSize="16" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Grid>
+                            
+                            <TextBlock x:Name="StartMenuCount" Margin="10,20,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding StartMenuCountText}"/>
+                        </StackPanel>
+
+                        <!-- 시작 메뉴 폴더 목록 - Grid를 드롭 타겟으로 사용 -->
+                    <Grid x:Name="StartMenuDropGrid"
+                          Grid.Row="1"
+                          VerticalAlignment="Stretch"
+                          HorizontalAlignment="Stretch"
+                          AllowDrop="True"
+                          DragOver="StartMenuGrid_DragOver"
+                          Drop="StartMenuGrid_Drop"
+                          Background="Transparent">
+
+                        <!-- ListView (드래그 비활성화) -->
+                        <ListView x:Name="StartMenuListView"
+                                   ItemsSource="{Binding FilteredStartMenuItems}"
+                                   CanDragItems="False"
+                                   SelectionMode="None"
+                                   CornerRadius="10"
+                                   Padding="0,0,0,6"
+                                   Background="Transparent">
+                            <ListView.Resources>
+                                <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">False</x:Boolean>
+                            </ListView.Resources>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1,0,0" HorizontalAlignment="Stretch" CornerRadius="5" Padding="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                                            <StackPanel Spacing="5" VerticalAlignment="Center" Padding="6" Orientation="Vertical" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}" CornerRadius="5">
+                                                <StackPanel CornerRadius="4">
+                                                    <Image Source="{Binding FolderIcon}" Width="35" Height="35" Stretch="Uniform"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Spacing="0" Orientation="Vertical">
+                                                <TextBlock Text="{Binding FolderName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding FolderPath}" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="300"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                            <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditStartMenuButton_Click" ToolTipService.ToolTip="수정">
+                                                <FontIcon Glyph="&#xe70f;" FontSize="15" />
+                                            </Button>
+                                            <Button Grid.Column="2" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
+                                            <FontIcon Glyph="&#xe712;" FontSize="15" />
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuFlyoutItem Text="파일 위치 열기" Icon="Folder" Click="StartMenuOpenLocationButton_Click"/>
+                                                    <MenuFlyoutItem Text="삭제" Icon="Delete" Click="StartMenuDeleteButton_Click"/>
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <!-- 빈 상태 표시 -->
+                        <Grid VerticalAlignment="Stretch" x:Name="StartMenuEmptyView" Visibility="{Binding StartMenuEmptyViewVisibility}">
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <FontIcon Glyph="&#xe8f7;" FontSize="60" Margin="0,0,0,20" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                <StackPanel Spacing="10">
+                                    <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="Bold">폴더가 없습니다!</TextBlock>
+                                    <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="Normal" TextWrapping="Wrap" MaxWidth="300" TextAlignment="Center">폴더를 드래그하여 추가하세요</TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+            </Grid>
+        </NavigationView>
     </Grid>
 </winex:WindowEx>

@@ -443,7 +443,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-
             <StackPanel>
                 <Grid ColumnSpacing="10" Margin="10,0,10,10">
                     <Grid.ColumnDefinitions>

@@ -2,6 +2,116 @@
 
 ## 최근 변경 사항
 
+### 2026-02-04 - 왼쪽 메뉴바 UI 수정
+
+#### 문제점/요청
+- 왼쪽 메뉴바의 접기/펼치기 및 뒤로가기 버튼 제거 요청
+- 메뉴 아이콘 아래에 텍스트 표시 요청
+
+#### 수정 내용
+- `View/MainWindow.xaml`: `NavigationView` 속성 변경
+  - `IsPaneToggleButtonVisible="False"`, `IsBackButtonVisible="Collapsed"`, `IsPaneOpen="True"`, `OpenPaneLength="75"` 추가
+- `NavigationView.MenuItems`: 아이콘과 텍스트 수직 배치 (`StackPanel` 사용)
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+
+---
+
+### 2026-02-04 - StartMenuDropGrid 드롭 영역 크기 수정
+
+#### 문제점
+- StartMenuDropGrid가 ListView 콘텐츠 크기에 맞춰 축소되어, 아이템이 없을 때 드롭 타겟 영역이 작음
+- 탭 전체 영역에 드래그앤드롭이 되어야 하지만 실제 드롭 가능 영역이 협소
+
+#### 수정 내용
+- 시작 메뉴 탭 내부 Grid에 `VerticalAlignment="Stretch"` 추가하여 탭 전체 높이를 채우도록 지정
+- `StartMenuDropGrid`에 `VerticalAlignment="Stretch"`, `HorizontalAlignment="Stretch"` 명시 추가
+
+#### 변경된 파일
+- `View/MainWindow.xaml` - 시작 메뉴 탭 내부 Grid 및 StartMenuDropGrid 레이아웃 속성 추가
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 625개 (기존 nullable 관련 경고)
+
+---
+
+### 2026-02-04 - 시작 메뉴 탭 드래그앤드롭 버그 수정
+
+#### 문제점
+- StartMenuDropGrid에서 폴더를 드래그앤드롭해도 드롭이 되지 않는 문제
+
+#### 원인 분석
+- `StartMenuGrid_DragOver` 이벤트 핸들러에서 `Task.Run`으로 스레드풀(MTA)에서 `GetStorageItemsAsync()`를 호출
+- `DragEventArgs.DataView`는 COM 객체로 UI 스레드(STA)에서만 안전하게 접근 가능
+- MTA 스레드에서 호출 시 실패하거나 교착 상태 발생
+- catch 블록에서 `DataPackageOperation.None`으로 설정되어 드롭이 항상 거부됨
+- `DragOver`는 마우스 이동마다 반복 호출되므로 비동기 처리가 완료되기 전 새 이벤트 발생으로 deferral 충돌 가능
+
+#### 수정 내용
+- `StartMenuGrid_DragOver`에서 `Task.Run` + `GetStorageItemsAsync()` + `Deferral` 제거
+- `e.DataView.Contains(StandardDataFormats.StorageItems)`만으로 동기적으로 `Copy` 허용
+- 실제 폴더 검증은 `StartMenuGrid_Drop`에서 수행 (기존 동작 유지)
+
+#### 변경된 파일
+- `View/MainWindow.xaml.cs` - `StartMenuGrid_DragOver` 메서드 단순화
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 625개 (기존 nullable 관련 경고)
+
+#### 참고: 동일 실수 방지
+- `DragOver` 이벤트에서 `DragEventArgs`의 COM 객체(`DataView`)에 접근할 때는 반드시 UI 스레드에서 수행할 것
+- `DragOver`는 빈번하게 호출되므로 비동기 작업을 최소화하고, 무거운 검증은 `Drop`에서 수행할 것
+
+---
+
+### 2026-02-04 - TabView 구현 및 시작 메뉴 기능 추가
+
+#### 수행한 작업
+
+MainWindow를 TabView로 분리하고 "시작 메뉴" 탭에 폴더 드래그앤드롭 기능을 추가하였습니다.
+
+#### 1. 새로 추가된 파일
+| 파일 | 설명 |
+|------|------|
+| `Models/StartMenuItem.cs` | 시작 메뉴 폴더 항목 모델 |
+
+#### 2. 수정된 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `View/MainWindow.xaml` | TabView 추가, "작업 표시줄"/"시작 메뉴" 탭 구현 |
+| `ViewModels/MainWindowViewModel.cs` | 시작 메뉴 관련 속성 및 필터링 메서드 추가 |
+| `JsonConfigHelper.cs` | 시작 메뉴 JSON 저장/로드 메서드 추가 |
+| `View/MainWindow.xaml.cs` | 시작 메뉴 드래그앤드롭 이벤트 핸들러 추가 |
+
+#### 3. 시작 메뉴 탭 기능
+- 폴더 드래그앤드롭으로 목록에 추가 (파일은 거부됨)
+- 목록 구조는 작업 표시줄 탭과 동일하게 표시
+- 왼쪽: 폴더 아이콘 (Assets/icon/folder_3.png)
+- 중앙: 폴더 이름과 경로
+- 오른쪽: 편집/삭제 메뉴 아이콘
+- 검색 기능 지원
+
+#### 4. JSON 저장소
+- 별도 파일 사용: `%LocalAppData%\AppGroup\startmenu.json`
+- 구조: `{ "1": { "folderName": "...", "folderPath": "..." } }`
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 626개 (기존 nullable 관련 경고)
+
+#### 참고 사항
+- `Assets/icon/folder_3.png` 이미지 파일이 존재해야 정상적으로 아이콘이 표시됨
+- 시작 메뉴 폴더는 ID 순서로 정렬됨
+
+---
+
 ### 2026-02-03 - 미사용 코드 삭제 및 빌드 경고 수정
 
 #### 수행한 작업
@@ -407,7 +517,7 @@ g.DrawImage(originalImage, x, y, newWidth, newHeight);
 3. 실제로 temp 폴더 복사는 불필요함 - 원본 파일에서 직접 메모리로 읽으면 됨
 
 #### 이전 수정 시도 (모두 실패)
-1. 파일 삭제 후 복사 → 파일 잠겨있으면 삭제도 실패
+1. 파일 삭제 후 복사 → 파일이 잠겨있으면 삭제도 실패
 2. GUID 기반 고유 파일명 → 폴더 자체에 쓰기 권한 문제로 실패
 
 #### temp 폴더 사용 이유 분석
@@ -1050,4 +1160,3 @@ Windows/AppGroup/
 ├── App.xaml                     # 앱 리소스
 ├── App.xaml.cs                  # 앱 엔트리
 ├── ...
-```
