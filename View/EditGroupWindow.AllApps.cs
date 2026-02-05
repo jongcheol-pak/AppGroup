@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -59,10 +59,13 @@ namespace AppGroup.View {
 
                 _ = AllAppsDialog.ShowAsync();
 
+                // UI가 렌더링될 시간을 확보한 후 백그라운드에서 앱 목록 가져오기
+                await Task.Yield();
+
                 var addedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 // shell:AppsFolder를 통해 Windows 설치된 앱 목록 가져오기 (Win32 + UWP 모두 포함)
-                var shellApps = GetAppsFromShellFolder();
+                var shellApps = await Task.Run(GetAppsFromShellFolder);
 
                 foreach (var appInfo in shellApps)
                 {

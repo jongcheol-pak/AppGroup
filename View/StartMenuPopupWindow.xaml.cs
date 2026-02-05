@@ -529,9 +529,15 @@ namespace AppGroup.View
 
 
 
+
+
+
+
         private const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
-        private const int MAX_HEIGHT_SINGLE_COLUMN = 400;
-        private const int MAX_HEIGHT_GRID = 500;
+        private const int MAX_HEIGHT_SINGLE_COLUMN = 700;
+        private const int MAX_HEIGHT_GRID = 600;
+        private const int HEADER_HEIGHT = 45; // 헤더 영역 높이 (TextBlock + Border + Margin)
+        private const int SCROLLVIEW_MARGIN = 15; // ScrollView 마진 + 여유 공간
 
         /// <summary>
         /// 윈도우 크기 업데이트
@@ -568,18 +574,18 @@ namespace AppGroup.View
             if (_columnCount == 1)
             {
                 // 1열: 가로 레이아웃
-                // 항목당 약 56px (버튼 높이 + 마진) + 헤더 영역 + 여유 공간
-                width = 220;
-                int contentHeight = folderCount * 56 + 50; // 헤더 + 마진
-                height = Math.Min(maxAvailableHeight, Math.Max(100, contentHeight));
+                // 항목당 약 56px (버튼 높이 + 마진) + 헤더 영역 + ScrollView 마진 + 추가 여유 공간
+                width = 240;
+                int contentHeight = folderCount * 56 + HEADER_HEIGHT + SCROLLVIEW_MARGIN + 10;
+                height = Math.Min(maxAvailableHeight, Math.Max(120, contentHeight));
             }
             else
             {
                 // 그리드 레이아웃
                 int rowCount = (int)Math.Ceiling((double)folderCount / _columnCount);
-                width = _columnCount * 98 + WINDOW_PADDING * 2;
-                int contentHeight = rowCount * 98 + 50; // 헤더 + 마진
-                height = Math.Min(maxAvailableHeight, Math.Max(150, contentHeight));
+                width = _columnCount * 100 + WINDOW_PADDING * 2;
+                int contentHeight = rowCount * 100 + HEADER_HEIGHT + SCROLLVIEW_MARGIN + 10;
+                height = Math.Min(maxAvailableHeight, Math.Max(160, contentHeight));
             }
 
             this.AppWindow.Resize(new SizeInt32(width, height));

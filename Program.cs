@@ -133,10 +133,20 @@ namespace AppGroup {
         public static void RedirectActivationTo(AppActivationArguments args,
                                                 AppInstance keyInstance) {
             redirectEventHandle = CreateEvent(IntPtr.Zero, true, false, null);
-            Task.Run(() =>
+
+            // .Wait() 제거로 데드락 위험 방지: async/await 사용하여 비동기 처리
+            Task.Run(async () =>
             {
-                keyInstance.RedirectActivationToAsync(args).AsTask().Wait();
-                SetEvent(redirectEventHandle);
+                try
+                {
+                    await keyInstance.RedirectActivationToAsync(args);
+                    SetEvent(redirectEventHandle);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"RedirectActivationToAsync failed: {ex.Message}");
+                    SetEvent(redirectEventHandle);
+                }
             });
 
             uint CWMO_DEFAULT = 0;

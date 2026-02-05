@@ -541,7 +541,7 @@ namespace AppGroup
         /// <summary>
         /// 시작 메뉴 JSON 파일에 새 폴더를 추가합니다.
         /// </summary>
-        public static void AddStartMenuFolder(string folderPath, string folderName)
+        public static void AddStartMenuFolder(string folderName, string folderPath, string folderIcon = null)
         {
             try
             {
@@ -567,6 +567,11 @@ namespace AppGroup
                     { "folderName", folderName },
                     { "folderPath", folderPath }
                 };
+
+                if (!string.IsNullOrEmpty(folderIcon))
+                {
+                    newFolder["folderIcon"] = folderIcon;
+                }
 
                 jsonObject[folderId.ToString()] = newFolder;
 

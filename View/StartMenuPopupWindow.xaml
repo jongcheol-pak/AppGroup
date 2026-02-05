@@ -8,9 +8,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="Start Menu Popup">
-    <Window.SystemBackdrop>
-        <winuiex:TransparentTintBackdrop />
-    </Window.SystemBackdrop>
     <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,10 +23,11 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="HeaderText" VerticalAlignment="Center" FontWeight="SemiBold" Text="폴더"/>
             </Grid>
+            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="10,0,10,5"/>
         </StackPanel>
 
         <!-- 폴더 목록 영역 -->
-        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
+        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
                     VerticalScrollBarVisibility="Auto" Margin="5">
             <ItemsControl x:Name="FolderItemsControl" HorizontalAlignment="Left">
                 <ItemsControl.ItemsPanel>

@@ -48,6 +48,11 @@ private BackupHelper _backupHelper;
 private readonly MainWindowViewModel _viewModel;
 // 설정 파일 변경 감시자
 private FileSystemWatcher _fileWatcher;
+
+// FileSystemWatcher debounce를 위한 필드 (장시간 실행 메모리 누수 방지)
+private DateTime _lastFileChangeTime = DateTime.MinValue;
+private const int FILE_CHANGE_DEBOUNCE_MS = 500;
+
 // 로딩 동기화를 위한 락 객체
 private readonly object _loadLock = new object();
 private readonly IconHelper _iconHelper;
@@ -477,14 +482,27 @@ private bool _disposed = false;
 
         /// <summary>
         /// 설정 파일 변경 시 호출되는 이벤트 핸들러
+        /// debounce 처리로 중복 변경 이벤트 방지 (장시간 실행 메모리 누수 방지)
         /// </summary>
-        private void OnFileWatcherChanged(object sender, FileSystemEventArgs e) {
+        private void OnFileWatcherChanged(object sender, FileSystemEventArgs e)
+        {
             // 재정렬 중에는 파일 감시자 업데이트를 스킵하여 충돌 방지
             if (_isReordering || _disposed) return;
 
+            // Debounce 적용: 500ms 이내에 추가 변경이 있으면 무시
+            var now = DateTime.Now;
+            if ((now - _lastFileChangeTime).TotalMilliseconds < FILE_CHANGE_DEBOUNCE_MS)
+            {
+                Debug.WriteLine($"OnFileWatcherChanged: Debounced (last: {_lastFileChangeTime:HH:mm:ss.fff}, now: {now:HH:mm:ss.fff})");
+                return;
+            }
+            _lastFileChangeTime = now;
+
             string jsonFilePath = JsonConfigHelper.GetDefaultConfigPath();
-            DispatcherQueue.TryEnqueue(async () => {
-                if (!_disposed && !IsFileInUse(jsonFilePath)) {
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                if (!_disposed && !IsFileInUse(jsonFilePath))
+                {
                     await UpdateGroupItemAsync(jsonFilePath);
                 }
             });
@@ -1126,8 +1144,10 @@ private bool _disposed = false;
 
                         // 다이얼로그 UI 초기화
                         Debug.WriteLine("UI 초기화 중...");
+                        EditStartMenuDialogTitle.Text = "폴더 수정";
                         FolderNameTextBox.Text = selectedFolder.FolderName;
                         FolderPathTextBlock.Text = selectedFolder.FolderPath;
+                        BrowseFolderPathButton.Visibility = Visibility.Visible;
 
                         // 아이콘 로드
                         Debug.WriteLine($"아이콘 로드 중: {selectedFolder.FolderIcon}");
@@ -1343,22 +1363,95 @@ private bool _disposed = false;
             try
             {
                 string newName = FolderNameTextBox.Text.Trim();
+                string folderPath = FolderPathTextBlock.Text?.Trim();
+                
                 if (string.IsNullOrEmpty(newName))
+                {
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(folderPath))
                 {
                     return;
                 }
 
                 if (_editingFolder != null)
                 {
-                    JsonConfigHelper.UpdateStartMenuFolder(_editingFolder.FolderId, newName, _editingFolder.FolderPath, _selectedFolderIconPath);
-                    await LoadStartMenuItemsAsync();
+                    // 수정 모드
+                    JsonConfigHelper.UpdateStartMenuFolder(_editingFolder.FolderId, newName, folderPath, _selectedFolderIconPath);
                 }
-
+                else
+                {
+                    // 추가 모드
+                    JsonConfigHelper.AddStartMenuFolder(newName, folderPath, _selectedFolderIconPath);
+                }
+                
+                await LoadStartMenuItemsAsync();
                 EditStartMenuDialog.Hide();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"폴더 저장 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 폴더 추가 버튼 클릭 이벤트 핸들러
+        /// </summary>
+        private async void AddStartMenuFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _editingFolder = null;
+                _selectedFolderIconPath = "ms-appx:///Assets/icon/folder_3.png";
+
+                // 다이얼로그 UI 초기화
+                EditStartMenuDialogTitle.Text = "폴더 추가";
+                FolderNameTextBox.Text = "";
+                FolderPathTextBlock.Text = "";
+                BrowseFolderPathButton.Visibility = Visibility.Visible;
+                LoadFolderIconPreview("ms-appx:///Assets/icon/folder_3.png");
+
+                // 다이얼로그 표시
+                EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+                await EditStartMenuDialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"폴더 추가 다이얼로그 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 폴더 경로 선택 버튼 클릭
+        /// </summary>
+        private async void BrowseFolderPath_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+                folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+                folderPicker.FileTypeFilter.Add("*");
+
+                // WinUI 3에서 FolderPicker 초기화
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+                WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
+
+                var folder = await folderPicker.PickSingleFolderAsync();
+                if (folder != null)
+                {
+                    FolderPathTextBlock.Text = folder.Path;
+                    
+                    // 폴더 이름이 비어있으면 폴더명으로 자동 설정
+                    if (string.IsNullOrEmpty(FolderNameTextBox.Text))
+                    {
+                        FolderNameTextBox.Text = folder.Name;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"폴더 선택 오류: {ex.Message}");
             }
         }
 

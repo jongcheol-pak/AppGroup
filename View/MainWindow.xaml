@@ -13,7 +13,7 @@
     </Window.SystemBackdrop>
     <Grid Background="{ThemeResource DesktopAcrylicTransparentBrush}">
 
-        <!-- 시작 메뉴 폴더 수정 다이얼로그 -->
+        <!-- 시작 메뉴 폴더 수정/추가 다이얼로그 -->
         <ContentDialog x:Name="EditStartMenuDialog">
             <ContentDialog.Resources>
                 <Thickness x:Key="ContentDialogPadding">0,0,0,-5</Thickness>
@@ -24,7 +24,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto" MinWidth="250"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">폴더 수정</TextBlock>
+                    <TextBlock x:Name="EditStartMenuDialogTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">폴더 수정</TextBlock>
                     <Button Click="CloseEditStartMenuDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
@@ -54,7 +54,16 @@
                                     </StackPanel>
                                     <StackPanel CornerRadius="5" Padding="5" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                                         <TextBlock Margin="5,0,0,0" Opacity="0.8" FontSize="12">폴더 경로</TextBlock>
-                                        <TextBlock x:Name="FolderPathTextBlock" FontWeight="SemiBold" Opacity="0.7" Margin="5,5,5,5" TextTrimming="CharacterEllipsis"/>
+                                        <Grid ColumnSpacing="5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="FolderPathTextBlock" Grid.Column="0" FontWeight="SemiBold" Opacity="0.7" Margin="5,5,5,5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                            <Button x:Name="BrowseFolderPathButton" Grid.Column="1" Click="BrowseFolderPath_Click" ToolTipService.ToolTip="폴더 선택" Padding="8,6">
+                                                <FontIcon Glyph="&#xED25;" FontSize="14"/>
+                                            </Button>
+                                        </Grid>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -118,7 +127,8 @@
             </StackPanel>
         </ContentDialog>
 
-        
+        <TextBlock Padding="20,10,0,0" FontSize="18" Margin="0,0,0,0" FontWeight="SemiBold" Text="앱 그룹 관리"></TextBlock>
+
         <!-- NavigationView 영역 -->
         <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="80">
             <NavigationView.MenuItems>
@@ -254,7 +264,7 @@
                                                 </StackPanel>
                                                 <StackPanel Spacing="0" Orientation="Vertical">
                                                     <TextBlock Text="{Binding GroupName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                    <StackPanel CornerRadius="5" Orientation="Horizontal">
+                                                    <StackPanel CornerRadius="5" Orientation="Horizontal" Margin="0,2,0,0">
                                                         <ItemsControl ItemsSource="{Binding PathIcons}">
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
@@ -325,7 +335,7 @@
                         </StackPanel>
 
                         <!-- 탭 헤더 컨트롤 영역 -->
-                        <StackPanel Grid.Row="1" Padding="20,20,20,10">
+                        <StackPanel Grid.Row="1" Padding="10,20,20,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -338,7 +348,10 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="StartMenuSettingsButton_Click" ToolTipService.ToolTip="설정">
+                                    <Button Grid.Column="0" Padding="10" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="폴더 추가" Click="AddStartMenuFolder_Click">
+                                        <FontIcon Glyph="&#xe710;" FontSize="17" />
+                                    </Button>
+                                    <Button Grid.Column="1" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="StartMenuSettingsButton_Click" ToolTipService.ToolTip="설정">
                                         <FontIcon Glyph="&#xE713;" FontSize="17" />
                                     </Button>                                    
                                 </Grid>
@@ -380,17 +393,21 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
-                                            <StackPanel Spacing="5" VerticalAlignment="Center" Padding="6" Orientation="Vertical" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}" CornerRadius="5">
-                                                <StackPanel CornerRadius="4">
-                                                    <Image Source="{Binding FolderIcon}" Width="35" Height="35" Stretch="Uniform"/>
+                                            <Grid ColumnSpacing="15" VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="5" VerticalAlignment="Center" Padding="6" Orientation="Vertical" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefault}" CornerRadius="5">
+                                                    <StackPanel CornerRadius="4">
+                                                        <Image Source="{Binding FolderIcon}" Width="35" Height="35" Stretch="Uniform"/>
+                                                    </StackPanel>
                                                 </StackPanel>
-                                            </StackPanel>
-                                            <StackPanel Spacing="0" Orientation="Vertical">
-                                                <TextBlock Text="{Binding FolderName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding FolderPath}" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="300"/>
-                                            </StackPanel>
-                                        </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="0" Orientation="Vertical" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FolderName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding FolderPath}" ToolTipService.ToolTip="{Binding FolderPath}" Margin="0,2,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Stretch"/>
+                                                </StackPanel>
+                                            </Grid>
 
                                             <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditStartMenuButton_Click" ToolTipService.ToolTip="수정">
                                                 <FontIcon Glyph="&#xe70f;" FontSize="15" />

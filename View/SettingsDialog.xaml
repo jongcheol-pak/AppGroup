@@ -162,7 +162,7 @@
                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                  Margin="0,4,0,0"/>
 
-                        <HyperlinkButton NavigateUri="https://github.com/iandiv/AppGroup"      Padding="0"
+                        <HyperlinkButton NavigateUri="http://github.com/iandiv/AppGroup"      Padding="0"
       Margin="0,12,0,4">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="AppGroup" FontWeight="SemiBold" FontSize="13" Margin="0,0,12,0" VerticalAlignment="Center"/>

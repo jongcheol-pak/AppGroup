@@ -18,6 +18,7 @@ namespace AppGroup {
         private IntPtr _hWnd;
         private SystemBackdropConfiguration _configurationSource;
         private MicaBackdrop _micaBackdrop;
+        private DesktopAcrylicBackdrop _desktopAcrylicBackdrop;
         private DesktopAcrylicController _acrylicController;
         private bool _micaEnabled = false;
         private bool _centerWindow;
@@ -161,6 +162,9 @@ namespace AppGroup {
 
 
             if (_window.Content is FrameworkElement root) {
+                // Initialize theme based on current content
+                UpdateTheme(root.ActualTheme);
+
                 root.ActualThemeChanged += (sender, args) => {
                     UpdateTheme(root.ActualTheme);
                 };
@@ -176,6 +180,9 @@ namespace AppGroup {
 
             //TrySetMicaBackdrop();
             UpdateTitleBarColors();
+
+            int useDarkMode = newTheme == ElementTheme.Dark ? 1 : 0;
+            NativeMethods.DwmSetWindowAttribute(_hWnd, NativeMethods.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
         }
 
 
@@ -258,6 +265,20 @@ namespace AppGroup {
                 _window.SystemBackdrop = null;
                 _currentBackdropType = BackdropType.None;
                 return BackdropType.None;
+            }
+
+            // Use DesktopAcrylicBackdrop (SystemBackdrop) for Base acrylic if possible
+            // This often handles the initialization phase better than manual Controller, preventing white flashes.
+            if (!useThin)
+            {
+                if (_desktopAcrylicBackdrop == null)
+                {
+                    _desktopAcrylicBackdrop = new DesktopAcrylicBackdrop();
+                }
+
+                _window.SystemBackdrop = _desktopAcrylicBackdrop;
+                _currentBackdropType = BackdropType.AcrylicBase;
+                return BackdropType.AcrylicBase;
             }
 
             var dispatcherQueueHelper = new WindowsSystemDispatcherQueueHelper();

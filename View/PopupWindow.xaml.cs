@@ -121,7 +121,7 @@ namespace AppGroup.View
         private UISettings _uiSettings; // Cache UISettings instance
         private bool _isUISettingsSubscribed = false;
         private readonly List<Task> _backgroundTasks = new List<Task>();
-        private readonly List<Task> _iconLoadingTasks = new List<Task>();
+        // _iconLoadingTasks는 사용되지 않아 제거 (메모리 누수 방지)
 
         // 백그라운드 작업 취소를 위한 CancellationTokenSource
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -1188,10 +1188,27 @@ namespace AppGroup.View
 
         private void CleanupCompletedTasks()
         {
+            // 완료된 Task 정리
             foreach (var task in _backgroundTasks.ToList())
-                if (task.IsCompleted) { task.Dispose(); _backgroundTasks.Remove(task); }
-            foreach (var task in _iconLoadingTasks.ToList())
-                if (task.IsCompleted) { task.Dispose(); _iconLoadingTasks.Remove(task); }
+            {
+                if (task.IsCompleted || task.IsCanceled || task.IsFaulted)
+                {
+                    task.Dispose();
+                    _backgroundTasks.Remove(task);
+                }
+            }
+
+            // 오랫동안 완료되지 않은 Task도 제거 (메모리 누수 방지)
+            // 장시간 대기 중인 Task는 취소되었을 가능성이 높음
+            if (_backgroundTasks.Count > 100) // 너무 많이 쌓이면 강제 정리
+            {
+                Debug.WriteLine($"CleanupCompletedTasks: Too many pending tasks ({_backgroundTasks.Count}), forcing cleanup");
+                foreach (var task in _backgroundTasks)
+                {
+                    task.Dispose();
+                }
+                _backgroundTasks.Clear();
+            }
         }
 
         private async Task RestoreOriginalIconAsync()
@@ -1712,24 +1729,23 @@ namespace AppGroup.View
                 }
                 _viewModel.PopupItems.Clear();
 
-                // 백그라운드 Task 정리
-                foreach (var task in _backgroundTasks.ToList())
+                // 백그라운드 Task 강제 정리 (장시간 실행 메모리 누수 방지)
+                foreach (var task in _backgroundTasks)
                 {
-                    if (task.IsCompleted)
+                    // 완료되지 않은 Task도 Dispose (CancellationToken으로 이미 취소 요청)
+                    if (!task.IsCompleted && !task.IsCanceled)
+                    {
+                        try { task.Dispose(); }
+                        catch (Exception ex) { Debug.WriteLine($"Task dispose error: {ex.Message}"); }
+                    }
+                    else
                     {
                         task.Dispose();
                     }
                 }
                 _backgroundTasks.Clear();
 
-                foreach (var task in _iconLoadingTasks.ToList())
-                {
-                    if (task.IsCompleted)
-                    {
-                        task.Dispose();
-                    }
-                }
-                _iconLoadingTasks.Clear();
+                // _iconLoadingTasks는 사용되지 않으므로 제거 완료
 
                 // CancellationTokenSource 정리
                 _cancellationTokenSource?.Dispose();

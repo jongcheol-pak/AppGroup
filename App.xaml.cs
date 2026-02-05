@@ -170,11 +170,17 @@ namespace AppGroup {
         }
 
         /// <summary>
-        /// 생성자에서 사용할 점프 목록 초기화 (동기 래퍼)
+        /// 생성자에서 사용할 점프 목록 초기화 (Fire-and-forget)
+        /// .Wait() 제거로 데드락 위험 방지
         /// </summary>
         private void InitializeJumpListSync() {
             try {
-                Task.Run(async () => await InitializeJumpListAsync()).Wait();
+                // Fire-and-forget: 점프 목록 초기화는 비동기로 실행하고 완료를 기다리지 않음
+                _ = InitializeJumpListAsync().ContinueWith(t => {
+                    if (t.Exception != null) {
+                        System.Diagnostics.Debug.WriteLine($"Jump list initialization failed: {t.Exception.InnerException?.Message}");
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Sync jump list initialization failed: {ex.Message}");
