@@ -42,13 +42,20 @@
     <None Remove="Assets\icon\ai.png" />
     <None Remove="Assets\icon\AI_2.png" />
     <None Remove="Assets\icon\appgroup.png" />
+    <None Remove="Assets\icon\audio.png" />
     <None Remove="Assets\icon\browser.png" />
     <None Remove="Assets\icon\browser_2.png" />
     <None Remove="Assets\icon\browser_3.png" />
     <None Remove="Assets\icon\browser_4.png" />
+    <None Remove="Assets\icon\cs.png" />
+    <None Remove="Assets\icon\css.png" />
+    <None Remove="Assets\icon\csv.png" />
     <None Remove="Assets\icon\design.png" />
     <None Remove="Assets\icon\development.png" />
     <None Remove="Assets\icon\development_2.png" />
+    <None Remove="Assets\icon\dll.png" />
+    <None Remove="Assets\icon\doc.png" />
+    <None Remove="Assets\icon\doc_2.png" />
     <None Remove="Assets\icon\edit.png" />
     <None Remove="Assets\icon\edit_2.png" />
     <None Remove="Assets\icon\edit_3.png" />
@@ -56,6 +63,7 @@
     <None Remove="Assets\icon\etc_2.png" />
     <None Remove="Assets\icon\etc_3.png" />
     <None Remove="Assets\icon\etc_4.png" />
+    <None Remove="Assets\icon\exe.png" />
     <None Remove="Assets\icon\file.png" />
     <None Remove="Assets\icon\file_2.png" />
     <None Remove="Assets\icon\file_3.png" />
@@ -71,6 +79,13 @@
     <None Remove="Assets\icon\folder_7.png" />
     <None Remove="Assets\icon\game.png" />
     <None Remove="Assets\icon\games_2.png" />
+    <None Remove="Assets\icon\html.png" />
+    <None Remove="Assets\icon\inf.png" />
+    <None Remove="Assets\icon\ini.png" />
+    <None Remove="Assets\icon\ini_2.png" />
+    <None Remove="Assets\icon\jpg.png" />
+    <None Remove="Assets\icon\jpg_2.png" />
+    <None Remove="Assets\icon\json.png" />
     <None Remove="Assets\icon\lgupdate.png" />
     <None Remove="Assets\icon\lgupdate_2.png" />
     <None Remove="Assets\icon\link.png" />
@@ -81,18 +96,39 @@
     <None Remove="Assets\icon\link_6.png" />
     <None Remove="Assets\icon\link_7.png" />
     <None Remove="Assets\icon\link_8.png" />
+    <None Remove="Assets\icon\md.png" />
+    <None Remove="Assets\icon\md_2.png" />
     <None Remove="Assets\icon\Messenger.png" />
     <None Remove="Assets\icon\Messenger_2.png" />
     <None Remove="Assets\icon\Messenger_3.png" />
+    <None Remove="Assets\icon\mp3_2.png" />
+    <None Remove="Assets\icon\mp4_2.png" />
     <None Remove="Assets\icon\office_2.png" />
+    <None Remove="Assets\icon\pdf.png" />
+    <None Remove="Assets\icon\pdf_2.png" />
+    <None Remove="Assets\icon\php.png" />
+    <None Remove="Assets\icon\png.png" />
+    <None Remove="Assets\icon\png_2.png" />
     <None Remove="Assets\icon\pp.png" />
+    <None Remove="Assets\icon\ppt.png" />
+    <None Remove="Assets\icon\ppt_2.png" />
     <None Remove="Assets\icon\pp_2.png" />
     <None Remove="Assets\icon\refresh.png" />
     <None Remove="Assets\icon\setting.png" />
     <None Remove="Assets\icon\settings_2.png" />
     <None Remove="Assets\icon\settings_3.png" />
+    <None Remove="Assets\icon\txt.png" />
+    <None Remove="Assets\icon\txt_2.png" />
+    <None Remove="Assets\icon\txt_3.png" />
     <None Remove="Assets\icon\video.png" />
     <None Remove="Assets\icon\video_2.png" />
+    <None Remove="Assets\icon\video_3.png" />
+    <None Remove="Assets\icon\xaml.png" />
+    <None Remove="Assets\icon\xls.png" />
+    <None Remove="Assets\icon\xls_2.png" />
+    <None Remove="Assets\icon\xml.png" />
+    <None Remove="Assets\icon\zip.png" />
+    <None Remove="Assets\icon\zip_2.png" />
     <None Remove="Assets\tm.png" />
     <None Remove="Assets\tm_2.png" />
     <None Remove="View\EditGroupWindow.xaml" />
@@ -230,6 +266,14 @@
     <EditorConfigFiles Remove="C:\Users\Ian Divinagracia\source\repos\AppGroup\AppGroup\.editorconfig" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="View\FolderContentsPopupWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="View\FolderContentsPopupWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -250,6 +294,9 @@
     <None Update="Assets\AppGroup.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
+    </None>
+    <None Update="View\FolderContentsPopupWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -498,9 +498,11 @@ namespace AppGroup {
                 }
 
 
+
                 // 초기 위치 (커서 기준 수평 중앙 정렬)
                 int x = cursorPos.X - (windowWidth / 2);
                 int y;
+                const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
 
                 // 작업 표시줄 위치에 따라 위치 설정
                 switch (taskbarPosition) {
@@ -517,9 +519,9 @@ namespace AppGroup {
                         else {
                             // 커서가 작업 표시줄 위에 있지 않음 (바탕 화면/탐색기) - 커서 근처에 배치
                             y = cursorPos.Y - windowHeight - spacing;
-                            // 작업 영역으로 제한
-                            if (y < monitorInfo.rcWork.top + spacing)
-                                y = monitorInfo.rcWork.top + spacing;
+                            // 작업 영역으로 제한 (상단 최소 100픽셀)
+                            if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                                y = monitorInfo.rcWork.top + TOP_MARGIN;
                             if (y + windowHeight > monitorInfo.rcWork.bottom - spacing)
                                 y = monitorInfo.rcWork.bottom - windowHeight - spacing;
                         }
@@ -531,6 +533,9 @@ namespace AppGroup {
                         else
                             x = monitorInfo.rcWork.left + spacing;
                         y = cursorPos.Y - (windowHeight / 2);
+                        // 상단 최소 100픽셀 유지
+                        if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                            y = monitorInfo.rcWork.top + TOP_MARGIN;
                         break;
                     case TaskbarPosition.Right:
                         // 자동 숨김의 경우 작업 영역이 전체 화면일 수 있으므로 간격을 두고 모니터 오른쪽 사용
@@ -539,6 +544,9 @@ namespace AppGroup {
                         else
                             x = monitorInfo.rcWork.right - windowWidth - spacing;
                         y = cursorPos.Y - (windowHeight / 2);
+                        // 상단 최소 100픽셀 유지
+                        if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                            y = monitorInfo.rcWork.top + TOP_MARGIN;
                         break;
                     default:
                         // 기본값은 하단 배치
@@ -556,6 +564,10 @@ namespace AppGroup {
                     x = monitorInfo.rcWork.left;
                 if (x + windowWidth > monitorInfo.rcWork.right)
                     x = monitorInfo.rcWork.right - windowWidth;
+                
+                // 상단 최소 100픽셀 유지 (최종 확인)
+                if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                    y = monitorInfo.rcWork.top + TOP_MARGIN;
 
                 Debug.WriteLine($"Final Position (after bounds check): X={x}, Y={y}");
                 Debug.WriteLine($"================================");

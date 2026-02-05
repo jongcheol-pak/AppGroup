@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +35,10 @@ namespace AppGroup.View
         private int _columnCount = 1;
         private bool _disposed = false;
         private UISettings _uiSettings;
+        
+        private FolderContentsPopupWindow? _folderContentsPopup;
+        private Button? _currentHoveredButton;
+        private DispatcherTimer? _hoverTimer;
 
         public StartMenuPopupWindow()
         {
@@ -52,10 +57,22 @@ namespace AppGroup.View
 
             _hwnd = WindowNative.GetWindowHandle(this);
             this.AppWindow.IsShownInSwitchers = false;
+            
+            // 초기 크기를 작게 설정하여 깜빡임 방지
+            this.AppWindow.Resize(new SizeInt32(1, 1));
 
             // 테마 변경 감지
             _uiSettings = new UISettings();
             _uiSettings.ColorValuesChanged += UiSettings_ColorValuesChanged;
+
+            // 폴더 내용 팝업 윈도우 초기화
+            _folderContentsPopup = new FolderContentsPopupWindow();
+            _folderContentsPopup.FileExecuted += FolderContentsPopup_FileExecuted;
+
+            // 호버 타이머 초기화 (200ms 지연)
+            _hoverTimer = new DispatcherTimer();
+            _hoverTimer.Interval = TimeSpan.FromMilliseconds(200);
+            _hoverTimer.Tick += HoverTimer_Tick;
 
             this.Activated += Window_Activated;
         }
@@ -99,6 +116,7 @@ namespace AppGroup.View
             else
             {
                 // 포커스를 잃으면 윈도우 숨기기
+                HideFolderContentsPopup();
                 this.Hide();
             }
         }
@@ -366,6 +384,7 @@ namespace AppGroup.View
                     Debug.WriteLine($"폴더 열기 오류: {ex.Message}");
                 }
 
+                HideFolderContentsPopup();
                 this.Hide();
             }
         }
@@ -375,6 +394,10 @@ namespace AppGroup.View
             if (sender is Button button)
             {
                 button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(30, 128, 128, 128));
+                
+                // 폴더 내용 팝업 표시를 위한 타이머 시작
+                _currentHoveredButton = button;
+                _hoverTimer?.Start();
             }
         }
 
@@ -383,8 +406,132 @@ namespace AppGroup.View
             if (sender is Button button)
             {
                 button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+                
+                // 타이머 중지
+                _hoverTimer?.Stop();
+                
+                // 마우스가 폴더 내용 팝업으로 이동하지 않은 경우에만 숨기기
+                // (팝업에 마우스가 있으면 숨기지 않음)
+                if (_currentHoveredButton == button)
+                {
+                    _currentHoveredButton = null;
+                }
             }
         }
+
+        /// <summary>
+        /// 호버 타이머 틱 이벤트 - 폴더 내용 팝업 표시
+        /// </summary>
+        private void HoverTimer_Tick(object? sender, object e)
+        {
+            _hoverTimer?.Stop();
+            
+            if (_currentHoveredButton != null && _currentHoveredButton.Tag is string folderPath)
+            {
+                ShowFolderContentsPopup(_currentHoveredButton, folderPath);
+            }
+        }
+
+        /// <summary>
+        /// 폴더 내용 팝업 표시
+        /// </summary>
+        private void ShowFolderContentsPopup(Button button, string folderPath)
+        {
+            if (_folderContentsPopup == null || !Directory.Exists(folderPath))
+                return;
+
+            try
+            {
+                // 폴더 이름 가져오기
+                string folderName = Path.GetFileName(folderPath);
+                if (string.IsNullOrEmpty(folderName))
+                    folderName = folderPath;
+
+                // 폴더 내용 로드
+                _folderContentsPopup.LoadFolderContents(folderPath, folderName);
+
+                // 버튼의 화면 위치 계산
+                var transform = button.TransformToVisual(null);
+                var buttonPosition = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
+                
+                // 현재 윈도우의 위치와 크기 가져오기
+                var windowPos = this.AppWindow.Position;
+                var windowSize = this.AppWindow.Size;
+                var popupSize = _folderContentsPopup.AppWindow.Size;
+                
+                // 팝업 윈도우를 현재 윈도우의 왼쪽에 배치하되 살짝 겹치도록
+                int popupWidth = 250;
+                int overlap = 20; // 겹치는 정도 (픽셀)
+                int popupX = windowPos.X - popupWidth + overlap; // 왼쪽에 배치하되 살짝 겹침
+                int popupY = windowPos.Y + (int)buttonPosition.Y; // 버튼 위치에 맞춤
+
+                // 화면 밖으로 나가지 않도록 조정
+                NativeMethods.POINT cursorPos = new NativeMethods.POINT { X = popupX, Y = popupY };
+                IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
+                NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+                monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+                
+                const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
+                
+                if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
+                {
+                    // X 위치 조정: 왼쪽에 공간이 없으면 오른쪽에 표시
+                    if (popupX < monitorInfo.rcWork.left)
+                    {
+                        popupX = windowPos.X + windowSize.Width - overlap;
+                    }
+                    
+                    // X가 오른쪽 경계를 넘으면 조정
+                    if (popupX + popupWidth > monitorInfo.rcWork.right)
+                    {
+                        popupX = monitorInfo.rcWork.right - popupWidth;
+                    }
+                    
+                    // Y 위치 조정: 작업 영역 하단을 넘으면 위로 이동
+                    if (popupY + popupSize.Height > monitorInfo.rcWork.bottom)
+                    {
+                        popupY = monitorInfo.rcWork.bottom - popupSize.Height;
+                    }
+                    
+                    // 상단 경계 확인: 최소 100픽셀 떨어지도록
+                    if (popupY < monitorInfo.rcWork.top + TOP_MARGIN)
+                    {
+                        popupY = monitorInfo.rcWork.top + TOP_MARGIN;
+                    }
+                }
+
+                _folderContentsPopup.ShowAt(popupX, popupY);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"폴더 내용 팝업 표시 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 폴더 내용 팝업에서 파일/폴더 실행 시 호출
+        /// </summary>
+        private void FolderContentsPopup_FileExecuted(object? sender, EventArgs e)
+        {
+            // 모든 윈도우 숨기기
+            _folderContentsPopup?.HidePopup();
+            this.Hide();
+        }
+
+        /// <summary>
+        /// 폴더 내용 팝업 숨기기
+        /// </summary>
+        private void HideFolderContentsPopup()
+        {
+            _folderContentsPopup?.HidePopup();
+        }
+
+
+
+
+        private const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
+        private const int MAX_HEIGHT_SINGLE_COLUMN = 400;
+        private const int MAX_HEIGHT_GRID = 500;
 
         /// <summary>
         /// 윈도우 크기 업데이트
@@ -393,18 +540,46 @@ namespace AppGroup.View
         {
             int width, height;
 
+            // 화면 작업 영역을 확인하여 최대 높이를 동적으로 계산
+            int maxAvailableHeight = _columnCount == 1 ? MAX_HEIGHT_SINGLE_COLUMN : MAX_HEIGHT_GRID;
+            try
+            {
+                NativeMethods.POINT cursorPos;
+                if (NativeMethods.GetCursorPos(out cursorPos))
+                {
+                    IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
+                    NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+                    monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+                    
+                    if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
+                    {
+                        // 작업 영역 높이에서 상단 100픽셀 여백을 뺀 값이 최대 높이
+                        int workAreaHeight = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+                        int defaultMaxHeight = _columnCount == 1 ? MAX_HEIGHT_SINGLE_COLUMN : MAX_HEIGHT_GRID;
+                        maxAvailableHeight = Math.Min(defaultMaxHeight, workAreaHeight - TOP_MARGIN);
+                    }
+                }
+            }
+            catch
+            {
+                // 오류 발생 시 기본 최대 높이 사용
+            }
+
             if (_columnCount == 1)
             {
                 // 1열: 가로 레이아웃
+                // 항목당 약 56px (버튼 높이 + 마진) + 헤더 영역 + 여유 공간
                 width = 220;
-                height = Math.Min(400, Math.Max(100, folderCount * 50 + 60));
+                int contentHeight = folderCount * 56 + 50; // 헤더 + 마진
+                height = Math.Min(maxAvailableHeight, Math.Max(100, contentHeight));
             }
             else
             {
                 // 그리드 레이아웃
                 int rowCount = (int)Math.Ceiling((double)folderCount / _columnCount);
                 width = _columnCount * 98 + WINDOW_PADDING * 2;
-                height = Math.Min(500, Math.Max(150, rowCount * 98 + 60));
+                int contentHeight = rowCount * 98 + 50; // 헤더 + 마진
+                height = Math.Min(maxAvailableHeight, Math.Max(150, contentHeight));
             }
 
             this.AppWindow.Resize(new SizeInt32(width, height));
@@ -428,12 +603,18 @@ namespace AppGroup.View
         /// <summary>
         /// 팝업 윈도우 표시
         /// </summary>
-        public void ShowPopup()
+        public async void ShowPopup()
         {
             try
             {
                 // 테마에 맞는 배경색 설정
                 UpdateMainGridBackground(_uiSettings);
+
+                // 폴더 목록을 먼저 로드하여 크기 설정 (깜빡임 방지)
+                await LoadFoldersAsync();
+
+                // 윈도우 표시 전에 위치를 먼저 설정
+                PositionWindowAboveTaskbar();
 
                 // 윈도우 표시
                 NativeMethods.ShowWindow(_hwnd, NativeMethods.SW_SHOW);
@@ -462,6 +643,20 @@ namespace AppGroup.View
                 {
                     _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
                     _uiSettings = null;
+                }
+
+                if (_hoverTimer != null)
+                {
+                    _hoverTimer.Stop();
+                    _hoverTimer.Tick -= HoverTimer_Tick;
+                    _hoverTimer = null;
+                }
+
+                if (_folderContentsPopup != null)
+                {
+                    _folderContentsPopup.FileExecuted -= FolderContentsPopup_FileExecuted;
+                    _folderContentsPopup.Dispose();
+                    _folderContentsPopup = null;
                 }
             }
 

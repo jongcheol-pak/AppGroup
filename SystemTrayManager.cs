@@ -225,12 +225,31 @@ public class SystemTrayManager {
             return NativeMethods.DefWindowProc(hWnd, msg, wParam, lParam);
         }
 
+        // 더블클릭 감지를 위한 필드
+        private static DateTime _lastClickTime = DateTime.MinValue;
+        private static bool _isDoubleClick = false;
+        private static Action? onHidePopupCallback;
+
+        /// <summary>
+        /// 팝업을 숨기기 위한 콜백을 설정합니다.
+        /// </summary>
+        /// <param name="hidePopupCallback">팝업을 숨길 때 호출될 콜백</param>
+        public static void SetHidePopupCallback(Action hidePopupCallback) {
+            onHidePopupCallback = hidePopupCallback;
+        }
+
         /// <summary>
         /// 트레이 아이콘 이벤트를 처리합니다.
         /// </summary>
         private static void HandleTrayIconMessage(IntPtr lParam) {
             switch (lParam.ToInt32()) {
                 case (int)NativeMethods.WM_LBUTTONUP:
+                    // 더블클릭의 두 번째 클릭인 경우 무시
+                    if (_isDoubleClick) {
+                        _isDoubleClick = false;
+                        return;
+                    }
+                    
                     // 클릭 시 시작 메뉴 팝업 또는 메인 창 표시
                     if (onTrayClickCallback != null) {
                         _ = onTrayClickCallback.Invoke();
@@ -241,6 +260,12 @@ public class SystemTrayManager {
                     break;
 
                 case (int)NativeMethods.WM_LBUTTONDBLCLK:
+                    // 더블클릭 플래그 설정 (다음 WM_LBUTTONUP 무시용)
+                    _isDoubleClick = true;
+                    
+                    // 팝업이 열려있으면 숨기기
+                    onHidePopupCallback?.Invoke();
+                    
                     // 더블 클릭 시 메인 창 표시
                     onShowCallback?.Invoke();
                     break;

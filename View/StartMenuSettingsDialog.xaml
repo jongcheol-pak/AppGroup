@@ -52,7 +52,7 @@
                             <TextBlock Text="클릭 시 폴더 목록 표시" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
                             <TextBlock Text="트레이 아이콘 클릭 시 등록된 폴더 목록을 표시합니다." FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <ToggleSwitch x:Name="ShowStartMenuPopupToggle" Grid.Column="1" IsOn="True" OnContent="" OffContent="" VerticalAlignment="Center" Toggled="ShowFolderIconToggle_Toggled"/>
+                        <ToggleSwitch x:Name="ShowStartMenuPopupToggle" Grid.Column="1" IsOn="True" OnContent="" OffContent="" VerticalAlignment="Center" Toggled="ShowStartMenuPopupToggle_Toggled" />
                     </Grid>
                 </Border>
 

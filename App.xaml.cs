@@ -667,11 +667,17 @@ namespace AppGroup {
                         await HandleTrayClickAsync();
                     }
                 );
+                
+                // 더블클릭 시 팝업을 숨기기 위한 콜백 설정
+                SystemTrayManager.SetHidePopupCallback(() => {
+                    HideStartMenuPopupWindow();
+                });
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize system tray: {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// 트레이 아이콘 클릭 시 동작을 처리합니다.
@@ -684,15 +690,10 @@ namespace AppGroup {
                     // 시작 메뉴 팝업 표시
                     ShowStartMenuPopupWindow();
                 }
-                else {
-                    // 메인 창 표시
-                    ShowAppGroup();
-                }
+                // OFF인 경우 클릭 시 아무 동작도 하지 않음 (더블클릭 시에만 메인 창 표시)
             }
             catch (Exception ex) {
                 System.Diagnostics.Debug.WriteLine($"Failed to handle tray click: {ex.Message}");
-                // 오류 시 기본 동작으로 메인 창 표시
-                ShowAppGroup();
             }
         }
 

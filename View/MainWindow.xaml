@@ -67,6 +67,7 @@
             </StackPanel>
         </ContentDialog>
 
+       
         <!-- 시작 메뉴 폴더 아이콘 선택 다이얼로그 -->
         <ContentDialog x:Name="FolderIconDialog">
             <ContentDialog.Resources>
@@ -117,13 +118,14 @@
             </StackPanel>
         </ContentDialog>
 
+        
         <!-- NavigationView 영역 -->
-        <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="75">
+        <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="80">
             <NavigationView.MenuItems>
                 <NavigationViewItem Tag="Taskbar" Height="60" Margin="0,32,0,0">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
-                        <FontIcon Glyph="&#xE76F;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock Text="작업" HorizontalAlignment="Center" FontSize="12"/>
+                        <FontIcon Glyph="&#xF168;" HorizontalAlignment="Center" FontSize="18"/>
+                        <TextBlock Text="앱 그룹" HorizontalAlignment="Center" FontSize="12"/>
                     </StackPanel>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="StartMenu" Height="60">

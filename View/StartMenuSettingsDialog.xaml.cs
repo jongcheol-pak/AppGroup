@@ -135,6 +135,15 @@ namespace AppGroup.View
         }
 
         /// <summary>
+        /// 시작 메뉴 팝업 표시 토글 변경 이벤트 핸들러
+        /// </summary>
+        private async void ShowStartMenuPopupToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_isLoading) return;
+            await SaveSettingsAsync();
+        }
+
+        /// <summary>
         /// 다이얼로그 닫기
         /// </summary>
         private void CloseDialog(object sender, RoutedEventArgs e)
