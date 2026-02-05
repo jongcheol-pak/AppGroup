@@ -25,16 +25,241 @@ namespace AppGroup.View
     /// </summary>
     public sealed partial class StartMenuPopupWindow : Window, IDisposable
     {
+        #region UI 크기 상수
+
+        /// <summary>
+        /// 아이콘 크기 (픽셀)
+        /// </summary>
         private const int ICON_SIZE = 32;
+
+        /// <summary>
+        /// 그리드 레이아웃 아이콘 크기 (픽셀)
+        /// </summary>
         private const int ICON_SIZE_GRID = 48;
+
+        /// <summary>
+        /// 항목 마진 (픽셀)
+        /// </summary>
         private const int ITEM_MARGIN = 4;
+
+        /// <summary>
+        /// 윈도우 패딩 (픽셀)
+        /// </summary>
         private const int WINDOW_PADDING = 10;
+
+        /// <summary>
+        /// 가로 레이아웃 텍스트 최대 너비 (픽셀)
+        /// </summary>
+        private const int HORIZONTAL_LAYOUT_TEXT_MAX_WIDTH = 150;
+
+        /// <summary>
+        /// 가로 레이아웃 스택 패널 간격 (픽셀)
+        /// </summary>
+        private const int HORIZONTAL_LAYOUT_STACK_SPACING = 10;
+
+        /// <summary>
+        /// 가로 레이아웃 버튼 패딩 (왼쪽, 위쪽, 오른쪽, 아래쪽, 픽셀)
+        /// </summary>
+        private const int HORIZONTAL_LAYOUT_BUTTON_PADDING_LEFT = 10;
+        private const int HORIZONTAL_LAYOUT_BUTTON_PADDING_TOP = 8;
+        private const int HORIZONTAL_LAYOUT_BUTTON_PADDING_RIGHT = 10;
+        private const int HORIZONTAL_LAYOUT_BUTTON_PADDING_BOTTOM = 8;
+
+        /// <summary>
+        /// 그리드 레이아웃 텍스트 최대 너비 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_TEXT_MAX_WIDTH = 70;
+
+        /// <summary>
+        /// 그리드 레이아웃 스택 패널 수직 간격 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_STACK_VERTICAL_SPACING = 5;
+
+        /// <summary>
+        /// 그리드 레이아웃 텍스트 최대 줄 수
+        /// </summary>
+        private const int GRID_LAYOUT_TEXT_MAX_LINES = 2;
+
+        /// <summary>
+        /// 그리드 레이아웃 텍스트 폰트 크기
+        /// </summary>
+        private const int GRID_LAYOUT_TEXT_FONT_SIZE = 12;
+
+        /// <summary>
+        /// 그리드 레이아웃 버튼 너비 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_BUTTON_WIDTH = 90;
+
+        /// <summary>
+        /// 그리드 레이아웃 버튼 높이 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_BUTTON_HEIGHT = 90;
+
+        /// <summary>
+        /// 그리드 레이아웃 버튼 패딩 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_BUTTON_PADDING = 5;
+
+        #endregion
+
+        #region 윈도우 크기 계산 상수
+
+        /// <summary>
+        /// 1열 레이아웃 윈도우 너비 (픽셀)
+        /// </summary>
+        private const int SINGLE_COLUMN_WINDOW_WIDTH = 250;
+
+        /// <summary>
+        /// 1열 레이아웃 항목당 높이 (픽셀)
+        /// </summary>
+        private const int SINGLE_COLUMN_ITEM_HEIGHT = 56;
+
+        /// <summary>
+        /// 그리드 레이아웃 열당 너비 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_COLUMN_WIDTH = 98;
+
+        /// <summary>
+        /// 그리드 레이아웃 행당 높이 (픽셀)
+        /// </summary>
+        private const int GRID_LAYOUT_ROW_HEIGHT = 98;
+
+        /// <summary>
+        /// 윈도우 헤더 높이 (픽셀)
+        /// </summary>
+        private const int WINDOW_HEADER_HEIGHT = 45;
+
+        /// <summary>
+        /// 윈도우 너비 패딩 (픽셀)
+        /// </summary>
+        private const int WINDOW_WIDTH_PADDING = 30;
+
+        /// <summary>
+        /// 윈도우 높이 패딩 (픽셀)
+        /// </summary>
+        private const int WINDOW_HEIGHT_PADDING = 20;
+
+        /// <summary>
+        /// 화면 하단 마진 (픽셀)
+        /// </summary>
+        private const int SCREEN_BOTTOM_MARGIN = 100;
+
+        /// <summary>
+        /// 윈도우 최소 너비 (픽셀)
+        /// </summary>
+        private const int MIN_WINDOW_WIDTH = 150;
+
+        /// <summary>
+        /// 윈도우 최소 높이 (픽셀)
+        /// </summary>
+        private const int MIN_WINDOW_HEIGHT = 120;
+
+        /// <summary>
+        /// 1열 레이아웃 최대 높이 (픽셀)
+        /// </summary>
+        private const int MAX_HEIGHT_SINGLE_COLUMN = 800;
+
+        /// <summary>
+        /// 그리드 레이아웃 최대 높이 (픽셀)
+        /// </summary>
+        private const int MAX_HEIGHT_GRID = 700;
+
+        /// <summary>
+        /// 윈도우 크롬 보정 마진 (왼쪽, 위쪽, 오른쪽, 아래쪽, 픽셀)
+        /// </summary>
+        private const int WINDOW_CHROME_MARGIN_LEFT = 0;
+        private const int WINDOW_CHROME_MARGIN_TOP = 0;
+        private const int WINDOW_CHROME_MARGIN_RIGHT = -5;
+        private const int WINDOW_CHROME_MARGIN_BOTTOM = -15;
+
+        /// <summary>
+        /// 작업 표시줄 위 윈도우 배치 하단 마진 (픽셀)
+        /// </summary>
+        private const int TASKBAR_BOTTOM_MARGIN = 10;
+
+        #endregion
+
+        #region 색상 상수
+
+        /// <summary>
+        /// 다크 모드 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte DARK_MODE_BACKGROUND_A = 230;
+        private const byte DARK_MODE_BACKGROUND_R = 32;
+        private const byte DARK_MODE_BACKGROUND_G = 32;
+        private const byte DARK_MODE_BACKGROUND_B = 32;
+
+        /// <summary>
+        /// 라이트 모드 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte LIGHT_MODE_BACKGROUND_A = 230;
+        private const byte LIGHT_MODE_BACKGROUND_R = 243;
+        private const byte LIGHT_MODE_BACKGROUND_G = 243;
+        private const byte LIGHT_MODE_BACKGROUND_B = 243;
+
+        /// <summary>
+        /// 투명 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte TRANSPARENT_BACKGROUND_A = 0;
+        private const byte TRANSPARENT_BACKGROUND_R = 0;
+        private const byte TRANSPARENT_BACKGROUND_G = 0;
+        private const byte TRANSPARENT_BACKGROUND_B = 0;
+
+        /// <summary>
+        /// 호버 상태 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte HOVER_BACKGROUND_A = 30;
+        private const byte HOVER_BACKGROUND_R = 128;
+        private const byte HOVER_BACKGROUND_G = 128;
+        private const byte HOVER_BACKGROUND_B = 128;
+
+        /// <summary>
+        /// 테마 감지 임계값 (R 값 기준)
+        /// </summary>
+        private const byte THEME_DETECTION_THRESHOLD = 128;
+
+        #endregion
+
+        #region 경로 상수
+
+        /// <summary>
+        /// 기본 폴더 아이콘 경로
+        /// </summary>
+        private const string DEFAULT_FOLDER_ICON_PATH = "ms-appx:///Assets/icon/folder_3.png";
+
+        #endregion
+
+        #region 팝업 위치 계산 상수
+
+        /// <summary>
+        /// 폴더 내용 팝업 겹침 정도 (픽셀, 양수=겹침, 음수=간격)
+        /// </summary>
+        private const int POPUP_OVERLAP = 20;
+
+        /// <summary>
+        /// 상단 최소 여백 (픽셀)
+        /// </summary>
+        private const int TOP_MARGIN = 100;
+
+        /// <summary>
+        /// 호버 딜레이 (밀리초)
+        /// </summary>
+        private const int HOVER_DELAY_MS = 200;
+
+        #endregion
 
         private readonly WindowHelper _windowHelper;
         private IntPtr _hwnd;
         private int _columnCount = 1;
         private bool _disposed = false;
         private UISettings _uiSettings;
+
+        // 윈도우 크기 저장 (SetWindowPos에서 사용)
+        private int _currentWindowWidth = 250;
+        private int _currentWindowHeight = 200;
+
+        // 이중 로딩 방지 플래그
+        private bool _isShowingPopup = false;
         
         private FolderContentsPopupWindow? _folderContentsPopup;
         private Button? _currentHoveredButton;
@@ -48,7 +273,7 @@ namespace AppGroup.View
             _windowHelper.SetSystemBackdrop(WindowHelper.BackdropType.AcrylicBase);
             _windowHelper.IsMaximizable = false;
             _windowHelper.IsMinimizable = false;
-            _windowHelper.IsResizable = false;
+            _windowHelper.IsResizable = true;
             _windowHelper.HasBorder = true;
             _windowHelper.HasTitleBar = false;
             _windowHelper.IsAlwaysOnTop = true;
@@ -57,9 +282,6 @@ namespace AppGroup.View
 
             _hwnd = WindowNative.GetWindowHandle(this);
             this.AppWindow.IsShownInSwitchers = false;
-            
-            // 초기 크기를 작게 설정하여 깜빡임 방지
-            this.AppWindow.Resize(new SizeInt32(1, 1));
 
             // 테마 변경 감지
             _uiSettings = new UISettings();
@@ -71,7 +293,7 @@ namespace AppGroup.View
 
             // 호버 타이머 초기화 (200ms 지연)
             _hoverTimer = new DispatcherTimer();
-            _hoverTimer.Interval = TimeSpan.FromMilliseconds(200);
+            _hoverTimer.Interval = TimeSpan.FromMilliseconds(HOVER_DELAY_MS);
             _hoverTimer.Tick += HoverTimer_Tick;
 
             this.Activated += Window_Activated;
@@ -90,15 +312,15 @@ namespace AppGroup.View
             try
             {
                 var foreground = settings.GetColorValue(UIColorType.Foreground);
-                bool isDarkMode = foreground.R > 128;
+                bool isDarkMode = foreground.R > THEME_DETECTION_THRESHOLD;
 
                 if (isDarkMode)
                 {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(230, 32, 32, 32));
+                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(DARK_MODE_BACKGROUND_A, DARK_MODE_BACKGROUND_R, DARK_MODE_BACKGROUND_G, DARK_MODE_BACKGROUND_B));
                 }
                 else
                 {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(230, 243, 243, 243));
+                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(LIGHT_MODE_BACKGROUND_A, LIGHT_MODE_BACKGROUND_R, LIGHT_MODE_BACKGROUND_G, LIGHT_MODE_BACKGROUND_B));
                 }
             }
             catch (Exception ex)
@@ -111,11 +333,16 @@ namespace AppGroup.View
         {
             if (args.WindowActivationState != WindowActivationState.Deactivated)
             {
-                await LoadFoldersAsync();
+                // ShowPopup에서 이미 로드한 경우 중복 로드 방지
+                if (!_isShowingPopup)
+                {
+                    await LoadFoldersAsync();
+                }
             }
             else
             {
                 // 포커스를 잃으면 윈도우 숨기기
+                _isShowingPopup = false;
                 HideFolderContentsPopup();
                 this.Hide();
             }
@@ -135,13 +362,29 @@ namespace AppGroup.View
                 // 폴더 목록 로드
                 var folders = await JsonConfigHelper.LoadStartMenuFoldersAsync();
 
-                // UI 업데이트
+                // UI 업데이트 - TaskCompletionSource를 사용하여 완료 대기
+                var tcs = new TaskCompletionSource<bool>();
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    BuildFolderUI(folders);
-                    UpdateWindowSize(folders.Count);
-                    PositionWindowAboveTaskbar();
+                    try
+                    {
+                        BuildFolderUI(folders);
+                        
+                        // 초기 크기 설정 (추정값 기반)
+                        UpdateWindowSize(folders.Count);
+                        PositionWindowAboveTaskbar();
+                        
+                        // 레이아웃 완료 후 실제 크기로 재조정
+                        FolderPanel.Loaded += OnFolderPanelLoaded;
+                        
+                        tcs.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
                 });
+                await tcs.Task;
             }
             catch (Exception ex)
             {
@@ -149,12 +392,24 @@ namespace AppGroup.View
             }
         }
 
+        private void OnFolderPanelLoaded(object sender, RoutedEventArgs e)
+        {
+            FolderPanel.Loaded -= OnFolderPanelLoaded;
+
+            // 레이아웃 완료 후 실제 크기로 재조정
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                UpdateWindowSize(FolderPanel.Children.Count);
+                PositionWindowAboveTaskbar();
+            });
+        }
+
         /// <summary>
         /// 폴더 UI를 구성합니다.
         /// </summary>
         private void BuildFolderUI(List<StartMenuItem> folders)
         {
-            FolderItemsControl.Items.Clear();
+            FolderPanel.Children.Clear();
 
             if (folders.Count == 0)
             {
@@ -167,7 +422,7 @@ namespace AppGroup.View
                     Margin = new Thickness(20),
                     Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(180, 128, 128, 128))
                 };
-                FolderItemsControl.Items.Add(emptyText);
+                FolderPanel.Children.Add(emptyText);
                 return;
             }
 
@@ -191,7 +446,7 @@ namespace AppGroup.View
             foreach (var folder in folders)
             {
                 var button = CreateHorizontalFolderButton(folder);
-                FolderItemsControl.Items.Add(button);
+                FolderPanel.Children.Add(button);
             }
         }
 
@@ -220,7 +475,7 @@ namespace AppGroup.View
                     }
                 }
 
-                FolderItemsControl.Items.Add(rowPanel);
+                FolderPanel.Children.Add(rowPanel);
             }
         }
 
@@ -242,13 +497,13 @@ namespace AppGroup.View
                 Text = folder.FolderName,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxWidth = 150
+                MaxWidth = HORIZONTAL_LAYOUT_TEXT_MAX_WIDTH
             };
 
             var content = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Spacing = 10
+                Spacing = HORIZONTAL_LAYOUT_STACK_SPACING
             };
             content.Children.Add(icon);
             content.Children.Add(nameText);
@@ -260,8 +515,8 @@ namespace AppGroup.View
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(ITEM_MARGIN),
-                Padding = new Thickness(10, 8, 10, 8),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0)),
+                Padding = new Thickness(HORIZONTAL_LAYOUT_BUTTON_PADDING_LEFT, HORIZONTAL_LAYOUT_BUTTON_PADDING_TOP, HORIZONTAL_LAYOUT_BUTTON_PADDING_RIGHT, HORIZONTAL_LAYOUT_BUTTON_PADDING_BOTTOM),
+                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
                 BorderThickness = new Thickness(0)
             };
             button.Click += FolderButton_Click;
@@ -294,15 +549,15 @@ namespace AppGroup.View
                 TextAlignment = TextAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 TextWrapping = TextWrapping.Wrap,
-                MaxLines = 2,
-                MaxWidth = 70,
-                FontSize = 12
+                MaxLines = GRID_LAYOUT_TEXT_MAX_LINES,
+                MaxWidth = GRID_LAYOUT_TEXT_MAX_WIDTH,
+                FontSize = GRID_LAYOUT_TEXT_FONT_SIZE
             };
 
             var content = new StackPanel
             {
                 Orientation = Orientation.Vertical,
-                Spacing = 5,
+                Spacing = GRID_LAYOUT_STACK_VERTICAL_SPACING,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
             content.Children.Add(icon);
@@ -312,11 +567,11 @@ namespace AppGroup.View
             {
                 Content = content,
                 Tag = folder.FolderPath,
-                Width = 90,
-                Height = 90,
+                Width = GRID_LAYOUT_BUTTON_WIDTH,
+                Height = GRID_LAYOUT_BUTTON_HEIGHT,
                 Margin = new Thickness(ITEM_MARGIN),
-                Padding = new Thickness(5),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0)),
+                Padding = new Thickness(GRID_LAYOUT_BUTTON_PADDING),
+                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
                 BorderThickness = new Thickness(0),
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center
@@ -339,7 +594,7 @@ namespace AppGroup.View
             {
                 if (string.IsNullOrEmpty(iconPath) || iconPath.StartsWith("/Assets"))
                 {
-                    imageControl.Source = new BitmapImage(new Uri("ms-appx:///Assets/icon/folder_3.png"));
+                    imageControl.Source = new BitmapImage(new Uri(DEFAULT_FOLDER_ICON_PATH));
                 }
                 else if (File.Exists(iconPath))
                 {
@@ -347,13 +602,13 @@ namespace AppGroup.View
                 }
                 else
                 {
-                    imageControl.Source = new BitmapImage(new Uri("ms-appx:///Assets/icon/folder_3.png"));
+                    imageControl.Source = new BitmapImage(new Uri(DEFAULT_FOLDER_ICON_PATH));
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"아이콘 로드 오류: {ex.Message}");
-                imageControl.Source = new BitmapImage(new Uri("ms-appx:///Assets/icon/folder_3.png"));
+                imageControl.Source = new BitmapImage(new Uri(DEFAULT_FOLDER_ICON_PATH));
             }
         }
 
@@ -393,8 +648,8 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(30, 128, 128, 128));
-                
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(HOVER_BACKGROUND_A, HOVER_BACKGROUND_R, HOVER_BACKGROUND_G, HOVER_BACKGROUND_B));
+
                 // 폴더 내용 팝업 표시를 위한 타이머 시작
                 _currentHoveredButton = button;
                 _hoverTimer?.Start();
@@ -405,11 +660,11 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
-                
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B));
+
                 // 타이머 중지
                 _hoverTimer?.Stop();
-                
+
                 // 마우스가 폴더 내용 팝업으로 이동하지 않은 경우에만 숨기기
                 // (팝업에 마우스가 있으면 숨기지 않음)
                 if (_currentHoveredButton == button)
@@ -459,26 +714,23 @@ namespace AppGroup.View
                 var windowSize = this.AppWindow.Size;
                 var popupSize = _folderContentsPopup.AppWindow.Size;
                 
-                // 팝업 윈도우를 현재 윈도우의 왼쪽에 배치하되 살짝 겹치도록
-                int popupWidth = 250;
-                int overlap = 20; // 겹치는 정도 (픽셀)
-                int popupX = windowPos.X - popupWidth + overlap; // 왼쪽에 배치하되 살짝 겹침
-                int popupY = windowPos.Y + (int)buttonPosition.Y; // 버튼 위치에 맞춤
+                // 팝업 윈도우를 현재 윈도우의 왼쪽에 배치
+                int popupWidth = popupSize.Width; // 실제 팝업 크기 사용
+                int popupX = windowPos.X - popupWidth + POPUP_OVERLAP;
+                int popupY = windowPos.Y + (int)buttonPosition.Y;
 
                 // 화면 밖으로 나가지 않도록 조정
                 NativeMethods.POINT cursorPos = new NativeMethods.POINT { X = popupX, Y = popupY };
                 IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
                 NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
                 monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
-                
-                const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
-                
+
                 if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
                 {
                     // X 위치 조정: 왼쪽에 공간이 없으면 오른쪽에 표시
                     if (popupX < monitorInfo.rcWork.left)
                     {
-                        popupX = windowPos.X + windowSize.Width - overlap;
+                        popupX = windowPos.X + windowSize.Width - POPUP_OVERLAP;
                     }
                     
                     // X가 오른쪽 경계를 넘으면 조정
@@ -533,62 +785,73 @@ namespace AppGroup.View
 
 
 
-        private const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
-        private const int MAX_HEIGHT_SINGLE_COLUMN = 700;
-        private const int MAX_HEIGHT_GRID = 600;
-        private const int HEADER_HEIGHT = 45; // 헤더 영역 높이 (TextBlock + Border + Margin)
-        private const int SCROLLVIEW_MARGIN = 15; // ScrollView 마진 + 여유 공간
-
         /// <summary>
-        /// 윈도우 크기 업데이트
+        /// 윈도우 크기 업데이트 - PopupWindow와 동일한 방식
         /// </summary>
         private void UpdateWindowSize(int folderCount)
         {
-            int width, height;
+            // DPI 스케일 계수 가져오기 (PopupWindow와 동일)
+            uint dpi = NativeMethods.GetDpiForWindow(_hwnd);
+            float scaleFactor = (float)dpi / 96.0f;
 
-            // 화면 작업 영역을 확인하여 최대 높이를 동적으로 계산
-            int maxAvailableHeight = _columnCount == 1 ? MAX_HEIGHT_SINGLE_COLUMN : MAX_HEIGHT_GRID;
-            try
-            {
-                NativeMethods.POINT cursorPos;
-                if (NativeMethods.GetCursorPos(out cursorPos))
-                {
-                    IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
-                    NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
-                    monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
-                    
-                    if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
-                    {
-                        // 작업 영역 높이에서 상단 100픽셀 여백을 뺀 값이 최대 높이
-                        int workAreaHeight = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
-                        int defaultMaxHeight = _columnCount == 1 ? MAX_HEIGHT_SINGLE_COLUMN : MAX_HEIGHT_GRID;
-                        maxAvailableHeight = Math.Min(defaultMaxHeight, workAreaHeight - TOP_MARGIN);
-                    }
-                }
-            }
-            catch
-            {
-                // 오류 발생 시 기본 최대 높이 사용
-            }
+            // 콘텐츠 크기 계산
+            int dynamicWidth;
+            int dynamicHeight;
 
             if (_columnCount == 1)
             {
                 // 1열: 가로 레이아웃
-                // 항목당 약 56px (버튼 높이 + 마진) + 헤더 영역 + ScrollView 마진 + 추가 여유 공간
-                width = 240;
-                int contentHeight = folderCount * 56 + HEADER_HEIGHT + SCROLLVIEW_MARGIN + 10;
-                height = Math.Min(maxAvailableHeight, Math.Max(120, contentHeight));
+                dynamicWidth = SINGLE_COLUMN_WINDOW_WIDTH;
+                dynamicHeight = folderCount * SINGLE_COLUMN_ITEM_HEIGHT; // 버튼 높이 + 마진
             }
             else
             {
                 // 그리드 레이아웃
                 int rowCount = (int)Math.Ceiling((double)folderCount / _columnCount);
-                width = _columnCount * 100 + WINDOW_PADDING * 2;
-                int contentHeight = rowCount * 100 + HEADER_HEIGHT + SCROLLVIEW_MARGIN + 10;
-                height = Math.Min(maxAvailableHeight, Math.Max(160, contentHeight));
+                dynamicWidth = _columnCount * GRID_LAYOUT_COLUMN_WIDTH;
+                dynamicHeight = rowCount * GRID_LAYOUT_ROW_HEIGHT;
             }
 
-            this.AppWindow.Resize(new SizeInt32(width, height));
+            // 헤더 높이 추가
+            dynamicHeight += WINDOW_HEADER_HEIGHT;
+
+            // DPI 스케일 적용 (PopupWindow와 동일)
+            int scaledWidth = (int)(dynamicWidth * scaleFactor);
+            int scaledHeight = (int)(dynamicHeight * scaleFactor);
+
+            // 패딩 추가 (PopupWindow와 동일)
+            int finalWidth = scaledWidth + WINDOW_WIDTH_PADDING;
+            int finalHeight = scaledHeight + WINDOW_HEIGHT_PADDING;
+
+            // 화면 최대 높이 제한 (커서가 있는 모니터 기준)
+            NativeMethods.POINT cursorPos;
+            NativeMethods.GetCursorPos(out cursorPos);
+            IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+            monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+            NativeMethods.GetMonitorInfo(monitor, ref monitorInfo);
+
+            int screenHeight = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+            int maxFixedHeight = _columnCount == 1 ? MAX_HEIGHT_SINGLE_COLUMN : MAX_HEIGHT_GRID;
+            int maxAllowedHeight = Math.Min(screenHeight - SCREEN_BOTTOM_MARGIN, maxFixedHeight);
+            if (finalHeight > maxAllowedHeight)
+            {
+                finalHeight = maxAllowedHeight;
+            }
+
+            // 최소 크기 보장
+            finalWidth = Math.Max(finalWidth, MIN_WINDOW_WIDTH);
+            finalHeight = Math.Max(finalHeight, MIN_WINDOW_HEIGHT);
+
+            Debug.WriteLine($"UpdateWindowSize: folders={folderCount}, scaleFactor={scaleFactor}, finalWidth={finalWidth}, finalHeight={finalHeight}");
+
+            // PopupWindow와 동일하게 음수 마진 적용 (윈도우 크롬 보정)
+            MainGrid.Margin = new Thickness(WINDOW_CHROME_MARGIN_LEFT, WINDOW_CHROME_MARGIN_TOP, WINDOW_CHROME_MARGIN_RIGHT, WINDOW_CHROME_MARGIN_BOTTOM);
+
+            // 윈도우 크기 저장 및 적용
+            _currentWindowWidth = finalWidth;
+            _currentWindowHeight = finalHeight;
+            _windowHelper.SetSize(finalWidth, finalHeight);
         }
 
         /// <summary>
@@ -613,24 +876,67 @@ namespace AppGroup.View
         {
             try
             {
+                // 이중 로딩 방지 플래그 설정
+                _isShowingPopup = true;
+
                 // 테마에 맞는 배경색 설정
                 UpdateMainGridBackground(_uiSettings);
 
-                // 폴더 목록을 먼저 로드하여 크기 설정 (깜빡임 방지)
+                // 폴더 목록을 먼저 로드하여 크기 계산
                 await LoadFoldersAsync();
 
-                // 윈도우 표시 전에 위치를 먼저 설정
-                PositionWindowAboveTaskbar();
+                // 윈도우 크기 먼저 적용
+                _windowHelper.SetSize(_currentWindowWidth, _currentWindowHeight);
 
-                // 윈도우 표시
-                NativeMethods.ShowWindow(_hwnd, NativeMethods.SW_SHOW);
+                // 윈도우 위치 계산 (작업 표시줄 위)
+                var (x, y) = CalculateWindowPosition();
+
+                // SetWindowPos로 위치 및 표시 (크기는 이미 SetSize로 적용됨)
+                NativeMethods.SetWindowPos(
+                    _hwnd,
+                    NativeMethods.HWND_TOPMOST,
+                    x, y,
+                    _currentWindowWidth, _currentWindowHeight,
+                    NativeMethods.SWP_SHOWWINDOW);
+
                 NativeMethods.SetForegroundWindow(_hwnd);
                 this.Activate();
+
+                // 플래그 해제는 Deactivated에서 처리
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"팝업 표시 오류: {ex.Message}");
+                _isShowingPopup = false;
             }
+        }
+
+        /// <summary>
+        /// 작업 표시줄 위 윈도우 위치 계산
+        /// </summary>
+        private (int x, int y) CalculateWindowPosition()
+        {
+            // 현재 커서 위치 가져오기
+            NativeMethods.POINT cursorPos;
+            NativeMethods.GetCursorPos(out cursorPos);
+
+            // 모니터 정보 가져오기
+            IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+            monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+            NativeMethods.GetMonitorInfo(monitor, ref monitorInfo);
+
+            // 작업 영역 기준으로 위치 계산
+            int x = cursorPos.X - (_currentWindowWidth / 2);
+            int y = monitorInfo.rcWork.bottom - _currentWindowHeight - TASKBAR_BOTTOM_MARGIN;
+
+            // 화면 경계 조정
+            if (x < monitorInfo.rcWork.left)
+                x = monitorInfo.rcWork.left;
+            if (x + _currentWindowWidth > monitorInfo.rcWork.right)
+                x = monitorInfo.rcWork.right - _currentWindowWidth;
+
+            return (x, y);
         }
 
         public void Dispose()

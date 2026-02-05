@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- 헤더 영역 -->
-        <StackPanel Grid.Row="0">
+        <StackPanel Grid.Row="0" x:Name="HeaderPanel">
             <Grid x:Name="Header" Margin="10,5,10,5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -27,15 +27,9 @@
         </StackPanel>
 
         <!-- 폴더 목록 영역 -->
-        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
+        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
                     VerticalScrollBarVisibility="Auto" Margin="5">
-            <ItemsControl x:Name="FolderItemsControl" HorizontalAlignment="Left">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel x:Name="FolderPanel" HorizontalAlignment="Left"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+            <StackPanel x:Name="FolderPanel" Width="Auto" HorizontalAlignment="Left"/>
         </ScrollView>
     </Grid>
 </Window>

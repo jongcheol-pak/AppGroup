@@ -1050,8 +1050,8 @@ private bool _disposed = false;
                         {
                             if (item is StorageFolder folder)
                             {
-                                // 폴더인 경우 JSON에 추가
-                                JsonConfigHelper.AddStartMenuFolder(folder.Path, folder.Name);
+                                // 폴더인 경우 JSON에 추가 (folderName, folderPath 순서)
+                                JsonConfigHelper.AddStartMenuFolder(folder.Name, folder.Path);
                             }
                         }
 

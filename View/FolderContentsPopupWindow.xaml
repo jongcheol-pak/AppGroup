@@ -26,8 +26,8 @@
         </StackPanel>
 
         <!-- 파일/폴더 목록 영역 -->
-        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
-                    VerticalScrollBarVisibility="Auto" Margin="5">
+        <ScrollView Grid.Row="1" Padding="0,0,0,10"  VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
+                    VerticalScrollBarVisibility="Auto" Margin="5,5,5,10">
             <StackPanel x:Name="ContentsPanel" HorizontalAlignment="Stretch">
                 <!-- 파일 섹션 -->
                 <TextBlock x:Name="FileSectionHeader" Text="파일" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="10,5,10,5" Visibility="Collapsed"/>

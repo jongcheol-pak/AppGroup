@@ -2,6 +2,161 @@
 
 ## 최근 변경 사항
 
+### 2026-02-05 - FolderContentsPopupWindow, StartMenuPopupWindow 하드코딩된 값 상수화
+
+#### 작업 내용
+- FolderContentsPopupWindow.xaml.cs와 StartMenuPopupWindow.xaml.cs의 하드코딩된 값을 상수로 정의
+- 그룹별로 상수를 분류하여 코드 가독성 향상
+
+#### 상수 그룹 분류
+
+**FolderContentsPopupWindow.xaml.cs**
+- UI 크기 상수: ICON_SIZE, ITEM_MARGIN, TEXT_MAX_WIDTH, STACK_PANEL_SPACING, BUTTON_PADDING_*
+- 윈도우 크기 계산 상수: ITEM_HEIGHT, SECTION_HEADER_HEIGHT, TOP_HEADER_HEIGHT, EMPTY_STATE_HEIGHT, WINDOW_*_PADDING, SCREEN_BOTTOM_MARGIN, WINDOW_CHROME_MARGIN_*
+- 색상 상수: DARK_MODE_BACKGROUND_*, LIGHT_MODE_BACKGROUND_*, TRANSPARENT_BACKGROUND_*, HOVER_BACKGROUND_*, THEME_DETECTION_THRESHOLD
+- 경로 상수: DEFAULT_FOLDER_ICON_PATH, APP_RESOURCE_PREFIX
+
+**StartMenuPopupWindow.xaml.cs**
+- UI 크기 상수: ICON_SIZE, ICON_SIZE_GRID, HORIZONTAL_LAYOUT_*, GRID_LAYOUT_*
+- 윈도우 크기 계산 상수: SINGLE_COLUMN_WINDOW_WIDTH, SINGLE_COLUMN_ITEM_HEIGHT, GRID_LAYOUT_COLUMN_WIDTH, GRID_LAYOUT_ROW_HEIGHT, WINDOW_HEADER_HEIGHT, WINDOW_*_PADDING, SCREEN_BOTTOM_MARGIN, MAX_HEIGHT_*, WINDOW_CHROME_MARGIN_*, TASKBAR_BOTTOM_MARGIN
+- 색상 상수: DARK_MODE_BACKGROUND_*, LIGHT_MODE_BACKGROUND_*, TRANSPARENT_BACKGROUND_*, HOVER_BACKGROUND_*, THEME_DETECTION_THRESHOLD
+- 경로 상수: DEFAULT_FOLDER_ICON_PATH
+- 팝업 위치 계산 상수: POPUP_OVERLAP, TOP_MARGIN
+- 기타: HOVER_DELAY_MS
+
+#### 변경된 파일
+- `View/FolderContentsPopupWindow.xaml.cs` - 상수 정의 및 하드코딩된 값 교체
+- `View/StartMenuPopupWindow.xaml.cs` - 상수 정의 및 하드코딩된 값 교체
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 3개)
+- 동작: 기존 동작과 동일하게 유지
+
+---
+
+### 2026-02-05 - MainWindow 폴더 드래그앤드롭 저장 버그 수정
+
+#### 문제점
+- MainWindow에서 폴더를 드래그앤드롭하면 폴더 경로와 이름이 바뀌어 저장됨
+- 이로 인해 StartMenuPopupWindow에서 폴더 목록이 제대로 표시/작동하지 않음
+
+#### 원인 분석
+`JsonConfigHelper.AddStartMenuFolder` 메서드 호출 시 매개변수 순서가 잘못됨:
+- 메서드 시그니처: `AddStartMenuFolder(string folderName, string folderPath, string folderIcon = null)`
+- 잘못된 호출: `AddStartMenuFolder(folder.Path, folder.Name)` (순서 뒤바뀜)
+- 올바른 호출: `AddStartMenuFolder(folder.Name, folder.Path)`
+
+#### 수정 내용
+```csharp
+// 수정 전
+JsonConfigHelper.AddStartMenuFolder(folder.Path, folder.Name);
+
+// 수정 후
+JsonConfigHelper.AddStartMenuFolder(folder.Name, folder.Path);
+```
+
+#### 변경된 파일
+- `View/MainWindow.xaml.cs` - StartMenuGrid_Drop 메서드
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+
+#### 참고: 동일 실수 방지
+- 메서드 호출 시 매개변수 순서 확인 필수
+- 특히 문자열 매개변수가 여러 개인 경우 이름으로 구분하기 어려우므로 주의
+
+---
+
+### 2026-02-05 - StartMenuPopupWindow 히트 테스트 문제 수정 (4개 이후 항목 클릭 불가)
+
+#### 문제점
+- StartMenuPopupWindow에서 폴더 목록 중 4개까지는 클릭/호버가 작동하지만 5번째 이후 항목은 클릭/호버 이벤트가 발생하지 않음
+- 항목이 시각적으로는 보이지만 이벤트가 발생하지 않는 히트 테스트 문제
+
+#### 원인 분석
+- `_windowHelper.SetSize()`로 윈도우 크기를 변경해도 내부 컨트롤(ScrollView, MainGrid)의 레이아웃 바운드가 자동으로 업데이트되지 않음
+- WinUI 3에서 프로그래밍 방식으로 윈도우 크기를 변경할 때 레이아웃 시스템이 자동으로 재측정/재배치를 수행하지 않는 경우가 있음
+- 히트 테스트 영역이 이전 크기 기준으로 유지되어 확장된 영역의 컨트롤이 이벤트를 받지 못함
+
+#### 수정 내용
+`UpdateWindowSize()` 메서드에서 윈도우 크기 변경 후 레이아웃 강제 업데이트 추가:
+```csharp
+_windowHelper.SetSize(finalWidth, finalHeight);
+
+// 레이아웃 강제 업데이트 - 윈도우 크기 변경 후 내부 컨트롤의 히트 테스트 영역 갱신
+MainGrid.InvalidateMeasure();
+MainGrid.InvalidateArrange();
+MainGrid.UpdateLayout();
+```
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - UpdateWindowSize() 메서드에 레이아웃 강제 업데이트 추가
+- `View/FolderContentsPopupWindow.xaml.cs` - 동일한 수정 적용
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 721개)
+
+#### 참고: 동일 실수 방지
+- WinUI 3에서 윈도우 크기를 동적으로 변경할 때는 반드시 `InvalidateMeasure()`, `InvalidateArrange()`, `UpdateLayout()` 호출로 레이아웃 강제 업데이트 필요
+- 특히 ScrollView나 ItemsControl 등 가변 콘텐츠를 포함하는 컨트롤에서 중요
+- 시각적으로 보이지만 이벤트가 발생하지 않으면 히트 테스트 영역 문제 의심
+
+---
+
+### 2026-02-05 - StartMenuPopupWindow 및 FolderContentsPopupWindow 팝업 크기 변경 최종 수정
+
+#### 문제점
+- StartMenuPopupWindow와 FolderContentsPopupWindow에서 폴더/파일 개수에 따라 팝업 크기가 변경되지 않음
+- 폴더 4개까지만 표시되고 스크롤이 발생하는 문제
+- 이전 수정 시도 (`ScrollView.MaxHeight`, `AppWindow.Resize()`, `MoveWindow()`, `SetWindowPos()`)가 모두 실패
+
+#### 원인 분석 (근본 원인)
+- `OverlappedPresenter.IsResizable = false` 설정이 **프로그래밍 방식의 크기 변경까지 차단**
+- PopupWindow.xaml.cs는 `IsResizable = true`를 사용하여 정상 동작
+- StartMenuPopupWindow와 FolderContentsPopupWindow는 `IsResizable = false`로 설정되어 있어 모든 리사이즈 시도가 실패
+
+#### 수정 내용
+1. `IsResizable = true`로 변경하여 프로그래밍 방식 크기 변경 허용
+2. `_windowHelper.SetSize()`를 사용하여 크기 변경 (PopupWindow와 동일한 패턴)
+3. DPI 스케일링 적용 (`scaleFactor = dpi / 96.0f`)
+4. UpdateWindowSize() 메서드 전면 재작성
+
+#### 수정 전/후 비교
+```csharp
+// 수정 전: IsResizable = false로 인해 크기 변경 차단
+_windowHelper.IsResizable = false;
+this.AppWindow.Resize(new SizeInt32(width, height));
+
+// 수정 후: IsResizable = true, DPI 스케일링, _windowHelper.SetSize()
+_windowHelper.IsResizable = true;
+
+uint dpi = NativeMethods.GetDpiForWindow(_hwnd);
+float scaleFactor = (float)dpi / 96.0f;
+
+int scaledWidth = (int)(dynamicWidth * scaleFactor);
+int scaledHeight = (int)(dynamicHeight * scaleFactor);
+
+_windowHelper.SetSize(finalWidth, finalHeight);
+```
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - IsResizable = true, UpdateWindowSize() 전면 재작성
+- `View/FolderContentsPopupWindow.xaml.cs` - IsResizable = true, UpdateWindowSize() 전면 재작성
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 720개 (기존 nullable 관련 경고)
+- 테스트: 두 팝업 모두 정상 크기 변경 확인
+
+#### 참고: 동일 실수 방지
+- **`IsResizable = false`는 사용자 드래그뿐 아니라 프로그래밍 방식 크기 변경도 차단함**
+- 팝업 창 크기를 동적으로 변경해야 하는 경우 반드시 `IsResizable = true` 설정 필요
+- PopupWindow.xaml.cs를 레퍼런스로 참고하여 동일한 패턴 적용할 것
+- DPI 스케일링은 `NativeMethods.GetDpiForWindow(_hwnd)`로 가져와서 `dpi / 96.0f` 계산
+
+---
+
 ### 2026-02-05 - IconHelper.cs 파일 분리 (partial class)
 
 #### 문제점

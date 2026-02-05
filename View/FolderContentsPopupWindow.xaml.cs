@@ -21,11 +21,159 @@ namespace AppGroup.View
     /// </summary>
     public sealed partial class FolderContentsPopupWindow : Window, IDisposable
     {
+        #region UI 크기 상수
+
+        /// <summary>
+        /// 아이콘 크기 (픽셀)
+        /// </summary>
         private const int ICON_SIZE = 20;
+
+        /// <summary>
+        /// 항목 마진 (픽셀)
+        /// </summary>
         private const int ITEM_MARGIN = 2;
+
+        /// <summary>
+        /// 윈도우 너비 (픽셀)
+        /// </summary>
         private const int WINDOW_WIDTH = 250;
-        private const int MAX_WINDOW_HEIGHT = 600;
+
+        /// <summary>
+        /// 윈도우 최대 높이 (픽셀)
+        /// </summary>
+        private const int MAX_WINDOW_HEIGHT = 1000;
+
+        /// <summary>
+        /// 윈도우 최소 높이 (픽셀)
+        /// </summary>
         private const int MIN_WINDOW_HEIGHT = 100;
+
+        /// <summary>
+        /// 텍스트 최대 너비 (픽셀)
+        /// </summary>
+        private const int TEXT_MAX_WIDTH = 180;
+
+        /// <summary>
+        /// 스택 패널 간격 (픽셀)
+        /// </summary>
+        private const int STACK_PANEL_SPACING = 8;
+
+        /// <summary>
+        /// 버튼 패딩 (왼쪽, 위쪽, 오른쪽, 아래쪽, 픽셀)
+        /// </summary>
+        private const int BUTTON_PADDING_LEFT = 8;
+        private const int BUTTON_PADDING_TOP = 6;
+        private const int BUTTON_PADDING_RIGHT = 8;
+        private const int BUTTON_PADDING_BOTTOM = 6;
+
+        #endregion
+
+        #region 윈도우 크기 계산 상수
+
+        /// <summary>
+        /// 항목당 높이 (버튼 높이 + 마진, 픽셀)
+        /// </summary>
+        private const int ITEM_HEIGHT = 36;
+
+        /// <summary>
+        /// 섹션 헤더 높이 (픽셀)
+        /// </summary>
+        private const int SECTION_HEADER_HEIGHT = 30;
+
+        /// <summary>
+        /// 상단 헤더 높이 (픽셀)
+        /// </summary>
+        private const int TOP_HEADER_HEIGHT = 50;
+
+        /// <summary>
+        /// 빈 상태일 때 윈도우 높이 (픽셀)
+        /// </summary>
+        private const int EMPTY_STATE_HEIGHT = 80;
+
+        /// <summary>
+        /// 윈도우 너비 패딩 (픽셀)
+        /// </summary>
+        private const int WINDOW_WIDTH_PADDING = 30;
+
+        /// <summary>
+        /// 윈도우 높이 패딩 (픽셀)
+        /// </summary>
+        private const int WINDOW_HEIGHT_PADDING = 20;
+
+        /// <summary>
+        /// 화면 하단 여백 (픽셀)
+        /// </summary>
+        private const int SCREEN_BOTTOM_MARGIN = 100;
+
+        /// <summary>
+        /// 윈도우 최소 너비 (픽셀)
+        /// </summary>
+        private const int MIN_WINDOW_WIDTH = 150;
+
+        /// <summary>
+        /// 윈도우 크롬 보정 마진 (왼쪽, 위쪽, 오른쪽, 아래쪽, 픽셀)
+        /// </summary>
+        private const int WINDOW_CHROME_MARGIN_LEFT = 0;
+        private const int WINDOW_CHROME_MARGIN_TOP = 0;
+        private const int WINDOW_CHROME_MARGIN_RIGHT = -5;
+        private const int WINDOW_CHROME_MARGIN_BOTTOM = -15;
+
+        #endregion
+
+        #region 색상 상수
+
+        /// <summary>
+        /// 다크 모드 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte DARK_MODE_BACKGROUND_A = 230;
+        private const byte DARK_MODE_BACKGROUND_R = 32;
+        private const byte DARK_MODE_BACKGROUND_G = 32;
+        private const byte DARK_MODE_BACKGROUND_B = 32;
+
+        /// <summary>
+        /// 라이트 모드 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte LIGHT_MODE_BACKGROUND_A = 230;
+        private const byte LIGHT_MODE_BACKGROUND_R = 243;
+        private const byte LIGHT_MODE_BACKGROUND_G = 243;
+        private const byte LIGHT_MODE_BACKGROUND_B = 243;
+
+        /// <summary>
+        /// 투명 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte TRANSPARENT_BACKGROUND_A = 0;
+        private const byte TRANSPARENT_BACKGROUND_R = 0;
+        private const byte TRANSPARENT_BACKGROUND_G = 0;
+        private const byte TRANSPARENT_BACKGROUND_B = 0;
+
+        /// <summary>
+        /// 호버 상태 배경색 (A, R, G, B)
+        /// </summary>
+        private const byte HOVER_BACKGROUND_A = 30;
+        private const byte HOVER_BACKGROUND_R = 128;
+        private const byte HOVER_BACKGROUND_G = 128;
+        private const byte HOVER_BACKGROUND_B = 128;
+
+        /// <summary>
+        /// 테마 감지 임계값 (R 값 기준)
+        /// </summary>
+        private const byte THEME_DETECTION_THRESHOLD = 128;
+
+        #endregion
+
+        #region 경로 상수
+
+        /// <summary>
+        /// 기본 폴더 아이콘 경로
+        /// </summary>
+        private const string DEFAULT_FOLDER_ICON_PATH = "ms-appx:///Assets/icon/folder_3.png";
+
+        /// <summary>
+        /// 앱 내 리소스 경로 접두사
+        /// </summary>
+        private const string APP_RESOURCE_PREFIX = "ms-appx:///";
+
+        #endregion
 
         private readonly WindowHelper _windowHelper;
         private IntPtr _hwnd;
@@ -124,7 +272,7 @@ namespace AppGroup.View
             _windowHelper.SetSystemBackdrop(WindowHelper.BackdropType.AcrylicBase);
             _windowHelper.IsMaximizable = false;
             _windowHelper.IsMinimizable = false;
-            _windowHelper.IsResizable = false;
+            _windowHelper.IsResizable = true;
             _windowHelper.HasBorder = true;
             _windowHelper.HasTitleBar = false;
             _windowHelper.IsAlwaysOnTop = true;
@@ -151,15 +299,15 @@ namespace AppGroup.View
             try
             {
                 var foreground = settings.GetColorValue(UIColorType.Foreground);
-                bool isDarkMode = foreground.R > 128;
+                bool isDarkMode = foreground.R > THEME_DETECTION_THRESHOLD;
 
                 if (isDarkMode)
                 {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(230, 32, 32, 32));
+                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(DARK_MODE_BACKGROUND_A, DARK_MODE_BACKGROUND_R, DARK_MODE_BACKGROUND_G, DARK_MODE_BACKGROUND_B));
                 }
                 else
                 {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(230, 243, 243, 243));
+                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(LIGHT_MODE_BACKGROUND_A, LIGHT_MODE_BACKGROUND_R, LIGHT_MODE_BACKGROUND_G, LIGHT_MODE_BACKGROUND_B));
                 }
             }
             catch (Exception ex)
@@ -277,13 +425,13 @@ namespace AppGroup.View
                 Text = file.Name,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxWidth = 180
+                MaxWidth = TEXT_MAX_WIDTH
             };
 
             var content = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Spacing = 8
+                Spacing = STACK_PANEL_SPACING
             };
             content.Children.Add(icon);
             content.Children.Add(nameText);
@@ -295,8 +443,8 @@ namespace AppGroup.View
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(ITEM_MARGIN),
-                Padding = new Thickness(8, 6, 8, 6),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0)),
+                Padding = new Thickness(BUTTON_PADDING_LEFT, BUTTON_PADDING_TOP, BUTTON_PADDING_RIGHT, BUTTON_PADDING_BOTTOM),
+                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
                 BorderThickness = new Thickness(0)
             };
             button.Click += FileButton_Click;
@@ -318,7 +466,7 @@ namespace AppGroup.View
                 Width = ICON_SIZE,
                 Height = ICON_SIZE,
                 Stretch = Stretch.Uniform,
-                Source = new BitmapImage(new Uri("ms-appx:///Assets/icon/folder_3.png"))
+                Source = new BitmapImage(new Uri(DEFAULT_FOLDER_ICON_PATH))
             };
 
             var nameText = new TextBlock
@@ -326,13 +474,13 @@ namespace AppGroup.View
                 Text = folder.Name,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxWidth = 180
+                MaxWidth = TEXT_MAX_WIDTH
             };
 
             var content = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Spacing = 8
+                Spacing = STACK_PANEL_SPACING
             };
             content.Children.Add(icon);
             content.Children.Add(nameText);
@@ -344,8 +492,8 @@ namespace AppGroup.View
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(ITEM_MARGIN),
-                Padding = new Thickness(8, 6, 8, 6),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0)),
+                Padding = new Thickness(BUTTON_PADDING_LEFT, BUTTON_PADDING_TOP, BUTTON_PADDING_RIGHT, BUTTON_PADDING_BOTTOM),
+                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
                 BorderThickness = new Thickness(0)
             };
             button.Click += FolderButton_Click;
@@ -366,12 +514,12 @@ namespace AppGroup.View
             {
                 var extension = Path.GetExtension(filePath);
                 var iconPath = GetIconPathForExtension(extension);
-                imageControl.Source = new BitmapImage(new Uri($"ms-appx:///{iconPath}"));
+                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{iconPath}"));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"파일 아이콘 로드 오류: {ex.Message}");
-                imageControl.Source = new BitmapImage(new Uri($"ms-appx:///{FallbackDefaultIcon}"));
+                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
             }
         }
 
@@ -495,7 +643,7 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(30, 128, 128, 128));
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(HOVER_BACKGROUND_A, HOVER_BACKGROUND_R, HOVER_BACKGROUND_G, HOVER_BACKGROUND_B));
             }
         }
 
@@ -503,59 +651,66 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0, 0, 0, 0));
+                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B));
             }
         }
 
-        private const int TOP_MARGIN = 100; // 상단에서 최소 100픽셀 떨어지도록
-
         /// <summary>
-        /// 윈도우 크기 업데이트
+        /// 윈도우 크기 업데이트 - PopupWindow와 동일한 방식
         /// </summary>
         private void UpdateWindowSize(int fileCount, int folderCount)
         {
+            // DPI 스케일 계수 가져오기 (PopupWindow와 동일)
+            uint dpi = NativeMethods.GetDpiForWindow(_hwnd);
+            float scaleFactor = (float)dpi / 96.0f;
+
             int itemCount = fileCount + folderCount;
             int headerCount = 0;
             if (fileCount > 0) headerCount++;
             if (folderCount > 0) headerCount++;
 
-            // 화면 작업 영역을 확인하여 최대 높이를 동적으로 계산
-            int maxAvailableHeight = MAX_WINDOW_HEIGHT;
-            try
-            {
-                NativeMethods.POINT cursorPos;
-                if (NativeMethods.GetCursorPos(out cursorPos))
-                {
-                    IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
-                    NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
-                    monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
-                    
-                    if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
-                    {
-                        // 작업 영역 높이에서 상단 100픽셀 여백을 뺀 값이 최대 높이
-                        int workAreaHeight = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
-                        maxAvailableHeight = Math.Min(MAX_WINDOW_HEIGHT, workAreaHeight - TOP_MARGIN);
-                    }
-                }
-            }
-            catch
-            {
-                // 오류 발생 시 기본 MAX_WINDOW_HEIGHT 사용
-            }
+            // 콘텐츠 크기 계산
+            int dynamicWidth = WINDOW_WIDTH;
+            int dynamicHeight;
 
-            int height;
             if (itemCount == 0)
             {
-                height = MIN_WINDOW_HEIGHT;
+                dynamicHeight = EMPTY_STATE_HEIGHT;
             }
             else
             {
-                // 항목당 약 36px (버튼 높이 + 마진) + 섹션 헤더 + 상단 헤더 + 여유 공간
-                int contentHeight = itemCount * 36 + headerCount * 30 + 60;
-                height = Math.Min(maxAvailableHeight, Math.Max(MIN_WINDOW_HEIGHT, contentHeight));
+                // 항목당 약 36px (버튼 높이 + 마진) + 섹션 헤더 + 상단 헤더
+                dynamicHeight = itemCount * ITEM_HEIGHT + headerCount * SECTION_HEADER_HEIGHT + TOP_HEADER_HEIGHT;
             }
 
-            this.AppWindow.Resize(new SizeInt32(WINDOW_WIDTH, height));
+            // DPI 스케일 적용 (PopupWindow와 동일)
+            int scaledWidth = (int)(dynamicWidth * scaleFactor);
+            int scaledHeight = (int)(dynamicHeight * scaleFactor);
+
+            // 패딩 추가 (PopupWindow와 동일)
+            int finalWidth = scaledWidth + WINDOW_WIDTH_PADDING;
+            int finalHeight = scaledHeight + WINDOW_HEIGHT_PADDING;
+
+            // 화면 최대 높이 제한
+            int screenHeight = (int)(Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea.Height);
+            int maxAllowedHeight = screenHeight - SCREEN_BOTTOM_MARGIN;
+            if (finalHeight > maxAllowedHeight)
+            {
+                finalHeight = maxAllowedHeight;
+            }
+
+            // 최소/최대 크기 보장
+            finalWidth = Math.Max(finalWidth, MIN_WINDOW_WIDTH);
+            finalHeight = Math.Max(finalHeight, MIN_WINDOW_HEIGHT);
+            finalHeight = Math.Min(finalHeight, MAX_WINDOW_HEIGHT);
+
+            Debug.WriteLine($"FolderContentsPopupWindow.UpdateWindowSize: items={itemCount}, scaleFactor={scaleFactor}, finalWidth={finalWidth}, finalHeight={finalHeight}");
+
+            // PopupWindow와 동일하게 음수 마진 적용 (윈도우 크롬 보정)
+            MainGrid.Margin = new Thickness(WINDOW_CHROME_MARGIN_LEFT, WINDOW_CHROME_MARGIN_TOP, WINDOW_CHROME_MARGIN_RIGHT, WINDOW_CHROME_MARGIN_BOTTOM);
+
+            // PopupWindow와 동일하게 _windowHelper.SetSize() 사용
+            _windowHelper.SetSize(finalWidth, finalHeight);
         }
 
         /// <summary>
