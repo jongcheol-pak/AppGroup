@@ -2,6 +2,94 @@
 
 ## 최근 변경 사항
 
+### 2026-02-05 - IconHelper.cs 파일 분리 (partial class)
+
+#### 문제점
+- `IconHelper.cs` 파일이 2504줄로 1000줄 제한 초과
+- UWP 아이콘 추출, Grid 아이콘 생성 등 여러 기능이 단일 파일에 혼재
+
+#### 수정 내용
+- partial class를 사용하여 기능별로 파일 분리:
+  - `IconHelper.cs`: 1374줄 (핵심 아이콘 추출/변환 로직)
+  - `IconHelper.UwpExtractor.cs`: 659줄 (UWP/Shell 아이콘 추출)
+  - `IconHelper.GridIcon.cs`: 319줄 (그리드 아이콘 생성)
+
+#### 분리된 기능
+- **IconHelper.UwpExtractor.cs**
+  - `ExtractUwpAppIconAsync`: UWP 앱 아이콘 추출 (AppxManifest.xml 기반)
+  - `ExtractIconFromShellItem`: Shell API를 통한 아이콘 추출
+  - `TryExtractIconViaShellFolder`: IShellFolder 인터페이스 사용
+  - `ExtractIconFromPidl`: PIDL에서 아이콘 추출
+  - `TryExtractIconFromShellPath`: shell 경로에서 아이콘 추출
+  - `ExtractIconUsingSHGetFileInfo`: SHGetFileInfo API 사용
+  - `ConvertHBitmapToArgbBitmap`: HBITMAP을 ARGB Bitmap으로 변환
+  - `ResizeImageToFitSquare`: 이미지 정사각형 리사이즈 (비율 유지)
+  - `ResizeAndCropImageToSquare`: 이미지 정사각형 크롭
+
+- **IconHelper.GridIcon.cs**
+  - `CreateGridIconForPopupAsync`: 팝업용 그리드 아이콘 생성
+  - `CreateGridIconAsync`: 그리드 아이콘 생성 및 미리보기 표시
+
+#### 추가 정리
+- 원본 파일에서 주석 처리된 레거시 코드 (~150줄) 제거
+
+#### 변경된 파일
+- `IconHelper.cs` - 분리된 코드 제거, partial class로 변경
+- `IconHelper.UwpExtractor.cs` - 신규 생성
+- `IconHelper.GridIcon.cs` - 신규 생성
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 321개 (기존 경고, null 참조 관련)
+
+#### 참고
+- partial class 사용 시 같은 namespace와 class 이름 유지 필수
+- 각 partial 파일에 필요한 using 문 추가 필요
+- AppsFolder CLSID 상수는 UwpExtractor.cs로 이동됨
+
+---
+
+### 2026-02-05 - EditGroupWindow.xaml.cs 파일 분리 (partial class)
+
+#### 문제점
+- `EditGroupWindow.xaml.cs` 파일이 2721줄로 1000줄 제한 초과
+- 유지보수성 저하 및 코드 탐색 어려움
+
+#### 수정 내용
+- partial class를 사용하여 기능별로 파일 분리:
+  - `EditGroupWindow.xaml.cs`: 1843줄 (핵심 로직)
+  - `EditGroupWindow.FolderWeb.cs`: 481줄 (FolderWeb 다이얼로그 관련)
+  - `EditGroupWindow.AllApps.cs`: 500줄 (설치된 앱 목록 다이얼로그 관련)
+
+#### 분리된 기능
+- **EditGroupWindow.FolderWeb.cs**
+  - `#region FolderWeb Dialog Handlers` 전체
+  - 폴더/웹 항목 추가 및 편집 기능
+  - 아이콘 선택 다이얼로그 처리
+
+- **EditGroupWindow.AllApps.cs**
+  - `CloseAllAppsDialog`, `AllAppsButton_Click` 등
+  - shell:AppsFolder에서 앱 목록 로드
+  - UWP 앱 아이콘 추출
+  - COM 인터페이스 (IShellLinkW, CShellLink)
+
+#### 변경된 파일
+- `View/EditGroupWindow.xaml.cs` - 분리된 코드 제거
+- `View/EditGroupWindow.FolderWeb.cs` - 신규 생성
+- `View/EditGroupWindow.AllApps.cs` - 신규 생성
+
+#### 검증 결과
+- 빌드: 성공
+- 오류: 0개
+- 경고: 644개 (기존 경고, null 참조 관련)
+
+#### 참고
+- partial class 사용 시 같은 namespace와 class 이름 유지 필수
+- 각 partial 파일에 필요한 using 문 추가 필요
+
+---
+
 ### 2026-02-04 - StartMenuPopupWindow 빌드 오류 수정
 
 #### 문제점
@@ -1245,7 +1333,28 @@ g.DrawImage(originalImage, x, y, newWidth, newHeight);
 
 ## 미해결 이슈
 
-없음 (이전 이슈 해결됨)
+### 1000줄 초과 파일 분리 작업 (대기)
+
+AGENTS.md 규칙에 따라 1000줄 초과 파일을 partial class로 분리 필요.
+
+#### 완료된 파일
+- [x] `EditGroupWindow.xaml.cs`: 2721줄 → 1843줄 + FolderWeb.cs(481줄) + AllApps.cs(500줄)
+- [x] `IconHelper.cs`: 2504줄 → 1374줄 + UwpExtractor.cs(659줄) + GridIcon.cs(319줄)
+
+#### 남은 파일 (우선순위 순)
+
+| 파일 | 현재 줄 수 | 분리 제안 |
+|------|-----------|----------|
+| `PopupWindow.xaml.cs` | 1756줄 | 템플릿 생성, 아이템 로드, 컨텍스트 메뉴 등 기능별 분리 |
+| `MainWindow.xaml.cs` | 1465줄 | 탭별 핸들러 분리 (작업표시줄, 시작메뉴, 설정) |
+| `NativeMethods.cs` | 1333줄 | API 카테고리별 분리 (Shell, Window, Icon 등) |
+
+#### 작업 시 참고사항
+- partial class 패턴 사용
+- 같은 namespace와 class 이름 유지
+- 각 partial 파일에 필요한 using 문 추가
+- 분리 후 빌드 검증 필수
+- notes.md에 작업 기록 추가
 
 ---
 
