@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.Graphics;
 using Windows.UI.ViewManagement;
 using WinRT.Interop;
@@ -181,6 +182,16 @@ namespace AppGroup.View
         private UISettings _uiSettings;
         private string _currentFolderPath = string.Empty;
 
+        // 윈도우 크기 저장
+        private int _currentWindowWidth = 250;
+        private int _currentWindowHeight = 200;
+
+        // 정적 SolidColorBrush (테마별 캐싱)
+        private static readonly SolidColorBrush DarkModeBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(DARK_MODE_BACKGROUND_A, DARK_MODE_BACKGROUND_R, DARK_MODE_BACKGROUND_G, DARK_MODE_BACKGROUND_B));
+        private static readonly SolidColorBrush LightModeBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(LIGHT_MODE_BACKGROUND_A, LIGHT_MODE_BACKGROUND_R, LIGHT_MODE_BACKGROUND_G, LIGHT_MODE_BACKGROUND_B));
+        private static readonly SolidColorBrush TransparentBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B));
+        private static readonly SolidColorBrush HoverBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(HOVER_BACKGROUND_A, HOVER_BACKGROUND_R, HOVER_BACKGROUND_G, HOVER_BACKGROUND_B));
+
         /// <summary>
         /// 확장자별 아이콘 경로 매핑 (추후 확장자 추가 시 여기에 추가)
         /// </summary>
@@ -301,14 +312,7 @@ namespace AppGroup.View
                 var foreground = settings.GetColorValue(UIColorType.Foreground);
                 bool isDarkMode = foreground.R > THEME_DETECTION_THRESHOLD;
 
-                if (isDarkMode)
-                {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(DARK_MODE_BACKGROUND_A, DARK_MODE_BACKGROUND_R, DARK_MODE_BACKGROUND_G, DARK_MODE_BACKGROUND_B));
-                }
-                else
-                {
-                    MainGrid.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(LIGHT_MODE_BACKGROUND_A, LIGHT_MODE_BACKGROUND_R, LIGHT_MODE_BACKGROUND_G, LIGHT_MODE_BACKGROUND_B));
-                }
+                MainGrid.Background = isDarkMode ? DarkModeBackground : LightModeBackground;
             }
             catch (Exception ex)
             {
@@ -323,6 +327,12 @@ namespace AppGroup.View
         /// <param name="folderName">폴더 이름 (헤더에 표시)</param>
         public void LoadFolderContents(string folderPath, string folderName)
         {
+            // 이미 같은 폴더가 로드되어 있으면 다시 로드하지 않음 (아이콘 깜빡임 방지)
+            if (_currentFolderPath == folderPath && (FileItemsControl.Items.Count > 0 || FolderItemsControl.Items.Count > 0))
+            {
+                return;
+            }
+
             _currentFolderPath = folderPath;
             HeaderText.Text = folderName;
 
@@ -385,7 +395,9 @@ namespace AppGroup.View
                     FolderSectionHeader.Visibility = Visibility.Collapsed;
                 }
 
-                UpdateWindowSize(files.Count, folders.Count);
+                // 레이아웃 강제 갱신 후 실제 콘텐츠 높이로 윈도우 크기 계산
+                ContentsPanel.UpdateLayout();
+                UpdateWindowSizeFromActualHeight();
             }
             catch (UnauthorizedAccessException)
             {
@@ -418,6 +430,8 @@ namespace AppGroup.View
                 Height = ICON_SIZE,
                 Stretch = Stretch.Uniform
             };
+
+            // 기본 아이콘으로 초기화 후 비동기로 실제 아이콘 로드
             LoadFileIcon(icon, file.FullName);
 
             var nameText = new TextBlock
@@ -444,7 +458,7 @@ namespace AppGroup.View
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(ITEM_MARGIN),
                 Padding = new Thickness(BUTTON_PADDING_LEFT, BUTTON_PADDING_TOP, BUTTON_PADDING_RIGHT, BUTTON_PADDING_BOTTOM),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
+                Background = TransparentBackground,
                 BorderThickness = new Thickness(0)
             };
             button.Click += FileButton_Click;
@@ -493,7 +507,7 @@ namespace AppGroup.View
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(ITEM_MARGIN),
                 Padding = new Thickness(BUTTON_PADDING_LEFT, BUTTON_PADDING_TOP, BUTTON_PADDING_RIGHT, BUTTON_PADDING_BOTTOM),
-                Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B)),
+                Background = TransparentBackground,
                 BorderThickness = new Thickness(0)
             };
             button.Click += FolderButton_Click;
@@ -506,20 +520,89 @@ namespace AppGroup.View
         }
 
         /// <summary>
-        /// 파일 아이콘 로드
+        /// 파일 아이콘 로드 (실제 파일 아이콘 추출)
         /// </summary>
         private void LoadFileIcon(Image imageControl, string filePath)
         {
             try
             {
+                // 이미지 컨트롤에 태그로 파일 경로 저장 (중복 업데이트 방지)
+                imageControl.Tag = filePath;
+
+                // 먼저 기본 아이콘으로 설정 (로딩 중 표시)
                 var extension = Path.GetExtension(filePath);
-                var iconPath = GetIconPathForExtension(extension);
-                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{iconPath}"));
+                var fallbackIconPath = GetIconPathForExtension(extension);
+                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{fallbackIconPath}"));
+
+                // 비동기로 실제 아이콘 로드 시작 (Fire-and-forget)
+                _ = LoadFileIconAsync(imageControl, filePath, fallbackIconPath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"파일 아이콘 로드 오류: {ex.Message}");
                 imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
+            }
+        }
+
+        /// <summary>
+        /// 파일 아이콘 비동기 로드 (실제 파일 아이콘 추출)
+        /// </summary>
+        private async Task LoadFileIconAsync(Image imageControl, string filePath, string fallbackIconPath)
+        {
+            try
+            {
+                // 1. 캐시된 아이콘이 있는지 확인
+                var cachedIconPath = await IconCache.GetIconPathAsync(filePath);
+                if (cachedIconPath != null && File.Exists(cachedIconPath))
+                {
+                    UpdateIconSource(imageControl, filePath, cachedIconPath);
+                    return;
+                }
+
+                // 2. 캐시에 없으면 실제 아이콘 추출 (32x32 크기)
+                var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, AppPaths.IconsFolder, size: 32);
+                if (extractedIconPath != null && File.Exists(extractedIconPath))
+                {
+                    UpdateIconSource(imageControl, filePath, extractedIconPath);
+                    return;
+                }
+
+                // 3. 추출 실패 시 기본 확장자 아이콘 사용
+                Debug.WriteLine($"아이콘 추출 실패, 기본 아이콘 사용: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"실제 아이콘 로드 실패 ({filePath}): {ex.Message}");
+            }
+            // 실패 시 기본 아이콘이 이미 설정되어 있으므로 추가 조치 불필요
+        }
+
+        /// <summary>
+        /// UI 스레드에서 안전하게 아이콘 소스 업데이트
+        /// </summary>
+        private void UpdateIconSource(Image imageControl, string expectedFilePath, string iconPath)
+        {
+            // UI 스레드에서 안전하게 이미지 업데이트
+            if (DispatcherQueue != null)
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    try
+                    {
+                        // 이미지 컨트롤의 태그가 여전히 같은 파일 경로인지 확인 (다른 파일로 변경되었으면 업데이트 중단)
+                        if (imageControl.Tag is string currentFilePath && currentFilePath == expectedFilePath)
+                        {
+                            if (File.Exists(iconPath))
+                            {
+                                imageControl.Source = new BitmapImage(new Uri(iconPath));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"아이콘 소스 업데이트 실패: {ex.Message}");
+                    }
+                });
             }
         }
 
@@ -643,7 +726,7 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(HOVER_BACKGROUND_A, HOVER_BACKGROUND_R, HOVER_BACKGROUND_G, HOVER_BACKGROUND_B));
+                button.Background = HoverBackground;
             }
         }
 
@@ -651,8 +734,77 @@ namespace AppGroup.View
         {
             if (sender is Button button)
             {
-                button.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B));
+                button.Background = TransparentBackground;
             }
+        }
+
+        /// <summary>
+        /// ContentsPanel 로드 완료 후 실제 콘텐츠 높이에 맞춰 윈도우 크기 재조정
+        /// </summary>
+        private void OnContentsPanelLoaded(object sender, RoutedEventArgs e)
+        {
+            // 레이아웃 완료 후 실제 콘텐츠 높이에 맞춰 윈도우 크기 재조정
+            UpdateWindowSizeFromActualHeight();
+        }
+
+        /// <summary>
+        /// 항목 수 기반으로 윈도우 크기 계산 및 설정
+        /// </summary>
+        private void UpdateWindowSizeFromActualHeight()
+        {
+            // 항목 수 기반 콘텐츠 높이 계산 (숨겨진 윈도우에서 ActualHeight가 부정확할 수 있음)
+            int fileCount = FileItemsControl.Items.Count;
+            int folderCount = FolderItemsControl.Items.Count;
+            int itemCount = fileCount + folderCount;
+
+            int dynamicHeight;
+            if (itemCount == 0)
+            {
+                dynamicHeight = EMPTY_STATE_HEIGHT;
+            }
+            else
+            {
+                int headerCount = 0;
+                if (fileCount > 0) headerCount++;
+                if (folderCount > 0) headerCount++;
+                dynamicHeight = itemCount * ITEM_HEIGHT + headerCount * SECTION_HEADER_HEIGHT + TOP_HEADER_HEIGHT;
+            }
+
+            // DPI 스케일 계수 가져오기
+            uint dpi = NativeMethods.GetDpiForWindow(_hwnd);
+            float scaleFactor = (float)dpi / 96.0f;
+
+            // 물리적 픽셀로 변환 (올림으로 서브픽셀 손실 방지)
+            int newWindowHeight = (int)Math.Ceiling(dynamicHeight * scaleFactor) + WINDOW_HEIGHT_PADDING;
+
+            // 화면 최대 높이 제한 확인
+            int screenHeight = (int)(Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea.Height);
+            int maxAllowedHeight = screenHeight - SCREEN_BOTTOM_MARGIN;
+            int absoluteMaxHeight = Math.Min(maxAllowedHeight, MAX_WINDOW_HEIGHT);
+
+            newWindowHeight = Math.Max(newWindowHeight, MIN_WINDOW_HEIGHT);
+            if (newWindowHeight > absoluteMaxHeight)
+            {
+                newWindowHeight = absoluteMaxHeight;
+            }
+
+            // 너비 계산 (DPI 적용)
+            int newWindowWidth = (int)(WINDOW_WIDTH * scaleFactor) + WINDOW_WIDTH_PADDING;
+            newWindowWidth = Math.Max(newWindowWidth, MIN_WINDOW_WIDTH);
+
+            // 윈도우 크롬 보정 마진 적용 (하단 non-client area 보정)
+            MainGrid.Margin = new Thickness(
+                WINDOW_CHROME_MARGIN_LEFT,
+                WINDOW_CHROME_MARGIN_TOP,
+                WINDOW_CHROME_MARGIN_RIGHT,
+                WINDOW_CHROME_MARGIN_BOTTOM);
+
+            // MaxHeight 제거 - Grid Row * 에 의해 자연스럽게 제한
+            ScrollView.ClearValue(FrameworkElement.MaxHeightProperty);
+
+            _currentWindowWidth = newWindowWidth;
+            _currentWindowHeight = newWindowHeight;
+            _windowHelper.SetSize(_currentWindowWidth, _currentWindowHeight);
         }
 
         /// <summary>
@@ -709,7 +861,9 @@ namespace AppGroup.View
             // PopupWindow와 동일하게 음수 마진 적용 (윈도우 크롬 보정)
             MainGrid.Margin = new Thickness(WINDOW_CHROME_MARGIN_LEFT, WINDOW_CHROME_MARGIN_TOP, WINDOW_CHROME_MARGIN_RIGHT, WINDOW_CHROME_MARGIN_BOTTOM);
 
-            // PopupWindow와 동일하게 _windowHelper.SetSize() 사용
+            // 윈도우 크기 저장 및 적용
+            _currentWindowWidth = finalWidth;
+            _currentWindowHeight = finalHeight;
             _windowHelper.SetSize(finalWidth, finalHeight);
         }
 

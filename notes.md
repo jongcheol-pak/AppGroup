@@ -2,6 +2,367 @@
 
 ## 최근 변경 사항
 
+### 2026-02-06 - FolderContentsPopupWindow 스크롤 불필요 표시 버그 동일 수정
+
+#### 문제점
+- StartMenuPopupWindow와 동일한 패턴의 문제: `ContentsPanel.ActualHeight` 부정확, `MainGrid.Margin` 크롬 보정 누락, 너비 DPI 미적용
+
+#### 수정 내용
+**`UpdateWindowSizeFromActualHeight` 메서드 전면 재작성 (StartMenuPopupWindow와 동일 패턴 적용):**
+- `ContentsPanel.ActualHeight` 대신 `FileItemsControl.Items.Count` + `FolderItemsControl.Items.Count` 항목 수 기반 계산
+- 섹션 헤더(파일/폴더) 가시성에 따른 높이 반영
+- `MainGrid.Margin` 크롬 보정 적용
+- 너비 DPI 스케일 적용
+- `ScrollView.MaxHeight` 제거 (Grid Row * 자연 제한)
+- `Math.Ceiling` 적용으로 서브픽셀 반올림 손실 방지
+
+#### 변경된 파일
+- `View/FolderContentsPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight 메서드 전면 재작성
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow 스크롤 불필요 표시 버그 수정 (6차)
+
+#### 문제점
+- 폴더 목록이 몇 개 없어도 윈도우 높이가 MAX_HEIGHT_SINGLE_COLUMN(800px)으로 고정되어 스크롤 표시
+
+#### 원인 분석 (근본 원인)
+1. **`FolderPanel.ActualHeight` 부정확**: 윈도우가 숨겨진 상태에서 `UpdateLayout()` 호출 시 이전 레이아웃의 ActualHeight가 남아있어 콘텐츠 높이가 비정상적으로 크게 계산됨
+2. **`MainGrid.Margin` 크롬 보정 미적용**: `UpdateWindowSize`에는 있지만 `UpdateWindowSizeFromActualHeight`에는 누락되어 윈도우 non-client area 보정이 안 됨
+3. **`_currentWindowWidth` DPI 미적용**: 초기값 250 고정, DPI 스케일 팩터가 반영되지 않아 너비도 부정확
+
+#### 수정 내용
+**`UpdateWindowSizeFromActualHeight` 메서드 전면 재작성:**
+
+```csharp
+// 수정 전 (문제 코드)
+double contentHeight = FolderPanel.ActualHeight; // 숨겨진 윈도우에서 부정확
+// MainGrid.Margin 미적용
+// _currentWindowWidth DPI 미적용 (초기값 250 고정)
+
+// 수정 후 (항목 수 기반 계산)
+int itemCount = FolderPanel.Children.Count;
+double contentHeight = _columnCount == 1
+    ? itemCount * SINGLE_COLUMN_ITEM_HEIGHT
+    : (int)Math.Ceiling((double)itemCount / _columnCount) * GRID_LAYOUT_ROW_HEIGHT;
+
+// 너비도 DPI 적용하여 계산
+int dynamicWidth = _columnCount == 1 ? SINGLE_COLUMN_WINDOW_WIDTH : _columnCount * GRID_LAYOUT_COLUMN_WIDTH;
+int newWindowWidth = (int)(dynamicWidth * scaleFactor) + WINDOW_WIDTH_PADDING;
+
+// MainGrid 크롬 보정 적용
+MainGrid.Margin = new Thickness(WINDOW_CHROME_MARGIN_LEFT, WINDOW_CHROME_MARGIN_TOP,
+    WINDOW_CHROME_MARGIN_RIGHT, WINDOW_CHROME_MARGIN_BOTTOM);
+
+// ScrollView.MaxHeight 제거 - Grid Row * 로 자연스럽게 제한
+ScrollView.ClearValue(FrameworkElement.MaxHeightProperty);
+```
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight 메서드 전면 재작성
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+#### 이전 수정이 실패한 이유
+- `FolderPanel.ActualHeight`에 의존하는 한 숨겨진 윈도우에서 정확한 높이를 얻을 수 없음
+- `MainGrid.Margin` 크롬 보정이 누락되어 있어서 윈도우 내부 공간이 부족
+- 헤더 높이나 DPI 변환을 개선해도 근본 원인(ActualHeight 부정확)이 해결되지 않았음
+
+#### 참고: 동일 실수 방지
+- **숨겨진 윈도우에서 ActualHeight를 신뢰하지 말 것**: 항목 수 기반 계산이 더 안정적
+- **`UpdateWindowSize`에만 있는 로직이 `UpdateWindowSizeFromActualHeight`에는 누락되지 않았는지 확인**: MainGrid.Margin, 너비 계산 등
+- **두 메서드 간 로직 동기화 필요**: UpdateWindowSize(사용 안 됨)와 UpdateWindowSizeFromActualHeight(사용됨)의 불일치 주의
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow/FolderContentsPopupWindow ScrollView MaxHeight 로직 재수정 (5차)
+
+#### 문제점
+- 폴더가 2-3개인 작은 콘텐츠에서도 스크롤이 계속 표시됨
+- ScrollView MaxHeight 설정 로직이 너무 복잡하여 제대로 동작하지 않음
+
+#### 원인 분석 (최종 원인)
+**ScrollView MaxHeight 계산 로직의 복잡성:**
+
+1. DPI 스케일링을 `/ scaleFactor`로 나누고 다시 `* scaleFactor`로 곱하는 불필요한 연산
+2. `contentHeight <= maxContentHeight` 비교 시 두 값의 단위가 일치하지 않음 (ActualHeight는 논리적 픽셀, maxContentHeight는 물리적 픽셀로 변환된 값)
+3. ScrollView에 MaxHeight가 설정되면 `VerticalScrollBarVisibility="Auto"`에 의해 스크롤바 영역이 예약됨
+4. 계산된 MaxHeight가 실제 콘텐츠보다 커도 스크롤바가 표시됨
+
+#### 수정 내용
+**UpdateWindowSizeFromActualHeight 메서드의 MaxHeight 로직 완전 재작성**
+
+```csharp
+// 수정 전 (복잡하고 오류 발생)
+double maxContentHeight = (maxAllowedHeight - ...) / scaleFactor;
+if (contentHeight <= maxContentHeight)
+{
+    ScrollView.ClearValue(FrameworkElement.MaxHeightProperty);
+}
+else
+{
+    ScrollView.MaxHeight = maxContentHeight * scaleFactor;  // 복잡한 변환
+}
+
+// 수정 후 (단순하고 직관적)
+// 윈도우 높이에서 헤더와 여백을 제외한 ScrollView의 실제 사용 가능 높이 계산
+double availableScrollViewHeight = newWindowHeight - headerHeight - WINDOW_HEIGHT_PADDING - scrollViewMargin;
+
+// 콘텐츠 높이가 사용 가능한 ScrollView 높이보다 크면 MaxHeight 설정 (스크롤 표시)
+if (contentHeight > availableScrollViewHeight)
+{
+    ScrollView.MaxHeight = availableScrollViewHeight;
+}
+else
+{
+    // 콘텐츠가 작으면 MaxHeight 제거 (스크롤 숨김, 자동 크기 조정)
+    ScrollView.ClearValue(FrameworkElement.MaxHeightProperty);
+}
+```
+
+**핵심 변경:**
+1. DPI 스케일링 연산 제거 (단순화)
+2. **실제 윈도우 높이(newWindowHeight)**를 기준으로 ScrollView 사용 가능 높이 계산
+3. **contentHeight와 availableScrollViewHeight**를 직접 비교 (같은 단위: 논리적 픽셀)
+4. 콘텐츠가 **실제로 availableScrollViewHeight를 초과**할 때만 MaxHeight 설정
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight MaxHeight 로직 재작성
+- `View/FolderContentsPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight MaxHeight 로직 재작성
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+#### 참고: 동일 실수 방지
+- **DPI 스케일링을 왕복**하는 변환 연산을 피할 것
+  - ActualHeight는 이미 논리적 픽셀(logical pixels) 값
+  - WinUI 컨트롤 속성은 논리적 픽셀로 설정
+  - 물리적 픽셀 변환은 윈도우 크기 설정시 한 번만 수행
+- ScrollView MaxHeight 설정 로직:
+  1. 윈도우 높이 - 헤더 - 여백 = **ScrollView 실제 사용 가능 높이**
+  2. **contentHeight > availableScrollViewHeight**일 때만 MaxHeight 설정
+  3. MaxHeight 값은 **availableScrollViewHeight** 그대로 사용 (추가 변환 없음)
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow/FolderContentsPopupWindow 윈도우 높이 최대값 고정 문제 수정 (4차)
+
+#### 문제점
+- 콘텐츠가 작아도 윈도우가 MAX_HEIGHT_SINGLE_COLUMN(800px) 또는 MAX_WINDOW_HEIGHT(1000px)로 고정되어 표시됨
+- 폴더 2-3개인데도 윈도우 높이가 800px로 설정되어 불필요한 공간 차지
+
+#### 원인 분석
+**UpdateWindowSizeFromActualHeight 메서드의 로직 오류:**
+
+```csharp
+// 수정 전 (잘못된 로직)
+int newWindowHeight = (int)requiredWindowHeight;  // 예: 150px (실제 콘텐츠)
+newWindowHeight = Math.Max(newWindowHeight, MIN_WINDOW_HEIGHT);  // 150px 유지
+newWindowHeight = Math.Min(newWindowHeight, maxAllowedHeight);  // 150 vs 800 → 150으로 예상했지만...
+```
+
+실제 문제는:
+- `Math.Min(newWindowHeight, maxAllowedHeight)`에서 작은 값 선택이 아니라
+- 로직 순서와 조건문 누락으로 인해 항상 최대 높이가 적용되는 문제
+- 특히 FolderContentsPopupWindow 774번 줄: `Math.Min(newWindowHeight, Math.Min(maxAllowedHeight, MAX_WINDOW_HEIGHT))`
+  - 콘텐츠가 100px라도 `Math.Min(100, 1000)` = 100이 되어야 하지만, 로직이 꼬여서 1000이 적용됨
+
+#### 수정 내용
+**StartMenuPopupWindow.xaml.cs - UpdateWindowSizeFromActualHeight**
+```csharp
+// 수정 후 (올바른 로직)
+int newWindowHeight = (int)requiredWindowHeight;  // 실제 콘텐츠 높이 기반
+newWindowHeight = Math.Max(newWindowHeight, MIN_WINDOW_HEIGHT);  // 최소 높이 보장
+
+// 콘텐츠가 화면보다 큰 경우에만 최대 높이 제한 적용
+if (newWindowHeight > maxAllowedHeight)
+{
+    newWindowHeight = maxAllowedHeight;
+}
+```
+
+**FolderContentsPopupWindow.xaml.cs - UpdateWindowSizeFromActualHeight**
+- 동일하게 조건문으로 변경하여 콘텐츠가 작을 때는 실제 크기 유지
+- `absoluteMaxHeight` 변수 도입으로 코드 가독성 향상
+
+#### 핵심 변경
+- **Math.Min 사용 제거**하고 **명시적 조건문**으로 변경
+- 콘텐츠가 최대 높이보다 **큰 경우에만** 최대 높이로 제한
+- 콘텐츠가 작으면 **실제 크기 그대로** 윈도우 높이 설정
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight 메서드 로직 수정
+- `View/FolderContentsPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight 메서드 로직 수정
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+#### 참고: 동일 실수 방지
+- **Math.Min/Max 체인**은 로직 추적이 어려우므로 **명시적 조건문** 선호
+- 윈도우 크기 계산 시:
+  1. 실제 콘텐츠 크기 계산
+  2. 최소 크기 보장 (Math.Max)
+  3. **최대 크기 초과 시에만** 제한 (if 문)
+- 항상 "실제 크기 → 최소 보장 → 최대 제한" 순서로 계산할 것
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow 재시작 시 스크롤 표시 문제 수정 (3차)
+
+#### 문제점
+- 처음 실행 시에는 스크롤이 나오지 않는데, 팝업을 닫고 다시 실행하면 스크롤이 나오는 문제
+
+#### 원인 분석 (3차 근본 원인)
+1. `FolderPanel.Loaded` 이벤트는 **한 번만 발생**하므로:
+   - 처음 실행: `OnFolderPanelLoaded` 호출되어 실제 높이로 정확하게 계산 ✓
+   - 두 번째 실행: `Loaded` 이벤트 발생하지 않음, `LoadFoldersAsync()`의 `UpdateWindowSize(folderCount)`만 호출 ✗
+2. `LoadFoldersAsync()`에서 추정치 기반 `UpdateWindowSize(folders.Count)`가 호출됨
+3. 추정치가 실제보다 커서 스크롤이 표시됨
+
+#### 수정 내용
+**LoadFoldersAsync 메서드 수정**
+- `FolderPanel.Loaded` 이벤트 등록 코드 제거
+- `BuildFolderUI()` 호출 후 `FolderPanel.UpdateLayout()`로 강제 레이아웃 갱신
+- `UpdateWindowSizeFromActualHeight()` 호출로 즉시 실제 높이 계산
+
+**UpdateWindowSizeFromActualHeight 메서드 추가 (신규)**
+- `OnFolderPanelLoaded`의 로직을 별도 메서드로 분리
+- `FolderPanel.ActualHeight`를 사용하여 실제 콘텐츠 높이 기반 윈도우 크기 계산
+- 매 호출 시 즉시 실제 높이로 계산하므로 재시작 시에도 정확함
+
+**필드 삭제**
+- `_folderPanelLoadedRegistered` 플래그 제거 (더 이상 필요 없음)
+
+**OnFolderPanelLoaded 메서드 수정**
+- `UpdateWindowSizeFromActualHeight()` 호출만 수행하도록 간소화
+
+```csharp
+// LoadFoldersAsync 수정
+BuildFolderUI(folders);
+FolderPanel.UpdateLayout();  // 강제 레이아웃 갱신
+UpdateWindowSizeFromActualHeight();  // 실제 높이로 즉시 계산
+```
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - LoadFoldersAsync 수정, UpdateWindowSizeFromActualHeight 추가, OnFolderPanelLoaded 간소화, 필드 삭제
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+#### 참고: 동일 실수 방지
+- **Loaded 이벤트는 한 번만 발생**하므로 재사용 가능한 윈도우에서는 의존하지 말 것
+- 매번 실행 시 정확한 크기가 필요하면 **`UpdateLayout()` + `ActualHeight`** 패턴을 사용할 것
+- 이벤트 기반 비동기 계산 대신 **즉시 계산** 패턴을 선호할 것
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow 불필요한 스크롤 표시 문제 수정 (2차)
+
+#### 문제점
+- StartMenuPopupWindow에서 팝업 사이즈가 작은데도 스크롤이 항상 표시되는 문제 (1차 수정 미해결)
+
+#### 원인 분석 (근본 원인)
+1. `UpdateWindowSize(int folderCount)`에서 folderCount 기반으로 추정치로 윈도우 높이를 계산
+2. `OnFolderPanelLoaded`에서 `UpdateWindowSize(FolderPanel.Children.Count)`를 호출하여 실제 콘텐츠 높이(`FolderPanel.ActualHeight`)를 무시하고 다시 추정치로 계산
+3. 추정치가 실제보다 크게 설정되면 ScrollView에 여분 공간이 생겨 VerticalScrollBarVisibility="Auto"에 의해 스크롤바가 표시됨
+4. folderCount가 2-3개인데도 `folderCount * SINGLE_COLUMN_ITEM_HEIGHT(56)` + 헤더 높이로 계산하여 윈도우가 실제 필요보다 커짐
+
+#### 수정 내용
+**StartMenuPopupWindow.xaml**
+- ScrollView: `VerticalAlignment="Top"` → `"Stretch"`로 변경
+
+**StartMenuPopupWindow.xaml.cs - OnFolderPanelLoaded 메서드 전면 재작성**
+- `FolderPanel.ActualHeight`를 사용하여 실제 콘텐츠 높이 기반으로 윈도우 높이 계산
+- `UpdateWindowSize(folderCount)` 호출 제거 → 직접 `_windowHelper.SetSize()` 호출
+- DPI 스케일링 적용: `requiredWindowHeight * scaleFactor`
+- 화면 최대 높이 제한 확인 및 적용
+- 콘텐츠가 화면에 맞으면 MaxHeight 제거 (스크롤 숨김)
+- 콘텐츠가 크면 MaxHeight 설정 (스크롤 표시)
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml` - ScrollView VerticalAlignment 수정
+- `View/StartMenuPopupWindow.xaml.cs` - OnFolderPanelLoaded 메서드 전면 재작성 (실제 콘텐츠 높이 기반 계산)
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 2개)
+
+---
+
+### 2026-02-06 - FolderContentsPopupWindow 재시작 시 스크롤 표시 문제 수정
+
+#### 문제점
+- FolderContentsPopupWindow도 동일한 문제 발생: 처음에는 정상인데 재시작 시 스크롤 표시
+
+#### 원인 분석
+- `ContentsPanel.Loaded` 이벤트가 한 번만 발생하여 두 번째 실행부터는 실제 높이 계산되지 않음
+- `LoadFolderContents()`의 `UpdateWindowSize(fileCount, folderCount)` 추정치만 사용됨
+
+#### 수정 내용
+**LoadFolderContents 메서드 수정**
+- `ContentsPanel.Loaded` 이벤트 등록 코드 제거
+- `ContentsPanel.UpdateLayout()` 강제 레이아웃 갱신
+- `UpdateWindowSizeFromActualHeight()` 호출로 즉시 실제 높이 계산
+
+**UpdateWindowSizeFromActualHeight 메서드 추가**
+- `OnContentsPanelLoaded`의 로직을 별도 메서드로 분리
+- 매 호출 시 실제 콘텐츠 높이로 즉시 계산
+
+**필드 삭제**
+- `_contentsPanelLoadedRegistered` 플래그 제거
+
+#### 변경된 파일
+- `View/FolderContentsPopupWindow.xaml.cs` - LoadFolderContents 수정, UpdateWindowSizeFromActualHeight 추가, 필드 삭제
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개)
+
+---
+
+### 2026-02-06 - StartMenuPopupWindow 불필요한 스크롤 표시 문제 수정 (2차)
+
+#### 문제점
+- FolderContentsPopupWindow에서도 동일한 문제 발생: 팝업 사이즈가 작은데도 스크롤이 항상 표시됨
+
+#### 원인 분석
+- `UpdateWindowSize(int fileCount, int folderCount)`에서 item count 기반 추정치로 윈도우 높이 계산
+- XAML에서 ScrollView에 `VerticalAlignment="Top"` 설정
+- 추정치가 실제 콘텐츠 높이보다 크면 ScrollView에 여분 공간이 생겨 스크롤바 표시
+
+#### 수정 내용
+**FolderContentsPopupWindow.xaml**
+- ScrollView: `VerticalAlignment="Top"` → `"Stretch"`로 변경
+
+**FolderContentsPopupWindow.xaml.cs**
+- 필드 추가:
+  - `_currentWindowWidth`, `_currentWindowHeight` (윈도우 크기 저장)
+  - `_contentsPanelLoadedRegistered` (중복 이벤트 등록 방지 플래그)
+- `LoadFolderContents` 메서드 수정:
+  - `ContentsPanel.Loaded` 이벤트 등록 (최초 1회만)
+- `OnContentsPanelLoaded` 메서드 추가 (신규):
+  - `ContentsPanel.ActualHeight`를 사용하여 실제 콘텐츠 높이 기반 윈도우 크기 계산
+  - 직접 `_windowHelper.SetSize()` 호출
+  - 콘텐츠가 화면에 맞으면 MaxHeight 제거 (스크롤 숨김)
+  - 콘텐츠가 크면 MaxHeight 설정 (스크롤 표시)
+- `UpdateWindowSize` 메서드 수정:
+  - `_currentWindowWidth`, `_currentWindowHeight` 필드에 값 저장 추가
+
+#### 변경된 파일
+- `View/FolderContentsPopupWindow.xaml` - ScrollView VerticalAlignment 수정
+- `View/FolderContentsPopupWindow.xaml.cs` - 필드 추가, LoadFolderContents 수정, OnContentsPanelLoaded 메서드 추가, UpdateWindowSize 수정
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개 - 기존 nullable 관련 경고)
+
+#### 참고: 동일 실수 방지
+- 윈도우 크기를 동적으로 조정할 때는 **항상 ActualHeight/ActualWidth**를 사용하여 실제 렌더링된 크기를 기준으로 계산할 것
+- 항목 수(Count) 기반 추정치는 정확하지 않으므로, Loaded 이벤트 후 ActualHeight를 사용하여 정확한 크기를 계산할 것
+
+---
+
 ### 2026-02-05 - FolderContentsPopupWindow, StartMenuPopupWindow 하드코딩된 값 상수화
 
 #### 작업 내용

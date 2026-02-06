@@ -410,10 +410,9 @@ namespace AppGroup
                     // HBITMAP을 알파 채널 보존하면서 Bitmap으로 변환
                     using (Bitmap rawBitmap = ConvertHBitmapToArgbBitmap(hBitmap))
                     {
-                        // 실제 아이콘 영역만 크롭
-                        Bitmap bitmap = CropToActualContent(rawBitmap);
-                        Debug.WriteLine($"TryExtractIconFromShellPath: {rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height} for {shellPath}");
-                        return bitmap;
+                        // 32x32 아이콘 직접 사용 (크롭 불필요)
+                        Debug.WriteLine($"TryExtractIconFromShellPath: {rawBitmap.Width}x{rawBitmap.Height} for {shellPath}");
+                        return rawBitmap;
                     }
                 }
                 finally

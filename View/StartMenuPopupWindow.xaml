@@ -21,15 +21,19 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="HeaderText" VerticalAlignment="Center" FontWeight="SemiBold" Text="폴더"/>
+                <TextBlock x:Name="HeaderText" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" Text="폴더"/>
+                <Button Grid.Column="1" Padding="10" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="설정" >
+                    <FontIcon Glyph="&#xE713;" FontSize="17" />
+                </Button>
             </Grid>
             <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="10,0,10,5"/>
         </StackPanel>
 
         <!-- 폴더 목록 영역 -->
-        <ScrollView Grid.Row="1" VerticalScrollMode="Auto" x:Name="ScrollView" VerticalAlignment="Top" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled"
-                    VerticalScrollBarVisibility="Auto" Margin="5">
-            <StackPanel x:Name="FolderPanel" Width="Auto" HorizontalAlignment="Left"/>
-        </ScrollView>
+        <ScrollViewer Grid.Row="1" x:Name="ScrollView" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      HorizontalScrollMode="Disabled" Margin="5,5,5,10">
+            <StackPanel x:Name="FolderPanel" Width="Auto" HorizontalAlignment="Stretch"/>
+        </ScrollViewer>
     </Grid>
 </Window>
