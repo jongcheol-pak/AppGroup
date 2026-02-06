@@ -407,12 +407,14 @@ namespace AppGroup.View
 
             if (_columnCount == 1)
             {
+                // 1열: 각 버튼이 FolderPanel에 직접 추가됨 → Children.Count = 아이템 수
                 contentHeight = itemCount * SINGLE_COLUMN_ITEM_HEIGHT;
             }
             else
             {
-                int rowCount = (int)Math.Ceiling((double)itemCount / _columnCount);
-                contentHeight = rowCount * GRID_LAYOUT_ROW_HEIGHT;
+                // 그리드: 행 StackPanel이 FolderPanel에 추가됨 → Children.Count = 행 수
+                int actualRowHeight = GRID_LAYOUT_BUTTON_HEIGHT + ITEM_MARGIN * 2;
+                contentHeight = itemCount * actualRowHeight;
             }
 
             // DPI 스케일 계수 가져오기
@@ -445,7 +447,9 @@ namespace AppGroup.View
             }
 
             // 너비 계산 (DPI 적용)
-            int dynamicWidth = _columnCount == 1 ? SINGLE_COLUMN_WINDOW_WIDTH : _columnCount * GRID_LAYOUT_COLUMN_WIDTH;
+            // 그리드 레이아웃 열 너비 = 버튼 너비 + 좌우 마진 (상수 불일치 방지)
+            int actualColumnWidth = GRID_LAYOUT_BUTTON_WIDTH + ITEM_MARGIN * 2;
+            int dynamicWidth = _columnCount == 1 ? SINGLE_COLUMN_WINDOW_WIDTH : _columnCount * actualColumnWidth;
             int newWindowWidth = (int)(dynamicWidth * scaleFactor) + WINDOW_WIDTH_PADDING;
             newWindowWidth = Math.Max(newWindowWidth, MIN_WINDOW_WIDTH);
 
@@ -1039,6 +1043,31 @@ namespace AppGroup.View
         ~StartMenuPopupWindow()
         {
             Dispose(false);
+        }
+
+        /// <summary>
+        /// 설정 버튼 클릭 이벤트 - MainWindow의 시작 탭을 표시합니다.
+        /// </summary>
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 현재 팝업 숨기기
+                HideFolderContentsPopup();
+                this.Hide();
+
+                // MainWindow 가져오기 및 시작 탭으로 이동
+                var mainWindow = App.Current.MainWindow;
+                if (mainWindow != null)
+                {
+                    mainWindow.NavigateToStartMenuTab();
+                    mainWindow.Activate();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"설정 버튼 클릭 오류: {ex.Message}");
+            }
         }
     }
 }

@@ -35,6 +35,16 @@ namespace AppGroup {
         // LaunchAll 명령의 데드락 방지를 위한 지연 실행용 필드
         private string? _pendingLaunchAllGroupName = null;
 
+        /// <summary>
+        /// 현재 App 인스턴스를 반환합니다.
+        /// </summary>
+        public static new App Current => (App)Application.Current;
+
+        /// <summary>
+        /// 메인 윈도우 인스턴스를 반환합니다.
+        /// </summary>
+        public MainWindow? MainWindow => m_window;
+
 
         /// <summary>
         /// App 클래스의 생성자입니다.

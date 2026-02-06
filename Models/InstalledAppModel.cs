@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AppGroup.Models {
     public partial class InstalledAppModel : ObservableObject {
         private string _displayName = string.Empty;
         private string _executablePath = string.Empty;
-        private string _icon = string.Empty;
+        private string? _icon;
         private bool _isSelected;
 
         public string DisplayName {
@@ -18,7 +18,7 @@ namespace AppGroup.Models {
             set => SetProperty(ref _executablePath, value);
         }
 
-        public string Icon {
+        public string? Icon {
             get => _icon;
             set => SetProperty(ref _icon, value);
         }

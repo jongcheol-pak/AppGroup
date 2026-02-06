@@ -559,22 +559,47 @@ namespace AppGroup.View
                     return;
                 }
 
-                // 2. 캐시에 없으면 실제 아이콘 추출 (32x32 크기)
-                var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, AppPaths.IconsFolder, size: 32);
+                // 2. 캐시에 없으면 실제 아이콘 추출 (48x48 크기)
+                var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, AppPaths.IconsFolder, size: 48);
                 if (extractedIconPath != null && File.Exists(extractedIconPath))
                 {
                     UpdateIconSource(imageControl, filePath, extractedIconPath);
                     return;
                 }
 
-                // 3. 추출 실패 시 기본 확장자 아이콘 사용
+                // 3. 추출 실패 시 기본 아이콘 사용
                 Debug.WriteLine($"아이콘 추출 실패, 기본 아이콘 사용: {filePath}");
+                SetFallbackIcon(imageControl, filePath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"실제 아이콘 로드 실패 ({filePath}): {ex.Message}");
+                SetFallbackIcon(imageControl, filePath);
             }
-            // 실패 시 기본 아이콘이 이미 설정되어 있으므로 추가 조치 불필요
+        }
+
+        /// <summary>
+        /// 기본 아이콘 설정 (아이콘 추출 실패 시)
+        /// </summary>
+        private void SetFallbackIcon(Image imageControl, string filePath)
+        {
+            if (DispatcherQueue != null)
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    try
+                    {
+                        if (imageControl.Tag is string currentFilePath && currentFilePath == filePath)
+                        {
+                            imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"기본 아이콘 설정 실패: {ex.Message}");
+                    }
+                });
+            }
         }
 
         /// <summary>
@@ -592,15 +617,25 @@ namespace AppGroup.View
                         // 이미지 컨트롤의 태그가 여전히 같은 파일 경로인지 확인 (다른 파일로 변경되었으면 업데이트 중단)
                         if (imageControl.Tag is string currentFilePath && currentFilePath == expectedFilePath)
                         {
-                            if (File.Exists(iconPath))
+                            if (!string.IsNullOrEmpty(iconPath) && File.Exists(iconPath))
                             {
                                 imageControl.Source = new BitmapImage(new Uri(iconPath));
+                            }
+                            else
+                            {
+                                // 아이콘 파일이 없으면 기본 아이콘 사용
+                                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         Debug.WriteLine($"아이콘 소스 업데이트 실패: {ex.Message}");
+                        try
+                        {
+                            imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
+                        }
+                        catch { }
                     }
                 });
             }

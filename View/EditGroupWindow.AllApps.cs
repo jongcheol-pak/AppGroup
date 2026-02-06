@@ -84,17 +84,49 @@ namespace AppGroup.View {
 
                         string icon = null;
 
-                        // exe 파일인 경우 아이콘 추출
-                        if (!string.IsNullOrEmpty(appInfo.ExecutablePath) &&
+                        // 1단계: IconPath가 있으면 사용 (exe 경로)
+                        if (!string.IsNullOrEmpty(appInfo.IconPath) && File.Exists(appInfo.IconPath))
+                        {
+                            try
+                            {
+                                icon = await IconCache.GetIconPathAsync(appInfo.IconPath);
+                                Debug.WriteLine($"Got icon from IconPath for {appInfo.DisplayName}: {icon}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Failed to get icon from IconPath for {appInfo.DisplayName}: {ex.Message}");
+                            }
+                        }
+
+                        // 2단계: exe 파일 경로에서 아이콘 추출
+                        if (string.IsNullOrEmpty(icon) && 
+                            !string.IsNullOrEmpty(appInfo.ExecutablePath) &&
                             appInfo.ExecutablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
                             File.Exists(appInfo.ExecutablePath))
                         {
-                            icon = await IconCache.GetIconPathAsync(appInfo.ExecutablePath);
+                            try
+                            {
+                                icon = await IconCache.GetIconPathAsync(appInfo.ExecutablePath);
+                                Debug.WriteLine($"Got icon from exe for {appInfo.DisplayName}: {icon}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Failed to get icon for exe {appInfo.ExecutablePath}: {ex.Message}");
+                            }
                         }
-                        // UWP 앱 또는 exe가 없는 경우 바로가기 생성 후 아이콘 추출
-                        else if (!string.IsNullOrEmpty(appInfo.AppUserModelId))
+                        
+                        // 3단계: AUMID로 UWP 아이콘 추출 시도
+                        if (string.IsNullOrEmpty(icon) && !string.IsNullOrEmpty(appInfo.AppUserModelId))
                         {
-                            icon = await GetAppIconFromShellAsync(appInfo.AppUserModelId, appInfo.DisplayName);
+                            try
+                            {
+                                icon = await GetAppIconFromShellAsync(appInfo.AppUserModelId, appInfo.DisplayName);
+                                Debug.WriteLine($"Got icon from AUMID for {appInfo.DisplayName}: {icon}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Failed to get icon from shell for {appInfo.DisplayName}: {ex.Message}");
+                            }
                         }
 
                         // 취소 요청 재확인 (비동기 작업 후)
@@ -162,11 +194,11 @@ namespace AppGroup.View {
         }
 
         /// <summary>
-        /// shell:AppsFolder에서 설치된 앱 목록 가져오기
+        /// shell:AppsFolder에서 설치된 앱 목록 가져오기 (아이콘 경로 포함)
         /// </summary>
-        private List<(string DisplayName, string ExecutablePath, string AppUserModelId)> GetAppsFromShellFolder()
+        private List<(string DisplayName, string ExecutablePath, string AppUserModelId, string IconPath)> GetAppsFromShellFolder()
         {
-            var apps = new List<(string DisplayName, string ExecutablePath, string AppUserModelId)>();
+            var apps = new List<(string DisplayName, string ExecutablePath, string AppUserModelId, string IconPath)>();
 
             try
             {
@@ -196,6 +228,7 @@ namespace AppGroup.View {
 
                         string exePath = null;
                         string aumid = null;
+                        string iconPath = null;
 
                         // path가 exe 경로인지 AUMID인지 확인
                         if (!string.IsNullOrEmpty(path))
@@ -214,7 +247,30 @@ namespace AppGroup.View {
                             }
                         }
 
-                        apps.Add((name, exePath, aumid));
+                        // Shell item에서 아이콘 추출 시도
+                        try
+                        {
+                            // ExtractedIconLocation 속성 사용 시도 (일부 앱에서 작동)
+                            string iconLocation = null;
+                            try
+                            {
+                                // FolderItem의 ExtendedProperty를 통해 아이콘 정보 가져오기
+                                iconLocation = folder.GetDetailsOf(item, 0); // 이름
+                            }
+                            catch { }
+
+                            // exe 경로가 있으면 해당 경로에서 아이콘 추출
+                            if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
+                            {
+                                iconPath = exePath;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error getting icon for {name}: {ex.Message}");
+                        }
+
+                        apps.Add((name, exePath, aumid, iconPath));
                     }
                     catch (Exception ex)
                     {

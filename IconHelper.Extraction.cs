@@ -1,4 +1,4 @@
-using Microsoft.UI.Dispatching;
+﻿using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
@@ -28,8 +28,8 @@ namespace AppGroup
         /// <param name="filePath">아이콘을 추출할 파일 경로</param>
         /// <param name="outputDirectory">아이콘을 저장할 출력 디렉터리</param>
         /// <param name="timeout">추출 시간 초과 (기본 3초)</param>
-        /// <param name="size">추출할 아이콘 크기 (기본 256, 권장: 32/48/256)</param>
-        public static async Task<string> ExtractIconAndSaveAsync(string filePath, string outputDirectory, TimeSpan? timeout = null, int size = 256)
+        /// <param name="size">추출 및 저장할 아이콘 크기 (기본 48)</param>
+        public static async Task<string> ExtractIconAndSaveAsync(string filePath, string outputDirectory, TimeSpan? timeout = null, int size = 48)
         {
             timeout ??= TimeSpan.FromSeconds(3);
             if (string.IsNullOrEmpty(filePath))
@@ -141,11 +141,9 @@ namespace AppGroup
                                         {
                                             using (var icon = Icon.FromHandle(hIcons[0]))
                                             {
-                                                using (var rawBitmap = new Bitmap(icon.ToBitmap()))
-                                                {
-                                                    iconBitmap = rawBitmap;
-                                                    Debug.WriteLine($"Extracted icon from shortcut via ExtractIconEx: {filePath} ({rawBitmap.Width}x{rawBitmap.Height})");
-                                                }
+                                                // 복사본 생성 (dispose되지 않도록)
+                                                iconBitmap = new Bitmap(icon.ToBitmap());
+                                                Debug.WriteLine($"Extracted icon from shortcut via ExtractIconEx: {filePath} ({iconBitmap.Width}x{iconBitmap.Height})");
                                             }
                                             NativeMethods.DestroyIcon(hIcons[0]);
                                         }
@@ -180,7 +178,7 @@ namespace AppGroup
                         }
                         else
                         {
-                            iconBitmap = ExtractIconWithoutArrow(filePath);
+                            iconBitmap = ExtractIconWithoutArrow(filePath, size);
 
                         }
                         if (iconBitmap == null)
@@ -192,28 +190,44 @@ namespace AppGroup
                         // 추출된 아이콘 크기 로그 출력
                         Debug.WriteLine($"[IconSize] {iconBitmap.Width}x{iconBitmap.Height} - {Path.GetFileName(filePath)}");
 
-                        //using (Bitmap resizedIcon = ResizeAndCropImageToSquare(iconBitmap, 200)) {
                         Directory.CreateDirectory(outputDirectory);
-                        string iconFileName = GenerateUniqueIconFileName(filePath, iconBitmap);
+                        
+                        // 아이콘을 지정된 크기로 리사이즈 (기본 48x48)
+                        Bitmap resizedBitmap = iconBitmap;
+                        if (iconBitmap.Width != size || iconBitmap.Height != size)
+                        {
+                            resizedBitmap = new Bitmap(size, size);
+                            using (var graphics = Graphics.FromImage(resizedBitmap))
+                            {
+                                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                                graphics.DrawImage(iconBitmap, 0, 0, size, size);
+                            }
+                            iconBitmap.Dispose();
+                            Debug.WriteLine($"[IconSize] Resized to {size}x{size} - {Path.GetFileName(filePath)}");
+                        }
+
+                        string iconFileName = GenerateUniqueIconFileName(filePath, resizedBitmap);
                         string iconFilePath = Path.Combine(outputDirectory, iconFileName);
 
                         if (File.Exists(iconFilePath))
                         {
-                            Debug.WriteLine($"[IconSize] {iconBitmap.Width}x{iconBitmap.Height} - {Path.GetFileName(filePath)} (cached)");
-                            iconBitmap.Dispose();
+                            Debug.WriteLine($"[IconSize] {resizedBitmap.Width}x{resizedBitmap.Height} - {Path.GetFileName(filePath)} (cached)");
+                            resizedBitmap.Dispose();
                             return iconFilePath;
                         }
 
                         using (var stream = new FileStream(iconFilePath, FileMode.Create))
                         {
                             cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                            iconBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            resizedBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                         }
-                        iconBitmap.Dispose();
+                        resizedBitmap.Dispose();
 
-                        Debug.WriteLine($"Icon saved to: {iconFilePath}");
+                        Debug.WriteLine($"Icon saved to: {iconFilePath} ({size}x{size})");
                         return iconFilePath;
-                        //}
                     }
                     catch (OperationCanceledException)
                     {
@@ -334,9 +348,9 @@ namespace AppGroup
                         }
                     }
 
-                    // 우선순위 3: 바로가기 파일에서 SHGetImageList로 고해상도 아이콘 추출 시도
+                    // 우선순위 3: 바로가기 파일에서 SHGetImageList로 48x48 아이콘 추출 시도
                     {
-                        var bitmapFromImageList = TryExtractIconViaSHGetImageList(lnkPath);
+                        var bitmapFromImageList = TryExtractIconViaSHGetImageList(lnkPath, 48);
                         if (bitmapFromImageList != null)
                         {
                             Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Extracted via SHGetImageList: {lnkPath}");
@@ -483,10 +497,10 @@ namespace AppGroup
                 // iconIndex가 0인 경우에만 고해상도 아이콘 추출 시도
                 if (iconIndex == 0)
                 {
-                    // Method 1: IShellItemImageFactory 시도 (256/128/64/48/32)
+                    // Method 1: IShellItemImageFactory 시도 (48/32)
                     try
                     {
-                        var bitmapFromShell = TryExtractIconViaShellItemImageFactory(iconPath);
+                        var bitmapFromShell = TryExtractIconViaShellItemImageFactory(iconPath, 48);
                         if (bitmapFromShell != null)
                         {
                             Debug.WriteLine($"ExtractSpecificIcon: Got icon via IShellItemImageFactory for {iconPath}");
@@ -498,10 +512,10 @@ namespace AppGroup
                         Debug.WriteLine($"ExtractSpecificIcon: IShellItemImageFactory failed - {ex.Message}");
                     }
 
-                    // Method 2: SHGetImageList 시도 (256x256 또는 48x48)
+                    // Method 2: SHGetImageList 시도 (48x48)
                     try
                     {
-                        var bitmapFromImageList = TryExtractIconViaSHGetImageList(iconPath);
+                        var bitmapFromImageList = TryExtractIconViaSHGetImageList(iconPath, 48);
                         if (bitmapFromImageList != null)
                         {
                             Debug.WriteLine($"ExtractSpecificIcon: Got icon via SHGetImageList for {iconPath}");
@@ -590,22 +604,24 @@ namespace AppGroup
         /// <summary>
         /// 화살표 없는 아이콘 추출
         /// </summary>
-        private static Bitmap ExtractIconWithoutArrow(string targetPath)
+        /// <param name="targetPath">대상 파일 경로</param>
+        /// <param name="size">요청할 아이콘 크기 (기본 48)</param>
+        private static Bitmap ExtractIconWithoutArrow(string targetPath, int size = 48)
         {
             try
             {
-                Debug.WriteLine($"ExtractIconWithoutArrow: Attempting to extract icon from: {targetPath}");
+                Debug.WriteLine($"ExtractIconWithoutArrow: Attempting to extract icon from: {targetPath} (size: {size})");
 
                 // Method 1: Try IShellItemImageFactory first (works better with protected folders like Program Files)
-                var bitmapFromShell = TryExtractIconViaShellItemImageFactory(targetPath);
+                var bitmapFromShell = TryExtractIconViaShellItemImageFactory(targetPath, size);
                 if (bitmapFromShell != null)
                 {
                     Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via IShellItemImageFactory for {targetPath}");
                     return bitmapFromShell;
                 }
 
-                // Method 2: Try SHGetImageList (256x256 Jumbo 또는 48x48 ExtraLarge 아이콘)
-                var bitmapFromImageList = TryExtractIconViaSHGetImageList(targetPath);
+                // Method 2: Try SHGetImageList (48x48 ExtraLarge 아이콘)
+                var bitmapFromImageList = TryExtractIconViaSHGetImageList(targetPath, size);
                 if (bitmapFromImageList != null)
                 {
                     Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via SHGetImageList for {targetPath}");
@@ -962,24 +978,23 @@ namespace AppGroup
         /// 요청한 크기에 따라 적절한 SHIL 상수 배열을 반환합니다.
         /// </summary>
         /// <param name="size">요청한 아이콘 크기</param>
-        /// <returns>시도할 SHIL 상수 배열 (내림차순)</returns>
+        /// <returns>시도할 SHIL 상수 배열</returns>
         private static int[] GetImageListSizesForSize(int size)
         {
-            // 크기에 따라 적절한 SHIL 상수 선택
             // SHIL_LARGE = 0 (32x32), SHIL_EXTRALARGE = 2 (48x48), SHIL_JUMBO = 4 (256x256)
+            // 요청한 크기에 맞는 아이콘부터 시도 (다운스케일 방지)
             if (size <= 32)
             {
-                // 32 이하: SHIL_LARGE (32x32)만 시도
                 return new[] { NativeMethods.SHIL_LARGE };
             }
             else if (size <= 48)
             {
-                // 48 이하: SHIL_EXTRALARGE (48x48) → SHIL_LARGE (32x32) 순서로 시도
+                // 48 요청: EXTRALARGE(48) → LARGE(32) 순서로 시도
                 return new[] { NativeMethods.SHIL_EXTRALARGE, NativeMethods.SHIL_LARGE };
             }
             else
             {
-                // 49 이상: SHIL_JUMBO (256x256) → SHIL_EXTRALARGE (48x48) → SHIL_LARGE (32x32) 순서로 시도
+                // 49 이상: JUMBO(256) → EXTRALARGE(48) → LARGE(32) 순서로 시도
                 return new[] { NativeMethods.SHIL_JUMBO, NativeMethods.SHIL_EXTRALARGE, NativeMethods.SHIL_LARGE };
             }
         }
@@ -1036,13 +1051,11 @@ namespace AppGroup
                             {
                                 using (var icon = Icon.FromHandle(hIcon))
                                 {
-                                    using (var rawBitmap = new Bitmap(icon.ToBitmap()))
-                                    {
-                                        // 32x32 아이콘 직접 사용 (크롭 불필요)
-                                        string sizeLabel = shilSize == NativeMethods.SHIL_JUMBO ? "JUMBO(256)" : shilSize == NativeMethods.SHIL_EXTRALARGE ? "EXTRALARGE(48)" : $"SHIL({shilSize})";
-                                        Debug.WriteLine($"TryExtractIconViaSHGetImageList: {sizeLabel} -> {rawBitmap.Width}x{rawBitmap.Height} for {filePath}");
-                                        return rawBitmap;
-                                    }
+                                    // 복사본 생성하여 반환
+                                    var resultBitmap = new Bitmap(icon.ToBitmap());
+                                    string sizeLabel = shilSize == NativeMethods.SHIL_JUMBO ? "JUMBO(256)" : shilSize == NativeMethods.SHIL_EXTRALARGE ? "EXTRALARGE(48)" : $"SHIL({shilSize})";
+                                    Debug.WriteLine($"TryExtractIconViaSHGetImageList: {sizeLabel} -> {resultBitmap.Width}x{resultBitmap.Height} for {filePath}");
+                                    return resultBitmap;
                                 }
                             }
                         }
@@ -1079,7 +1092,7 @@ namespace AppGroup
         /// <summary>
         /// IShellItemImageFactory를 사용하여 아이콘 추출 시도
         /// </summary>
-        private static Bitmap TryExtractIconViaShellItemImageFactory(string filePath)
+        private static Bitmap TryExtractIconViaShellItemImageFactory(string filePath, int size = 48)
         {
             try
             {
@@ -1095,12 +1108,24 @@ namespace AppGroup
 
                 IntPtr hBitmap = IntPtr.Zero;
 
-                // 여러 크기로 시도 (큰 크기부터)
-                int[] sizes = { 256, 128, 64, 48, 32 };
-
-                foreach (int size in sizes)
+                // 요청한 크기에 맞는 아이콘 시도 (다운스케일 방지)
+                int[] sizes;
+                if (size <= 32)
                 {
-                    NativeMethods.SIZE iconSize = new NativeMethods.SIZE(size, size);
+                    sizes = new[] { 32 };
+                }
+                else if (size <= 48)
+                {
+                    sizes = new[] { 48, 32 };
+                }
+                else
+                {
+                    sizes = new[] { 256, 128, 64, 48, 32 };
+                }
+
+                foreach (int trySize in sizes)
+                {
+                    NativeMethods.SIZE iconSize = new NativeMethods.SIZE(trySize, trySize);
 
                     // SIIGBF_ICONONLY: 아이콘만 가져옴 (오버레이 없음)
                     hr = imageFactory.GetImage(iconSize, NativeMethods.SIIGBF.SIIGBF_BIGGERSIZEOK | NativeMethods.SIIGBF.SIIGBF_ICONONLY, out hBitmap);
@@ -1128,12 +1153,13 @@ namespace AppGroup
                 try
                 {
                     // 알파 채널을 보존하면서 HBITMAP을 Bitmap으로 변환
-                    using (Bitmap rawBitmap = ConvertHBitmapToArgbBitmap(hBitmap))
+                    Bitmap rawBitmap = ConvertHBitmapToArgbBitmap(hBitmap);
+                    if (rawBitmap != null)
                     {
-                        // 32x32 아이콘 직접 사용 (크롭 불필요)
                         Debug.WriteLine($"TryExtractIconViaShellItemImageFactory: {rawBitmap.Width}x{rawBitmap.Height} for {filePath}");
                         return rawBitmap;
                     }
+                    return null;
                 }
                 finally
                 {

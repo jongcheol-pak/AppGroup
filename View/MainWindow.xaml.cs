@@ -904,6 +904,22 @@ private bool _disposed = false;
 
         #region 시작 메뉴 관련 메서드
 
+        /// <summary>
+        /// 시작 메뉴 탭으로 이동합니다.
+        /// </summary>
+        public void NavigateToStartMenuTab()
+        {
+            // NavView.MenuItems에서 Tag가 "StartMenu"인 항목 찾기
+            foreach (var item in NavView.MenuItems)
+            {
+                if (item is NavigationViewItem navItem && navItem.Tag?.ToString() == "StartMenu")
+                {
+                    NavView.SelectedItem = navItem;
+                    break;
+                }
+            }
+        }
+
         private void NavView_Loaded(object sender, RoutedEventArgs e)
         {
             if (NavView.MenuItems.Count > 0)

@@ -2,6 +2,28 @@
 
 ## 최근 변경 사항
 
+### 2026-02-06 - StartMenuPopupWindow 2열 이상 그리드 레이아웃 높이/너비 계산 수정
+
+#### 문제점
+- 2열 이상 그리드 레이아웃에서 윈도우 높이가 부족하여 스크롤이 나타남
+
+#### 원인 분석
+- `GRID_LAYOUT_ROW_HEIGHT(100)` 상수가 실제 행 높이(`GRID_LAYOUT_BUTTON_HEIGHT(100) + ITEM_MARGIN(4)*2 = 108`)보다 작음
+- 버튼 크기 변경 시 `GRID_LAYOUT_ROW_HEIGHT`/`GRID_LAYOUT_COLUMN_WIDTH` 상수도 함께 변경해야 하는 동기화 문제
+
+#### 수정 내용
+- 행 높이: `GRID_LAYOUT_ROW_HEIGHT` 상수 대신 `GRID_LAYOUT_BUTTON_HEIGHT + ITEM_MARGIN * 2`로 동적 계산
+- 열 너비: `GRID_LAYOUT_COLUMN_WIDTH` 상수 대신 `GRID_LAYOUT_BUTTON_WIDTH + ITEM_MARGIN * 2`로 동적 계산
+- 버튼 크기나 마진이 변경되어도 자동 대응
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs` - UpdateWindowSizeFromActualHeight 내 그리드 높이/너비 계산
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 720개)
+
+---
+
 ### 2026-02-06 - FolderContentsPopupWindow 스크롤 불필요 표시 버그 동일 수정
 
 #### 문제점

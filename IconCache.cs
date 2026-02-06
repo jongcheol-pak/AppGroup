@@ -124,9 +124,9 @@ namespace AppGroup
                                        filePath.Contains("Windows", StringComparison.OrdinalIgnoreCase);
                 TimeSpan timeout = isProtectedPath ? TimeSpan.FromSeconds(5) : TimeSpan.FromSeconds(3);
 
-                Debug.WriteLine($"GetIconPathAsync: Extracting icon for {filePath} (timeout: {timeout.TotalSeconds}s, size: 32x32)");
+                Debug.WriteLine($"GetIconPathAsync: Extracting icon for {filePath} (timeout: {timeout.TotalSeconds}s, size: 48x48)");
 
-                var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, outputDirectory, timeout, size: 32);
+                var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, outputDirectory, timeout, size: 48);
 
                 if (extractedIconPath != null && File.Exists(extractedIconPath)) {
                     // 캐시 크기 제한 확인 및 정리
