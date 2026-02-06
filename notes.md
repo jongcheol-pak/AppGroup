@@ -2,6 +2,77 @@
 
 ## 최근 변경 사항
 
+### 2026-02-06 - 코드 리뷰 심각한 문제 21건 수정
+
+#### 수정된 이슈
+
+##### Step 1: Bitmap/GDI+ 리소스 수정
+- **IconHelper.UwpExtractor.cs:411** - `TryExtractIconFromShellPath`에서 `using` 제거하여 Disposed 객체 반환 방지
+- **IconHelper.Extraction.cs:162** - `using (var rawBitmap = icon.ToBitmap())` → `new Bitmap(icon.ToBitmap())`로 변경
+- **IconHelper.Extraction.cs:268** - `icon.ToBitmap().Save(...)` → `using (var tempBitmap)` 블록으로 GDI+ 리소스 해제
+- **IconHelper.Extraction.cs:392** - `icon.ToBitmap()` 반환값을 변수로 받아 `CreateBitmapImageFromBitmap` 내부에서 dispose
+- **IconHelper.Extraction.cs:1179** - `CreateBitmapImageFromBitmap`에 `finally { bitmap.Dispose(); }` 추가, 호출 측 `using` 제거
+- **IconHelper.UwpExtractor.cs:517~540** - `GetPixel`/`SetPixel` → `LockBits` + `Marshal.Copy` 기반 고속 알파 채널 처리
+
+##### Step 2: COM 객체 해제 (7곳)
+- **BackupHelper.cs:589** - `SafeCreateShortcut`에 `try/finally` + `Marshal.ReleaseComObject()` 추가
+- **JsonConfigHelper.cs:383~423** - `UpdateShortcutIcon`, `UpdateShortcutTarget` COM 해제 추가
+- **TaskbarManager.cs:13~42** - `IsShortcutPinnedToTaskbar` 루프 내 shortcut 및 wshShell COM 해제 추가
+- **IconHelper.GridIcon.cs:~200** - `CreateGridIconAsync` 루프 내 shell, shortcut COM 해제 추가
+- **IconHelper.Extraction.cs:312** - `ExtractLnkIconWithoutArrowAsync` COM 즉시 해제 패턴 적용
+- **EditGroupWindow.AllApps.cs:199~287** - `GetAppsFromShellFolder` shell, folder, item COM 해제 추가
+- **EditGroupWindow.AllApps.cs:323~445** - `GetAppIconFromShellAsync`, `GetShortcutTarget` COM 해제 추가
+
+##### Step 3: 이벤트 핸들러/콜백 해제 (3곳)
+- **ThemeHelper.cs** - 익명 람다 → 명명된 핸들러 + 중복 등록 방지 + `window.Closed`에서 해제
+- **FolderContentsPopupWindow.xaml.cs** - `Dispose`에 `UnregisterButtonEvents` 추가 (Click, PointerEntered, PointerExited 해제)
+- **StartMenuPopupWindow.xaml.cs:305** - `Dispose`에 `this.Activated -= Window_Activated` 추가
+
+##### Step 4: 논리적 버그 수정 (3곳)
+- **WindowHelper.cs:86** - `IsAlwaysOnTop` getter: `presenter.IsMaximizable` → `presenter.IsAlwaysOnTop` (복붙 오류 수정)
+- **Program.cs:60~68** - 기존 인스턴스 발견 시 `return;` 추가하여 새 인스턴스 생성 방지
+- **SystemTrayManager.cs:380~383** - `Cleanup()`에 `onTrayClickCallback = null`, `onHidePopupCallback = null` 추가
+
+##### Step 5: 리소스 관리 (2곳)
+- **WindowHelper.cs** - `IDisposable` 구현, `Dispose()`에서 `RemoveWindowSubclass` 호출
+- **NativeMethods.cs:390~410** - `SendString` cdsPtr를 `finally`에서 해제하도록 변경
+
+##### Step 6: 모델 분리
+- **PathData, GroupData 클래스** - `PopupWindow.xaml.cs`에서 `Models/PathData.cs`, `Models/GroupData.cs`로 분리
+
+#### 변경된 파일
+- `IconHelper.UwpExtractor.cs` - Disposed 객체 반환 수정, GetPixel/SetPixel → LockBits 성능 개선
+- `IconHelper.Extraction.cs` - GDI+ 리소스 해제, COM 객체 해제, CreateBitmapImageFromBitmap bitmap dispose
+- `BackupHelper.cs` - COM 객체 해제 추가
+- `JsonConfigHelper.cs` - COM 객체 해제 추가
+- `TaskbarManager.cs` - COM 객체 해제 추가
+- `IconHelper.GridIcon.cs` - COM 객체 해제 추가
+- `View/EditGroupWindow.AllApps.cs` - COM 객체 해제 추가
+- `ThemeHelper.cs` - 이벤트 핸들러 해제 패턴 개선
+- `View/FolderContentsPopupWindow.xaml.cs` - 버튼 이벤트 핸들러 해제 추가
+- `View/StartMenuPopupWindow.xaml.cs` - Activated 이벤트 해제 추가
+- `WindowHelper.cs` - IsAlwaysOnTop 복붙 오류 수정, IDisposable 구현
+- `Program.cs` - 기존 인스턴스 발견 시 return 추가
+- `SystemTrayManager.cs` - 콜백 정리 추가
+- `NativeMethods.cs` - SendString cdsPtr finally 블록 수정
+- `View/PopupWindow.xaml.cs` - PathData/GroupData 클래스 정의 제거
+- `Models/PathData.cs` - 신규 생성
+- `Models/GroupData.cs` - 신규 생성
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개, 경고 773개 - 기존 nullable 관련 경고)
+- README.md: 갱신 불필요 (기능/동작/설정/외부 인터페이스 변경 없음, 내부 코드 품질 개선)
+
+#### 참고: 동일 실수 방지
+- `using` 블록 안에서 객체를 반환하면 Disposed 객체가 반환됨 - 반환용 객체는 `using` 밖에서 생성
+- COM 객체(WScript.Shell, Shortcut 등)는 반드시 `try/finally` + `Marshal.ReleaseComObject()` 패턴 사용
+- 이벤트 핸들러는 등록과 해제가 반드시 쌍을 이루어야 함 - 익명 람다보다 명명된 메서드 선호
+- `GetPixel`/`SetPixel`은 성능이 매우 나쁨 - 픽셀 조작은 `LockBits` + `Marshal.Copy` 사용
+- 속성 getter에서 복붙 오류 주의 - `IsAlwaysOnTop`의 getter가 `IsMaximizable`을 반환하는 등
+- 네이티브 리소스(Subclass 등) 사용 시 `IDisposable` 구현 필수
+
+---
+
 ### 2026-02-06 - StartMenuPopupWindow 2열 이상 그리드 레이아웃 높이/너비 계산 수정
 
 #### 문제점

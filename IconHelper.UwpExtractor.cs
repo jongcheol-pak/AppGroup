@@ -408,12 +408,10 @@ namespace AppGroup
                 try
                 {
                     // HBITMAP을 알파 채널 보존하면서 Bitmap으로 변환
-                    using (Bitmap rawBitmap = ConvertHBitmapToArgbBitmap(hBitmap))
-                    {
-                        // 32x32 아이콘 직접 사용 (크롭 불필요)
-                        Debug.WriteLine($"TryExtractIconFromShellPath: {rawBitmap.Width}x{rawBitmap.Height} for {shellPath}");
-                        return rawBitmap;
-                    }
+                    // using 사용하지 않음 - 호출자가 소유권을 가짐
+                    Bitmap rawBitmap = ConvertHBitmapToArgbBitmap(hBitmap);
+                    Debug.WriteLine($"TryExtractIconFromShellPath: {rawBitmap.Width}x{rawBitmap.Height} for {shellPath}");
+                    return rawBitmap;
                 }
                 finally
                 {
@@ -513,30 +511,41 @@ namespace AppGroup
                     resultBitmap.UnlockBits(bmpData);
                 }
 
-                // 알파 채널이 모두 0인지 확인 (투명도가 없는 경우)
-                bool hasAlpha = false;
-                for (int y = 0; y < resultBitmap.Height && !hasAlpha; y++)
+                // 알파 채널이 모두 0인지 확인 (투명도가 없는 경우) - LockBits 기반 고속 처리
+                var alphaCheckData = resultBitmap.LockBits(
+                    new Rectangle(0, 0, resultBitmap.Width, resultBitmap.Height),
+                    System.Drawing.Imaging.ImageLockMode.ReadWrite,
+                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+                try
                 {
-                    for (int x = 0; x < resultBitmap.Width && !hasAlpha; x++)
+                    int pixelCount = resultBitmap.Width * resultBitmap.Height;
+                    byte[] pixelData = new byte[pixelCount * 4];
+                    Marshal.Copy(alphaCheckData.Scan0, pixelData, 0, pixelData.Length);
+
+                    bool hasAlpha = false;
+                    for (int i = 3; i < pixelData.Length; i += 4)
                     {
-                        if (resultBitmap.GetPixel(x, y).A != 0)
+                        if (pixelData[i] != 0)
                         {
                             hasAlpha = true;
+                            break;
                         }
+                    }
+
+                    if (!hasAlpha)
+                    {
+                        // 알파 채널이 없으면 모든 픽셀을 불투명하게 설정
+                        for (int i = 3; i < pixelData.Length; i += 4)
+                        {
+                            pixelData[i] = 255;
+                        }
+                        Marshal.Copy(pixelData, 0, alphaCheckData.Scan0, pixelData.Length);
                     }
                 }
-
-                if (!hasAlpha)
+                finally
                 {
-                    // 알파 채널이 없으면 모든 픽셀을 불투명하게 설정
-                    for (int y = 0; y < resultBitmap.Height; y++)
-                    {
-                        for (int x = 0; x < resultBitmap.Width; x++)
-                        {
-                            Color c = resultBitmap.GetPixel(x, y);
-                            resultBitmap.SetPixel(x, y, Color.FromArgb(255, c.R, c.G, c.B));
-                        }
-                    }
+                    resultBitmap.UnlockBits(alphaCheckData);
                 }
 
                 return resultBitmap;

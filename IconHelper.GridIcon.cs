@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using AppGroup.Models;
@@ -195,10 +196,12 @@ namespace AppGroup
                                     string shortcutIconPath = null;
                                     int iconIndex = 0;
 
+                                    dynamic shell = null;
+                                    dynamic shortcut = null;
                                     try
                                     {
-                                        dynamic shell = Microsoft.VisualBasic.Interaction.CreateObject("WScript.Shell");
-                                        dynamic shortcut = shell.CreateShortcut(filePath);
+                                        shell = Microsoft.VisualBasic.Interaction.CreateObject("WScript.Shell");
+                                        shortcut = shell.CreateShortcut(filePath);
                                         shortcutIconPath = shortcut.IconLocation;
                                         targetPath = shortcut.TargetPath;
 
@@ -216,6 +219,11 @@ namespace AppGroup
                                     catch (Exception ex)
                                     {
                                         Debug.WriteLine($"Error reading shortcut: {ex.Message}");
+                                    }
+                                    finally
+                                    {
+                                        if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                                        if (shell != null) Marshal.ReleaseComObject(shell);
                                     }
 
                                     // IconLocation에서 아이콘 추출 시도

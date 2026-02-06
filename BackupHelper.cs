@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -577,6 +578,8 @@ namespace AppGroup {
         }
         // Safer method to create shortcuts with error handling
         private void SafeCreateShortcut(string shortcutPath, string groupName, string iconPath) {
+            dynamic wshShell = null;
+            dynamic shortcut = null;
             try {
                 string baseDir = AppContext.BaseDirectory;
 
@@ -586,8 +589,8 @@ namespace AppGroup {
                 }
 
                 // Create a new shortcut using the IWshShortcut COM object
-                dynamic wshShell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell"));
-                dynamic shortcut = wshShell.CreateShortcut(shortcutPath);
+                wshShell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell"));
+                shortcut = wshShell.CreateShortcut(shortcutPath);
 
                 // Set the properties of the shortcut
                 shortcut.TargetPath = Path.Combine(baseDir, "AppGroup.exe");
@@ -606,6 +609,10 @@ namespace AppGroup {
             catch (Exception ex) {
                 Debug.WriteLine($"Error creating shortcut: {ex.Message}");
                 // Don't throw the exception - just log it and continue
+            }
+            finally {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (wshShell != null) Marshal.ReleaseComObject(wshShell);
             }
         }
 

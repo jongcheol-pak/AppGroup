@@ -394,17 +394,17 @@ namespace AppGroup
             cds.cbData = (message.Length + 1) * 2; // 바이트 단위 유니코드 문자열 길이
             cds.lpData = Marshal.StringToHGlobalUni(message);
 
+            IntPtr cdsPtr = IntPtr.Zero;
             try
             {
-                IntPtr cdsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cds));
+                cdsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cds));
                 Marshal.StructureToPtr(cds, cdsPtr, false);
 
                 SendMessage(targetWindow, WM_COPYDATA, IntPtr.Zero, cdsPtr);
-
-                Marshal.FreeHGlobal(cdsPtr);
             }
             finally
             {
+                if (cdsPtr != IntPtr.Zero) Marshal.FreeHGlobal(cdsPtr);
                 Marshal.FreeHGlobal(cds.lpData);
             }
         }

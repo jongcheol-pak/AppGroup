@@ -961,9 +961,31 @@ namespace AppGroup.View
                     _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
                     _uiSettings = null;
                 }
+
+                // 버튼 이벤트 핸들러 해제
+                UnregisterButtonEvents(FileItemsControl);
+                UnregisterButtonEvents(FolderItemsControl);
             }
 
             _disposed = true;
+        }
+
+        /// <summary>
+        /// ItemsControl 내 Button 이벤트 핸들러 일괄 해제
+        /// </summary>
+        private void UnregisterButtonEvents(ItemsControl itemsControl)
+        {
+            if (itemsControl?.Items == null) return;
+            foreach (var item in itemsControl.Items)
+            {
+                if (item is Button button)
+                {
+                    button.Click -= FileButton_Click;
+                    button.Click -= FolderButton_Click;
+                    button.PointerEntered -= Button_PointerEntered;
+                    button.PointerExited -= Button_PointerExited;
+                }
+            }
         }
 
         ~FolderContentsPopupWindow()

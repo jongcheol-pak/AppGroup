@@ -200,17 +200,19 @@ namespace AppGroup.View {
         {
             var apps = new List<(string DisplayName, string ExecutablePath, string AppUserModelId, string IconPath)>();
 
+            dynamic shell = null;
+            dynamic folder = null;
             try
             {
                 // Shell.Application COM 객체를 통해 AppsFolder 접근
                 Type shellType = Type.GetTypeFromProgID("Shell.Application");
                 if (shellType == null) return apps;
 
-                dynamic shell = Activator.CreateInstance(shellType);
+                shell = Activator.CreateInstance(shellType);
                 if (shell == null) return apps;
 
                 // shell:AppsFolder 네임스페이스 열기
-                dynamic folder = shell.NameSpace("shell:AppsFolder");
+                folder = shell.NameSpace("shell:AppsFolder");
                 if (folder == null) return apps;
 
                 foreach (dynamic item in folder.Items())
@@ -220,11 +222,19 @@ namespace AppGroup.View {
                         string name = item.Name;
                         string path = item.Path; // AUMID 또는 exe 경로
 
-                        if (string.IsNullOrEmpty(name)) continue;
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            Marshal.ReleaseComObject(item);
+                            continue;
+                        }
 
                         // 시스템 항목 필터링
                         if (name.StartsWith("Microsoft.") &&
-                            (name.Contains("Extension") || name.Contains("Client"))) continue;
+                            (name.Contains("Extension") || name.Contains("Client")))
+                        {
+                            Marshal.ReleaseComObject(item);
+                            continue;
+                        }
 
                         string exePath = null;
                         string aumid = null;
@@ -276,11 +286,20 @@ namespace AppGroup.View {
                     {
                         Debug.WriteLine($"Error enumerating shell item: {ex.Message}");
                     }
+                    finally
+                    {
+                        Marshal.ReleaseComObject(item);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error accessing shell:AppsFolder: {ex.Message}");
+            }
+            finally
+            {
+                if (folder != null) Marshal.ReleaseComObject(folder);
+                if (shell != null) Marshal.ReleaseComObject(shell);
             }
 
             return apps;
@@ -322,6 +341,9 @@ namespace AppGroup.View {
         /// </summary>
         private async Task<string> GetAppIconFromShellAsync(string aumid, string displayName)
         {
+            IWshShell wshShell = null;
+            IWshShortcut shortcut = null;
+            IWshShortcut savedShortcut = null;
             try
             {
                 // shell:AppsFolder 경로로 직접 IconCache 호출
@@ -341,19 +363,27 @@ namespace AppGroup.View {
                 string tempLnkPath = Path.Combine(tempFolder, $"{SanitizeFileName(displayName)}.lnk");
 
                 // 바로가기 생성
-                IWshShell wshShell = new WshShell();
-                IWshShortcut shortcut = (IWshShortcut)wshShell.CreateShortcut(tempLnkPath);
+                wshShell = new WshShell();
+                shortcut = (IWshShortcut)wshShell.CreateShortcut(tempLnkPath);
                 shortcut.TargetPath = shellPath;
                 shortcut.Save();
+
+                // 바로가기 COM 객체 즉시 해제
+                Marshal.ReleaseComObject(shortcut);
+                shortcut = null;
 
                 // 바로가기의 타겟에서 아이콘 추출 (화살표 없는 실제 아이콘)
                 if (File.Exists(tempLnkPath))
                 {
                     try
                     {
-                        IWshShortcut savedShortcut = (IWshShortcut)wshShell.CreateShortcut(tempLnkPath);
+                        savedShortcut = (IWshShortcut)wshShell.CreateShortcut(tempLnkPath);
                         string iconLocation = savedShortcut.IconLocation;
                         string targetPath = savedShortcut.TargetPath;
+
+                        // savedShortcut 사용 완료 후 즉시 해제
+                        Marshal.ReleaseComObject(savedShortcut);
+                        savedShortcut = null;
 
                         // 1. IconLocation에서 아이콘 파일 추출 시도 (exe, dll 등에서 추출)
                         if (!string.IsNullOrEmpty(iconLocation) && iconLocation != ",")
@@ -408,6 +438,12 @@ namespace AppGroup.View {
             {
                 Debug.WriteLine($"Error getting UWP app icon for {displayName}: {ex.Message}");
             }
+            finally
+            {
+                if (savedShortcut != null) Marshal.ReleaseComObject(savedShortcut);
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (wshShell != null) Marshal.ReleaseComObject(wshShell);
+            }
 
             return null;
         }
@@ -432,15 +468,22 @@ namespace AppGroup.View {
         /// </summary>
         private string GetShortcutTarget(string shortcutPath)
         {
+            IWshShell wshShell = null;
+            IWshShortcut shortcut = null;
             try
             {
-                IWshShell wshShell = new WshShell();
-                IWshShortcut shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
+                wshShell = new WshShell();
+                shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
                 return shortcut.TargetPath;
             }
             catch
             {
                 return null;
+            }
+            finally
+            {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (wshShell != null) Marshal.ReleaseComObject(wshShell);
             }
         }
 

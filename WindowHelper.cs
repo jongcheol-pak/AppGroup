@@ -12,7 +12,8 @@ using WinRT;
 using System.Diagnostics;
 using System.Drawing;
 namespace AppGroup {
-    public class WindowHelper {
+    public class WindowHelper : IDisposable {
+        private bool _disposed = false;
         private readonly Window _window;
         private AppWindow _appWindow;
         private IntPtr _hWnd;
@@ -40,6 +41,9 @@ namespace AppGroup {
 
         [DllImport("Comctl32.dll", SetLastError = true)]
         public static extern int DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("Comctl32.dll", SetLastError = true)]
+        public static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, uint uIdSubclass);
 
         private const int WM_GETMINMAXINFO = 0x0024;
 
@@ -83,7 +87,7 @@ namespace AppGroup {
             }
         }
         public bool IsAlwaysOnTop {
-            get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsMaximizable;
+            get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsAlwaysOnTop;
             set {
                 if (_appWindow.Presenter is OverlappedPresenter presenter) {
                     presenter.IsAlwaysOnTop = value;
@@ -378,6 +382,25 @@ namespace AppGroup {
             public int dwSize;
             public int threadType;
             public int apartmentType;
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing) {
+            if (_disposed) return;
+
+            if (_hWnd != IntPtr.Zero && _subClassDelegate != null) {
+                RemoveWindowSubclass(_hWnd, _subClassDelegate, 0);
+            }
+
+            _disposed = true;
+        }
+
+        ~WindowHelper() {
+            Dispose(false);
         }
     }
 }

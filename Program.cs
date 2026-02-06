@@ -64,7 +64,7 @@ namespace AppGroup {
                     // Bring existing instance to foreground and exit
                     NativeMethods.SetForegroundWindow(existingMainHWnd);
                     NativeMethods.ShowWindow(existingMainHWnd, NativeMethods.SW_RESTORE);
-                
+                    return;
                 }
             }
 

@@ -380,6 +380,8 @@ public class SystemTrayManager {
                 // GC가 구독자를 제거하지 못하는 것을 방지하기 위해 콜백 초기화
                 onShowCallback = null;
                 onExitCallback = null;
+                onTrayClickCallback = null;
+                onHidePopupCallback = null;
                 isInitialized = false;
 
                 // 참고: wndProcDelegate 참조는 프로세스 종료 시까지 유지합니다.

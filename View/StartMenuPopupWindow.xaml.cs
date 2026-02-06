@@ -1035,6 +1035,8 @@ namespace AppGroup.View
                     _folderContentsPopup.Dispose();
                     _folderContentsPopup = null;
                 }
+
+                this.Activated -= Window_Activated;
             }
 
             _disposed = true;

@@ -23,15 +23,23 @@ namespace AppGroup {
 
                     var taskbarShortcuts = Directory.GetFiles(taskbarPath, "*.lnk");
                     IWshShell wshShell = new WshShell();
-
-                    foreach (string shortcutFile in taskbarShortcuts) {
-                        try {
-                            IWshShortcut shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutFile);
-                            if (shortcut.Arguments.Contains($"\"{groupName}\"")) {
-                                return true;
+                    try {
+                        foreach (string shortcutFile in taskbarShortcuts) {
+                            IWshShortcut shortcut = null;
+                            try {
+                                shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutFile);
+                                if (shortcut.Arguments.Contains($"\"{groupName}\"")) {
+                                    return true;
+                                }
+                            }
+                            catch { }
+                            finally {
+                                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
                             }
                         }
-                        catch { }
+                    }
+                    finally {
+                        Marshal.ReleaseComObject(wshShell);
                     }
                     return false;
                 }

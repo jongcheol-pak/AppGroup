@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -381,9 +382,11 @@ namespace AppGroup
         }
 
         public static void UpdateShortcutIcon(string shortcutPath, string originalGroupName, string newGroupName) {
+            IWshShortcut shortcut = null;
+            WshShell wshShell = null;
             try {
-                WshShell wshShell = new WshShell();
-                IWshShortcut shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
+                wshShell = new WshShell();
+                shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
 
                 // Get the old icon location
                 string oldIconLocation = shortcut.IconLocation;
@@ -397,14 +400,20 @@ namespace AppGroup
             catch (Exception ex) {
                 throw new Exception($"Error updating shortcut icon: {ex.Message}", ex);
             }
+            finally {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (wshShell != null) Marshal.ReleaseComObject(wshShell);
+            }
         }
 
 
 
         private static void UpdateShortcutTarget(string shortcutPath, string originalGroupName, string newGroupName) {
+            IWshShortcut shortcut = null;
+            WshShell wshShell = null;
             try {
-                WshShell wshShell = new WshShell();
-                IWshShortcut shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
+                wshShell = new WshShell();
+                shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
 
                 string targetPath = shortcut.TargetPath.Replace(originalGroupName, newGroupName);
                 shortcut.TargetPath = targetPath;
@@ -419,6 +428,10 @@ namespace AppGroup
             }
             catch (Exception ex) {
                 throw new Exception($"Error updating shortcut target: {ex.Message}", ex);
+            }
+            finally {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (wshShell != null) Marshal.ReleaseComObject(wshShell);
             }
         }
         public static bool GroupExistsInJson(string groupName) {

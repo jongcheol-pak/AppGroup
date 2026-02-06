@@ -162,11 +162,9 @@ namespace AppGroup
                                         Icon icon = Icon.ExtractAssociatedIcon(targetPath);
                                         if (icon != null)
                                         {
-                                            using (var rawBitmap = icon.ToBitmap())
-                                            {
-                                                iconBitmap = rawBitmap;
-                                                Debug.WriteLine($"Fallback: ExtractAssociatedIcon from target: {targetPath} ({rawBitmap.Width}x{rawBitmap.Height})");
-                                            }
+                                            // 복사본 생성 (icon dispose 후에도 유효하도록)
+                                            iconBitmap = new Bitmap(icon.ToBitmap());
+                                            Debug.WriteLine($"Fallback: ExtractAssociatedIcon from target: {targetPath} ({iconBitmap.Width}x{iconBitmap.Height})");
                                         }
                                     }
                                     catch (Exception ex)
@@ -265,7 +263,10 @@ namespace AppGroup
 
                         using (var stream = new MemoryStream())
                         {
-                            icon.ToBitmap().Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            using (var tempBitmap = icon.ToBitmap())
+                            {
+                                tempBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            }
                             stream.Position = 0;
 
                             BitmapImage bitmapImage = null;
@@ -307,24 +308,31 @@ namespace AppGroup
         {
             return await Task.Run(() =>
             {
+                dynamic shell = null;
+                dynamic shortcut = null;
                 try
                 {
-                    dynamic shell = Microsoft.VisualBasic.Interaction.CreateObject("WScript.Shell");
-                    dynamic shortcut = shell.CreateShortcut(lnkPath);
+                    shell = Microsoft.VisualBasic.Interaction.CreateObject("WScript.Shell");
+                    shortcut = shell.CreateShortcut(lnkPath);
 
                     string iconPath = shortcut.IconLocation;
                     string targetPath = shortcut.TargetPath;
 
+                    // COM 객체 사용 완료 후 즉시 해제
+                    Marshal.ReleaseComObject(shortcut);
+                    shortcut = null;
+                    Marshal.ReleaseComObject(shell);
+                    shell = null;
+
                     // 우선순위 1: 타겟 경로에서 직접 아이콘 추출 (화살표 없음)
                     if (!string.IsNullOrEmpty(targetPath) && File.Exists(targetPath))
                     {
-                        using (var targetIcon = ExtractIconWithoutArrow(targetPath))
+                        var targetIcon = ExtractIconWithoutArrow(targetPath);
+                        if (targetIcon != null)
                         {
-                            if (targetIcon != null)
-                            {
-                                Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Extracted from target path: {targetPath}");
-                                return CreateBitmapImageFromBitmap(targetIcon, dispatcher);
-                            }
+                            Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Extracted from target path: {targetPath}");
+                            // CreateBitmapImageFromBitmap 내부에서 bitmap dispose
+                            return CreateBitmapImageFromBitmap(targetIcon, dispatcher);
                         }
                     }
 
@@ -337,13 +345,12 @@ namespace AppGroup
 
                         if (File.Exists(actualIconPath))
                         {
-                            using (var extractedIcon = ExtractSpecificIcon(actualIconPath, iconIndex))
+                            var extractedIcon = ExtractSpecificIcon(actualIconPath, iconIndex);
+                            if (extractedIcon != null)
                             {
-                                if (extractedIcon != null)
-                                {
-                                    Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Extracted from IconLocation: {actualIconPath}");
-                                    return CreateBitmapImageFromBitmap(extractedIcon, dispatcher);
-                                }
+                                Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Extracted from IconLocation: {actualIconPath}");
+                                // CreateBitmapImageFromBitmap 내부에서 bitmap dispose
+                                return CreateBitmapImageFromBitmap(extractedIcon, dispatcher);
                             }
                         }
                     }
@@ -389,7 +396,8 @@ namespace AppGroup
                                 if (icon != null)
                                 {
                                     Debug.WriteLine($"ExtractLnkIconWithoutArrowAsync: Fallback to ExtractAssociatedIcon: {targetPath}");
-                                    return CreateBitmapImageFromBitmap(icon.ToBitmap(), dispatcher);
+                                    var bmp = icon.ToBitmap();
+                                    return CreateBitmapImageFromBitmap(bmp, dispatcher);
                                 }
                             }
                         }
@@ -405,6 +413,11 @@ namespace AppGroup
                 {
                     Debug.WriteLine($"Error extracting .lnk icon: {ex.Message}");
                     return null;
+                }
+                finally
+                {
+                    if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                    if (shell != null) Marshal.ReleaseComObject(shell);
                 }
             });
         }
@@ -1180,32 +1193,40 @@ namespace AppGroup
         {
             if (bitmap == null) return null;
 
-            using (var stream = new MemoryStream())
+            try
             {
-                bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                stream.Position = 0;
-
-                BitmapImage bitmapImage = null;
-                using (var resetEvent = new ManualResetEvent(false))
+                using (var stream = new MemoryStream())
                 {
-                    dispatcher.TryEnqueue(() =>
-                    {
-                        try
-                        {
-                            bitmapImage = new BitmapImage();
-                            bitmapImage.SetSource(stream.AsRandomAccessStream());
-                            resetEvent.Set();
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"Error setting bitmap source: {ex.Message}");
-                            resetEvent.Set();
-                        }
-                    });
+                    bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    stream.Position = 0;
 
-                    resetEvent.WaitOne();
+                    BitmapImage bitmapImage = null;
+                    using (var resetEvent = new ManualResetEvent(false))
+                    {
+                        dispatcher.TryEnqueue(() =>
+                        {
+                            try
+                            {
+                                bitmapImage = new BitmapImage();
+                                bitmapImage.SetSource(stream.AsRandomAccessStream());
+                                resetEvent.Set();
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Error setting bitmap source: {ex.Message}");
+                                resetEvent.Set();
+                            }
+                        });
+
+                        resetEvent.WaitOne();
+                    }
+                    return bitmapImage;
                 }
-                return bitmapImage;
+            }
+            finally
+            {
+                // 전달받은 Bitmap 리소스 해제
+                bitmap.Dispose();
             }
         }
 
