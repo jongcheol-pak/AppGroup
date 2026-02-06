@@ -34,9 +34,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-        <TextBlock x:Name="EditTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">
-            설정
-        </TextBlock>
+        <TextBlock x:Uid="SettingsTitle" x:Name="EditTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold"/>
             <Button Click="CloseDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                 <FontIcon Glyph="&#xe711;" FontSize="15"/>
             </Button>
@@ -56,11 +54,11 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="시작 시 실행"
+                                <TextBlock x:Uid="RunAtStartup"
                                          FontWeight="SemiBold"
                                          FontSize="14"
                                          TextWrapping="Wrap"/>
-                                <TextBlock Text="Windows 시작 시 자동으로 앱 실행"
+                                <TextBlock x:Uid="RunAtStartupDescription"
                                          FontSize="12"
                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                          Margin="0,2,0,0"
@@ -97,11 +95,11 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                            <TextBlock Text="시스템 트레이 아이콘 표시"
+                            <TextBlock x:Uid="ShowSystemTrayIcon"
                                      FontWeight="SemiBold"
                                      FontSize="14"
                                      TextWrapping="Wrap"/>
-                            <TextBlock Text="시스템 트레이에 앱 아이콘 표시"
+                            <TextBlock x:Uid="ShowSystemTrayIconDescription"
                                      FontSize="12"
                                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                      Margin="0,2,0,0"
@@ -126,11 +124,11 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                            <TextBlock Text="회색조 아이콘"
+                            <TextBlock x:Uid="GrayscaleIcon"
                                      FontWeight="SemiBold"
                                      FontSize="14"
                                      TextWrapping="Wrap"/>
-                            <TextBlock Text="그룹 표시 중 아이콘을 회색조로 표시"
+                            <TextBlock x:Uid="GrayscaleIconDescription"
                                      FontSize="12"
                                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                      Margin="0,2,0,0"
@@ -149,7 +147,7 @@
                 </Border>
 
                 <!-- About Section -->
-                <TextBlock Text="정보" Style="{StaticResource SectionHeaderStyle}"/>
+                <TextBlock x:Uid="InformationSection" Style="{StaticResource SectionHeaderStyle}"/>
 
                 <Border Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
@@ -169,14 +167,14 @@
                                 <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </HyperlinkButton>
-                        <TextBlock Text="이 앱은 오픈소스 프로젝트 AppGroup를 기반으로 하여 UI 개선 및 기능 추가 등 일부 커스터마이징을 적용한 버전입니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
-                        <TextBlock Text="원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                        <TextBlock x:Uid="AppGroupDescription" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                        <TextBlock x:Uid="AppGroupOriginalNote" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
 
                     </StackPanel>
                 </Border>
 
                 <!-- Open Source Licenses -->
-                <TextBlock Text="Open Source Licenses" Style="{StaticResource SectionHeaderStyle}"/>
+                <TextBlock x:Uid="OpenSourceLicensesSection" Style="{StaticResource SectionHeaderStyle}"/>
 
                 <Border Style="{StaticResource SettingsCardStyle}">
                     <StackPanel Spacing="8">

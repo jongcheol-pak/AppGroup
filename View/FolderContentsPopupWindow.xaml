@@ -20,7 +20,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="HeaderText" VerticalAlignment="Center" FontWeight="SemiBold" Text="폴더 내용" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="HeaderText" x:Uid="FolderContentsHeader" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
             </Grid>
             <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="10,0,10,5"/>
         </StackPanel>
@@ -30,7 +30,7 @@
                     VerticalScrollBarVisibility="Auto" Margin="5,5,5,10">
             <StackPanel x:Name="ContentsPanel" HorizontalAlignment="Stretch">
                 <!-- 파일 섹션 -->
-                <TextBlock x:Name="FileSectionHeader" Text="파일" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="10,5,10,5" Visibility="Collapsed"/>
+                <TextBlock x:Name="FileSectionHeader" x:Uid="FileSectionHeader" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="10,5,10,5" Visibility="Collapsed"/>
                 <ItemsControl x:Name="FileItemsControl" HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -40,7 +40,7 @@
                 </ItemsControl>
                 
                 <!-- 폴더 섹션 -->
-                <TextBlock x:Name="FolderSectionHeader" Text="폴더" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="10,10,10,5" Visibility="Collapsed"/>
+                <TextBlock x:Name="FolderSectionHeader" x:Uid="FolderSectionHeader" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="10,10,10,5" Visibility="Collapsed"/>
                 <ItemsControl x:Name="FolderItemsControl" HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -50,7 +50,7 @@
                 </ItemsControl>
                 
                 <!-- 빈 상태 -->
-                <TextBlock x:Name="EmptyText" Text="내용이 없습니다." HorizontalAlignment="Center" Margin="20" 
+                <TextBlock x:Name="EmptyText" x:Uid="EmptyContents" HorizontalAlignment="Center" Margin="20" 
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed"/>
             </StackPanel>
         </ScrollView>

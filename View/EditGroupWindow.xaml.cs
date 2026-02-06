@@ -12,6 +12,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
@@ -32,6 +33,7 @@ using System.Threading;
 
 namespace AppGroup.View {
 public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
+    private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
     private bool _disposed = false;
     public int GroupId { get; private set; }
     private string selectedIconPath = string.Empty;
@@ -92,7 +94,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             Closed += MainWindow_Closed;
             this.AppWindow.Closing += AppWindow_Closing;
 
-            _viewModel.ApplicationCountText = "항목";
+            _viewModel.ApplicationCountText = _resourceLoader.GetString("ItemsLabel");
             NativeMethods.SetCurrentProcessExplicitAppUserModelID("AppGroup.EditGroup");
             Activated += EditGroupWindow_Activated;
             //this.AppWindow.Changed += AppWindow_Changed;
@@ -178,9 +180,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             {
                 var dialog = new ContentDialog()
                 {
-                    Title = "창 활성화됨",
-                    Content = "그룹 ID: " + id,
-                    CloseButtonText = "확인",
+                    Title = _resourceLoader.GetString("WindowActivatedTitle"),
+                    Content = string.Format(_resourceLoader.GetString("GroupIdFormat"), id),
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
                     XamlRoot = this.Content.XamlRoot
                 };
 
@@ -381,9 +383,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                     ExeListView.ItemsSource = _viewModel.ExeFiles;
                     lastSelectedItem = GroupColComboBox.SelectedItem as string;
                     _viewModel.ApplicationCountText = ExeListView.Items.Count > 1
-                        ? ExeListView.Items.Count.ToString() + "개 항목"
+                        ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), ExeListView.Items.Count)
                         : ExeListView.Items.Count == 1
-                        ? "1개 항목"
+                        ? _resourceLoader.GetString("OneItem")
                         : "";
                     IconGridComboBox.Items.Clear();
                     if (_viewModel.ExeFiles.Count >= 9)
@@ -609,12 +611,12 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                                         await bitmapImage.SetSourceAsync(memoryStream.AsRandomAccessStream());
                                     }
                                     IconPreviewImage.Source = bitmapImage;
-                                    IconPreviewBorder.Visibility = Visibility.Visible;
-                                    _viewModel.ApplicationCountText = paths.Count > 1
-                                        ? paths.Count.ToString() + "개 항목"
-                                        : paths.Count == 1
-                                        ? "1개 항목"
-                                        : "";
+                                IconPreviewBorder.Visibility = Visibility.Visible;
+                                _viewModel.ApplicationCountText = paths.Count > 1
+                                    ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
+                                    : paths.Count == 1
+                                    ? _resourceLoader.GetString("OneItem")
+                                    : "";
                                 });
                             }
                             catch (Exception ex)
@@ -626,9 +628,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                                     selectedIconPath = string.Empty;
                                     IconPreviewBorder.Visibility = Visibility.Collapsed;
                                     _viewModel.ApplicationCountText = paths?.Count > 1
-                                        ? paths.Count.ToString() + "개 항목"
+                                        ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
                                         : paths?.Count == 1
-                                        ? "1개 항목"
+                                        ? _resourceLoader.GetString("OneItem")
                                         : "";
                                 });
                             }
@@ -641,9 +643,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                                 selectedIconPath = string.Empty;
                                 IconPreviewBorder.Visibility = Visibility.Collapsed;
                                 _viewModel.ApplicationCountText = paths?.Count > 1
-                                    ? paths.Count.ToString() + "개 항목"
+                                    ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
                                     : paths?.Count == 1
-                                    ? "1개 항목"
+                                    ? _resourceLoader.GetString("OneItem")
                                     : "";
                             });
                         }
@@ -843,13 +845,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorDialog("그리드 아이콘 생성 오류", ex.Message);
+                    ShowErrorDialog(_resourceLoader.GetString("GridIconCreationError"), ex.Message);
                     Debug.WriteLine($"Grid icon creation error: {ex.Message}");
                 }
             }
             else
             {
-                ShowErrorDialog("잘못된 그리드 크기", "콤보박스에서 유효한 그리드 크기를 선택하세요.");
+                ShowErrorDialog(_resourceLoader.GetString("InvalidGridSize"), _resourceLoader.GetString("SelectValidGridSize"));
             }
         }
 
@@ -924,17 +926,17 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                     }
                     else
                     {
-                        ShowErrorDialog("알림", "사용 가능한 리소스 아이콘이 없습니다.");
+                        ShowErrorDialog(_resourceLoader.GetString("NotificationTitle"), _resourceLoader.GetString("NoResourceIconsAvailable"));
                     }
                 }
                 else
                 {
-                    ShowErrorDialog("오류", $"아이콘 폴더를 찾을 수 없습니다:\n{iconFolderPath}");
+                    ShowErrorDialog(_resourceLoader.GetString("ErrorTitle"), string.Format(_resourceLoader.GetString("IconFolderNotFoundFormat"), iconFolderPath));
                 }
             }
             catch (Exception ex)
             {
-                ShowErrorDialog("오류", $"아이콘 로드 중 오류 발생: {ex.Message}");
+                ShowErrorDialog(_resourceLoader.GetString("ErrorTitle"), string.Format(_resourceLoader.GetString("IconLoadErrorFormat"), ex.Message));
             }
         }
 
@@ -963,7 +965,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorDialog("오류", $"아이콘 선택 중 오류 발생: {ex.Message}");
+                    ShowErrorDialog(_resourceLoader.GetString("ErrorTitle"), string.Format(_resourceLoader.GetString("IconSelectionErrorFormat"), ex.Message));
                 }
             }
         }
@@ -1063,9 +1065,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             ExeListView.ItemsSource = _viewModel.ExeFiles;
             lastSelectedItem = GroupColComboBox.SelectedItem as string;
             _viewModel.ApplicationCountText = ExeListView.Items.Count > 1
-                          ? ExeListView.Items.Count.ToString() + "개 항목"
+                          ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), ExeListView.Items.Count)
                           : ExeListView.Items.Count == 1
-                          ? "1개 항목"
+                          ? _resourceLoader.GetString("OneItem")
                           : "";
 
 
@@ -1327,9 +1329,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             {
                 var dialog = new ContentDialog()
                 {
-                    Title = "오류",
-                    Content = $"아이콘 초기화 실패: {ex.Message}",
-                    CloseButtonText = "확인"
+                    Title = _resourceLoader.GetString("ErrorTitle"),
+                    Content = string.Format(_resourceLoader.GetString("IconResetFailedFormat"), ex.Message),
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton")
                 };
                 dialog.XamlRoot = this.Content.XamlRoot;
                 await dialog.ShowAsync();
@@ -1345,8 +1347,8 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             ExeListView.ItemsSource = _viewModel.ExeFiles;
             IconGridComboBox.Items.Clear();
             _viewModel.ApplicationCountText = ExeListView.Items.Count > 0
-      ? ExeListView.Items.Count.ToString() + "개 항목"
-      : "항목";
+      ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), ExeListView.Items.Count)
+      : _resourceLoader.GetString("ItemsLabel");
 
             //if (ExeFiles.Count >= 9) {
             //    IconGridComboBox.Items.Add("2");
@@ -1420,20 +1422,20 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 string newGroupName = _viewModel.GroupName?.Trim() ?? string.Empty;
                 if (string.IsNullOrEmpty(newGroupName))
                 {
-                    await ShowDialog("오류", "그룹 이름을 입력하세요.");
+                    await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("EnterGroupName"));
                     return;
                 }
 
                 // 그룹 이름 보안 검증
                 if (!IsValidGroupName(newGroupName))
                 {
-                    await ShowDialog("오류", "그룹 이름에 잘못된 문자가 포함되어 있습니다.");
+                    await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("InvalidCharactersInGroupName"));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(selectedIconPath))
                 {
-                    await ShowDialog("오류", "아이콘을 선택하세요.");
+                    await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("SelectIcon"));
                     return;
                 }
 
@@ -1456,7 +1458,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 if (!string.IsNullOrEmpty(oldGroupName) && Directory.Exists(oldGroupFolder) && oldGroupName != newGroupName)
                 {
                     Directory.Delete(oldGroupFolder, true);
-                    await ShowDialog("알림", "그룹 이름을 변경하면 '작업 표시줄 강제 업데이트'를 하거나 작업 표시줄에 다시 고정해야 합니다.");
+                    await ShowDialog(_resourceLoader.GetString("NotificationTitle"), _resourceLoader.GetString("GroupRenameWarning"));
                 }
 
                 string groupFolder = Path.Combine(groupsFolder, newGroupName);
@@ -1500,7 +1502,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
 
                 if (selectedIconData == null)
                 {
-                    await ShowDialog("오류", "아이콘 파일을 찾을 수 없습니다.");
+                    await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("IconFileNotFound"));
                     return;
                 }
 
@@ -1523,13 +1525,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                         bool iconSuccess = await IconHelper.ConvertToIco(pngFilePath, icoFilePath);
                         if (!iconSuccess)
                         {
-                            await ShowDialog("오류", "PNG를 ICO 형식으로 변환하지 못했습니다.");
+                            await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("PngToIcoConversionFailed"));
                             return;
                         }
                     }
                     else
                     {
-                        await ShowDialog("오류", "EXE 파일에서 아이콘을 추출하지 못했습니다.");
+                        await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("ExeIconExtractionFailed"));
                         return;
                     }
                 }
@@ -1542,7 +1544,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                     bool iconSuccess = await IconHelper.ConvertToIco(tempImagePath, icoFilePath);
                     if (!iconSuccess)
                     {
-                        await ShowDialog("오류", "이미지를 ICO 형식으로 변환하지 못했습니다.");
+                        await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("ImageToIcoConversionFailed"));
                         return;
                     }
                 }
@@ -1639,12 +1641,12 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                 }
                 else
                 {
-                    await ShowDialog("오류", "유효한 그룹 열 값을 선택하세요.");
+                    await ShowDialog(_resourceLoader.GetString("ErrorTitle"), _resourceLoader.GetString("SelectValidGroupColumn"));
                 }
             }
             catch (Exception ex)
             {
-                await ShowDialog("오류", $"오류가 발생했습니다: {ex.Message}");
+                await ShowDialog(_resourceLoader.GetString("ErrorTitle"), string.Format(_resourceLoader.GetString("ErrorOccurredFormat"), ex.Message));
             }
             finally
             {
@@ -1744,9 +1746,9 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             {
                 var dialog = new ContentDialog()
                 {
-                    Title = "오류",
-                    Content = $"아이콘 처리 실패: {ex.Message}",
-                    CloseButtonText = "확인"
+                    Title = _resourceLoader.GetString("ErrorTitle"),
+                    Content = string.Format(_resourceLoader.GetString("IconProcessingFailedFormat"), ex.Message),
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton")
                 };
                 dialog.XamlRoot = this.Content.XamlRoot;
                 await dialog.ShowAsync();
@@ -1756,10 +1758,10 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
         {
             ContentDialog dialog = new ContentDialog
             {
-                Title = "덮어쓰기",
-                Content = $"이 이름의 바로가기가 이미 있습니다. 바꾸시겠습니까?",
-                PrimaryButtonText = "예",
-                CloseButtonText = "아니오",
+                Title = _resourceLoader.GetString("OverwriteTitle"),
+                Content = _resourceLoader.GetString("OverwriteConfirmation"),
+                PrimaryButtonText = _resourceLoader.GetString("YesButton"),
+                CloseButtonText = _resourceLoader.GetString("NoButton"),
                 XamlRoot = Content.XamlRoot
             };
 

@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -64,6 +65,7 @@ namespace AppGroup.View
 
     public sealed partial class PopupWindow : Window, IDisposable
     {
+        private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
 
         // Constants for UI elements
         private const int BUTTON_SIZE = 40;
@@ -1386,13 +1388,13 @@ namespace AppGroup.View
                 }
                 else
                 {
-                    ShowErrorDialog($"폴더를 찾을 수 없습니다: {folderPath}");
+                    ShowErrorDialog(string.Format(_resourceLoader.GetString("FolderNotFoundFormat"), folderPath));
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to open folder {folderPath}: {ex.Message}");
-                ShowErrorDialog($"폴더 열기 실패: {ex.Message}");
+                ShowErrorDialog(string.Format(_resourceLoader.GetString("OpenFolderFailed"), ex.Message));
             }
         }
 
@@ -1406,7 +1408,7 @@ namespace AppGroup.View
                 // URL 검증
                 if (string.IsNullOrEmpty(url))
                 {
-                    ShowErrorDialog("URL이 비어 있습니다.");
+                    ShowErrorDialog(_resourceLoader.GetString("EmptyUrl"));
                     return;
                 }
 
@@ -1428,7 +1430,7 @@ namespace AppGroup.View
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to open URL {url}: {ex.Message}");
-                ShowErrorDialog($"웹 사이트 열기 실패: {ex.Message}");
+                ShowErrorDialog(string.Format(_resourceLoader.GetString("OpenWebsiteFailed"), ex.Message));
             }
         }
 
@@ -1474,7 +1476,7 @@ namespace AppGroup.View
                 // Check if this is a Windows Store app or special shell path
                 if (path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
                 {
-                    ShowErrorDialog("Windows Store 앱의 파일 위치는 열 수 없습니다.\n(Windows Store apps do not have accessible file locations)");
+                    ShowErrorDialog(_resourceLoader.GetString("WindowsStoreAppLocation"));
                     return;
                 }
 
@@ -1482,7 +1484,7 @@ namespace AppGroup.View
 
                 if (string.IsNullOrEmpty(directory))
                 {
-                    ShowErrorDialog($"경로에서 디렉터리를 확인할 수 없습니다: {path}");
+                    ShowErrorDialog(string.Format(_resourceLoader.GetString("CannotDetermineDirectory"), path));
                     return;
                 }
 
@@ -1492,13 +1494,13 @@ namespace AppGroup.View
                 }
                 else
                 {
-                    ShowErrorDialog($"디렉터리가 존재하지 않습니다: {directory}");
+                    ShowErrorDialog(string.Format(_resourceLoader.GetString("DirectoryDoesNotExist"), directory));
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to open file location {path}: {ex.Message}");
-                ShowErrorDialog($"파일 위치 열기 실패: {ex.Message}");
+                ShowErrorDialog(string.Format(_resourceLoader.GetString("OpenFileLocationFailed"), ex.Message));
             }
         }
 
@@ -1506,7 +1508,7 @@ namespace AppGroup.View
         private void ShowErrorDialog(string message)
         {
             // 네이티브 MessageBox 사용 (별도 창으로 표시)
-            NativeMethods.MessageBox(_hwnd, message, "오류", NativeMethods.MB_OK | NativeMethods.MB_ICONERROR);
+            NativeMethods.MessageBox(_hwnd, message, _resourceLoader.GetString("ErrorTitle"), NativeMethods.MB_OK | NativeMethods.MB_ICONERROR);
         }
 
         private MenuFlyout CreateItemFlyout(PopupItem item)
@@ -1515,7 +1517,7 @@ namespace AppGroup.View
 
             MenuFlyoutItem openItem = new MenuFlyoutItem
             {
-                Text = "열기",
+                Text = _resourceLoader.GetString("OpenMenuItem"),
                 Icon = new FontIcon { Glyph = "\ue8a7" }
             };
             openItem.Click += OpenItem_Click;
@@ -1523,7 +1525,7 @@ namespace AppGroup.View
 
             MenuFlyoutItem runAsAdminItem = new MenuFlyoutItem
             {
-                Text = "관리자 권한으로 실행",
+                Text = _resourceLoader.GetString("RunAsAdminMenuItem"),
                 Icon = new FontIcon { Glyph = "\uE7EF" }
             };
             runAsAdminItem.Click += RunAsAdminItem_Click;
@@ -1534,7 +1536,7 @@ namespace AppGroup.View
             {
                 MenuFlyoutItem fileLocationItem = new MenuFlyoutItem
                 {
-                    Text = "파일 위치 열기",
+                    Text = _resourceLoader.GetString("OpenFileLocationMenuItem"),
                     Icon = new FontIcon { Glyph = "\ued43" }
                 };
                 fileLocationItem.Click += OpenFileLocation_Click;
@@ -1545,7 +1547,7 @@ namespace AppGroup.View
 
             MenuFlyoutItem editItem = new MenuFlyoutItem
             {
-                Text = "이 그룹 편집",
+                Text = _resourceLoader.GetString("EditThisGroupMenuItem"),
                 Icon = new FontIcon { Glyph = "\ue70f" }
             };
             editItem.Click += EditGroup_Click;
@@ -1553,7 +1555,7 @@ namespace AppGroup.View
 
             MenuFlyoutItem launchAll = new MenuFlyoutItem
             {
-                Text = "Launch All",
+                Text = _resourceLoader.GetString("LaunchAllMenuItem"),
                 Icon = new FontIcon { Glyph = "\ue8a9" }
             };
             launchAll.Click += launchAllGroup_Click;

@@ -15,7 +15,7 @@
   <mp:PhoneIdentity PhoneProductId="7b5fbc4d-4b46-429e-ae24-17c5fbb43016" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>ms-resource:AppDisplayName</DisplayName>
+    <DisplayName>AppGroup</DisplayName>
     <PublisherDisplayName>JongCheol</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -34,8 +34,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="ms-resource:AppDisplayName"
-        Description="ms-resource:AppDescription"
+        DisplayName="AppGroup"
+        Description="App Group"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -47,7 +47,7 @@
           <uap5:StartupTask
             TaskId="AppGroupStartupTask"
             Enabled="false"
-            DisplayName="ms-resource:AppDisplayName" />
+            DisplayName="App Group" />
         </uap5:Extension>
       </Extensions>
     </Application>

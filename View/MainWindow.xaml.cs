@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,6 +40,7 @@ namespace AppGroup.View {
 /// 그룹 목록 표시, 그룹 관리, 설정, 파일 감시 등의 주요 기능을 담당합니다.
 /// </summary>
 public sealed partial class MainWindow : WinUIEx.WindowEx, IDisposable {
+private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
 // Private fields
 // 열려있는 편집 윈도우들을 추적하기 위한 딕셔너리 (GroupId -> Window)
 private readonly Dictionary<int, EditGroupWindow> _openEditWindows = new Dictionary<int, EditGroupWindow>();
@@ -160,9 +162,9 @@ private bool _disposed = false;
         private void UpdateGroupCountAndEmptyState() {
             var count = _viewModel.FilteredGroupItems.Count;
             _viewModel.GroupsCountText = count > 1
-                ? count + "개 그룹"
+                ? string.Format(_resourceLoader.GetString("GroupsCountFormat"), count)
                 : count == 1
-                ? "1개 그룹"
+                ? _resourceLoader.GetString("OneGroup")
                 : "";
             _viewModel.EmptyViewVisibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -783,10 +785,10 @@ private bool _disposed = false;
         private async void DeleteButton_Click(object sender, RoutedEventArgs e) {
             if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is GroupItem selectedGroup) {
                 ContentDialog deleteDialog = new ContentDialog {
-                    Title = "삭제",
-                    Content = $"\"{selectedGroup.GroupName}\" 그룹을 삭제하시겠습니까?",
-                    PrimaryButtonText = "삭제",
-                    CloseButtonText = "취소",
+                    Title = _resourceLoader.GetString("DeleteTitle"),
+                    Content = string.Format(_resourceLoader.GetString("DeleteGroupConfirmation"), selectedGroup.GroupName),
+                    PrimaryButtonText = _resourceLoader.GetString("DeleteButton"),
+                    CloseButtonText = _resourceLoader.GetString("CancelButton"),
                     DefaultButton = ContentDialogButton.Close,
                     XamlRoot = this.Content.XamlRoot
                 };
@@ -815,9 +817,9 @@ private bool _disposed = false;
 
                 // Optional: Show an error message to the user
                 ContentDialog errorDialog = new ContentDialog {
-                    Title = "오류",
-                    Content = "설정 창을 열지 못했습니다.",
-                    CloseButtonText = "확인",
+                    Title = _resourceLoader.GetString("ErrorTitle"),
+                    Content = _resourceLoader.GetString("SettingsOpenError"),
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
                     XamlRoot = this.Content.XamlRoot
                 };
 
@@ -1001,9 +1003,9 @@ private bool _disposed = false;
         {
             var count = _viewModel.FilteredStartMenuItems.Count;
             _viewModel.StartMenuCountText = count > 1
-                ? count + "개 폴더"
+                ? string.Format(_resourceLoader.GetString("FoldersCountFormat"), count)
                 : count == 1
-                ? "1개 폴더"
+                ? _resourceLoader.GetString("OneFolderItem")
                 : "";
             _viewModel.StartMenuEmptyViewVisibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -1114,10 +1116,10 @@ private bool _disposed = false;
             {
                 ContentDialog deleteDialog = new ContentDialog
                 {
-                    Title = "삭제",
-                    Content = $"\"{selectedFolder.FolderName}\" 폴더를 삭제하시겠습니까?",
-                    PrimaryButtonText = "삭제",
-                    CloseButtonText = "취소",
+                    Title = _resourceLoader.GetString("DeleteTitle"),
+                    Content = string.Format(_resourceLoader.GetString("DeleteFolderConfirmation"), selectedFolder.FolderName),
+                    PrimaryButtonText = _resourceLoader.GetString("DeleteButton"),
+                    CloseButtonText = _resourceLoader.GetString("CancelButton"),
                     DefaultButton = ContentDialogButton.Close,
                     XamlRoot = this.Content.XamlRoot
                 };
@@ -1160,7 +1162,7 @@ private bool _disposed = false;
 
                         // 다이얼로그 UI 초기화
                         Debug.WriteLine("UI 초기화 중...");
-                        EditStartMenuDialogTitle.Text = "폴더 수정";
+                        EditStartMenuDialogTitle.Text = _resourceLoader.GetString("EditFolderDialogTitle");
                         FolderNameTextBox.Text = selectedFolder.FolderName;
                         FolderPathTextBlock.Text = selectedFolder.FolderPath;
                         BrowseFolderPathButton.Visibility = Visibility.Visible;
@@ -1422,7 +1424,7 @@ private bool _disposed = false;
                 _selectedFolderIconPath = "ms-appx:///Assets/icon/folder_3.png";
 
                 // 다이얼로그 UI 초기화
-                EditStartMenuDialogTitle.Text = "폴더 추가";
+                EditStartMenuDialogTitle.Text = _resourceLoader.GetString("AddFolderDialogTitle");
                 FolderNameTextBox.Text = "";
                 FolderPathTextBlock.Text = "";
                 BrowseFolderPathButton.Visibility = Visibility.Visible;

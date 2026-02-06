@@ -1,13 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Windows.ApplicationModel.Resources;
 using AppGroup.Models;
 
 namespace AppGroup.ViewModels {
     public partial class EditGroupViewModel : ObservableObject {
+        private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
+        
         private string _groupName = string.Empty;
-        private string _applicationCountText = "항목";
-        private string _selectedAppsCountText = "0개 선택됨";
+        private string _applicationCountText = _resourceLoader.GetString("ItemsLabel");
+        private string _selectedAppsCountText = string.Format(_resourceLoader.GetString("ItemsSelectedFormat"), 0);
         private bool _groupHeaderIsOn;
         private bool _showLabelsIsOn;
         private bool _showGroupEditIsOn;

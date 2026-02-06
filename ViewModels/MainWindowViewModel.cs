@@ -1,15 +1,18 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.ApplicationModel.Resources;
 using AppGroup.Models;
 
 namespace AppGroup.ViewModels {
     public partial class MainWindowViewModel : ObservableObject {
+        private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
+        
         private string _searchText = string.Empty;
-        private string _groupsCountText = "그룹";
+        private string _groupsCountText = _resourceLoader.GetString("GroupsLabel");
         private Visibility _emptyViewVisibility = Visibility.Visible;
         private string _startMenuSearchText = string.Empty;
-        private string _startMenuCountText = "폴더";
+        private string _startMenuCountText = _resourceLoader.GetString("FoldersLabel");
         private Visibility _startMenuEmptyViewVisibility = Visibility.Visible;
 
         public ObservableCollection<GroupItem> GroupItems { get; } = new ObservableCollection<GroupItem>();

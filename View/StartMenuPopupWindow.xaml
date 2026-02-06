@@ -21,8 +21,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="HeaderText" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" Text="폴더"/>
-                <Button Grid.Column="1" Padding="10" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="설정" Click="SettingsButton_Click">
+                <TextBlock x:Name="HeaderText" x:Uid="FoldersHeader" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <Button Grid.Column="1" x:Uid="SettingsButton" Padding="10" Background="Transparent" BorderThickness="0" Click="SettingsButton_Click">
                     <FontIcon Glyph="&#xE713;" FontSize="17" />
                 </Button>
             </Grid>

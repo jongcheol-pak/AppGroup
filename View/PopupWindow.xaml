@@ -22,7 +22,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="HeaderText" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding HeaderText}"/>
-                <Button x:Name="EditButton" Grid.Column="1" Padding="7" VerticalAlignment="Center" Click="EditGroup_Click" BorderThickness="0" Background="Transparent" Visibility="{Binding EditButtonVisibility}" ToolTipService.ToolTip="그룹 편집">
+                <Button x:Name="EditButton" x:Uid="GroupEditButton" Grid.Column="1" Padding="7" VerticalAlignment="Center" Click="EditGroup_Click" BorderThickness="0" Background="Transparent" Visibility="{Binding EditButtonVisibility}">
                     <FontIcon Glyph="&#xe70f;" FontSize="13"/>
                 </Button>
 

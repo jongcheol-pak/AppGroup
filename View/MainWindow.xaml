@@ -24,7 +24,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto" MinWidth="250"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="EditStartMenuDialogTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">폴더 수정</TextBlock>
+                    <TextBlock x:Name="EditStartMenuDialogTitle" x:Uid="EditFolderTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <Button Click="CloseEditStartMenuDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
@@ -43,24 +43,22 @@
                                             <Image x:Name="FolderIconPreview" Width="50" Height="50" Stretch="Uniform"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button x:Name="ResetFolderIconButton" Click="ResetFolderIcon_Click" HorizontalAlignment="Center">
-                                        <TextBlock Text="초기화" FontSize="12" Opacity="0.7"/>
-                                    </Button>
+                                    <Button x:Name="ResetFolderIconButton" x:Uid="ResetButton" Click="ResetFolderIcon_Click" HorizontalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <StackPanel CornerRadius="5" Padding="5" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                        <TextBlock Margin="5,0,0,0" Opacity="0.8" FontSize="12">폴더 이름</TextBlock>
-                                        <TextBox x:Name="FolderNameTextBox" FontWeight="SemiBold" PlaceholderText="폴더 이름 입력" BorderBrush="Transparent" Background="Transparent"/>
+                                        <TextBlock x:Uid="FolderNameLabel" Margin="5,0,0,0" Opacity="0.8" FontSize="12"/>
+                                        <TextBox x:Name="FolderNameTextBox" x:Uid="FolderNameTextBox" FontWeight="SemiBold" BorderBrush="Transparent" Background="Transparent"/>
                                     </StackPanel>
                                     <StackPanel CornerRadius="5" Padding="5" Background="{ThemeResource CardBackgroundFillColorDefault}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                        <TextBlock Margin="5,0,0,0" Opacity="0.8" FontSize="12">폴더 경로</TextBlock>
+                                        <TextBlock x:Uid="FolderPathLabel" Margin="5,0,0,0" Opacity="0.8" FontSize="12"/>
                                         <Grid ColumnSpacing="5">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock x:Name="FolderPathTextBlock" Grid.Column="0" FontWeight="SemiBold" Opacity="0.7" Margin="5,5,5,5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                            <Button x:Name="BrowseFolderPathButton" Grid.Column="1" Click="BrowseFolderPath_Click" ToolTipService.ToolTip="폴더 선택" Padding="8,6">
+                                            <Button x:Name="BrowseFolderPathButton" x:Uid="FolderSelectButton" Grid.Column="1" Click="BrowseFolderPath_Click" Padding="8,6">
                                                 <FontIcon Glyph="&#xED25;" FontSize="14"/>
                                             </Button>
                                         </Grid>
@@ -70,7 +68,7 @@
                         </StackPanel>
                     </StackPanel>
                     <Grid Margin="0,10,0,0">
-                        <Button HorizontalAlignment="Right" Click="SaveFolderEdit_Click" Style="{StaticResource AccentButtonStyle}">저장</Button>
+                        <Button x:Uid="SaveButton" HorizontalAlignment="Right" Click="SaveFolderEdit_Click" Style="{StaticResource AccentButtonStyle}"/>
                     </Grid>
                 </StackPanel>
             </StackPanel>
@@ -88,7 +86,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto" MinWidth="250"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">아이콘 선택</TextBlock>
+                    <TextBlock x:Uid="IconSelectionTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <Button Click="CloseFolderIconDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
@@ -99,8 +97,8 @@
                             <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xe91b;" FontSize="25"/>
                                 <StackPanel>
-                                    <TextBlock FontSize="16" FontWeight="SemiBold">일반 아이콘</TextBlock>
-                                    <TextBlock FontSize="13">디렉터리에서 아이콘 선택</TextBlock>
+                                    <TextBlock x:Uid="RegularIconTitle" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock x:Uid="RegularIconDesc" FontSize="13"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -108,8 +106,8 @@
                             <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xE8B9;" FontSize="25"/>
                                 <StackPanel>
-                                    <TextBlock FontSize="16" FontWeight="SemiBold">리소스 아이콘</TextBlock>
-                                    <TextBlock FontSize="13">앱 리소스에서 아이콘 선택</TextBlock>
+                                    <TextBlock x:Uid="ResourceIconTitle" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock x:Uid="ResourceIconDesc" FontSize="13"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -127,21 +125,21 @@
             </StackPanel>
         </ContentDialog>
 
-        <TextBlock Padding="20,10,0,0" FontSize="18" Margin="0,0,0,0" FontWeight="SemiBold" Text="앱 그룹 관리"></TextBlock>
+        <TextBlock x:Uid="AppGroupManagement" Padding="20,10,0,0" FontSize="18" Margin="0,0,0,0" FontWeight="SemiBold"></TextBlock>
 
         <!-- NavigationView 영역 -->
-        <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="80">
+        <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="90">
             <NavigationView.MenuItems>
                 <NavigationViewItem Tag="Taskbar" Height="60" Margin="0,32,0,0">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xF168;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock Text="앱 그룹" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavTaskbar" HorizontalAlignment="Center" FontSize="12"/>
                     </StackPanel>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="StartMenu" Height="60">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE74C;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock Text="시작" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavStartMenu" HorizontalAlignment="Center" FontSize="12"/>
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
@@ -149,7 +147,7 @@
                 <NavigationViewItem Tag="Settings" Height="60">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE713;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock Text="설정" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavSettings" HorizontalAlignment="Center" FontSize="12"/>
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
@@ -171,10 +169,10 @@
                                     <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">앱을 그룹으로 지정해서 작업 표시줄에 고정할 수 있습니다.</TextBlock>
+                                <TextBlock x:Uid="TaskbarDescription" Grid.Row="0" FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                             
                             <Grid Grid.Row="1" Margin="0,24,0,0" VerticalAlignment="Top">
-                                <TextBox x:Name="SearchTextBox" Height="35" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" PlaceholderText="그룹 검색..." Padding="40,7,0,0" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding SearchText, Mode=TwoWay}" TextChanged="SearchTextBox_TextChanged" VerticalAlignment="Center"/>
+                                <TextBox x:Name="SearchTextBox" x:Uid="SearchGroupsPlaceholder" Height="35" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" Padding="40,7,0,0" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding SearchText, Mode=TwoWay}" TextChanged="SearchTextBox_TextChanged" VerticalAlignment="Center"/>
                                 <FontIcon Glyph="&#xe71e;" FontSize="16" Margin="10,0,0,0" HorizontalAlignment="Left" />
                             </Grid>
                         </Grid>
@@ -194,10 +192,10 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="Reload" ToolTipService.ToolTip="새로 고침">
+                                <Button Grid.Column="0" x:Uid="RefreshButton" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="Reload">
                                     <FontIcon Glyph="&#xe72c;" FontSize="17" />
                                 </Button>
-                                <Button Grid.Column="1" Padding="10" Background="Transparent" BorderThickness="0" Click="AddGroup" ToolTipService.ToolTip="그룹 추가">
+                                <Button Grid.Column="1" x:Uid="AddGroupButton" Padding="10" Background="Transparent" BorderThickness="0" Click="AddGroup">
                                     <FontIcon Glyph="&#xe710;" FontSize="17" />
                                 </Button>
                                 <Button Grid.Column="2" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
@@ -210,10 +208,10 @@
                                     </Grid>
                                     <Button.Flyout>
                                         <MenuFlyout>
-                                            <MenuFlyoutItem Text="가져오기" Icon="Download" Click="ImportBackupButton_Click"/>
-                                            <MenuFlyoutItem Text="내보내기" Icon="Upload" Click="ExportBackupButton_Click"/>
+                                            <MenuFlyoutItem x:Uid="ImportMenu" Icon="Download" Click="ImportBackupButton_Click"/>
+                                            <MenuFlyoutItem x:Uid="ExportMenu" Icon="Upload" Click="ExportBackupButton_Click"/>
                                             <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="작업 표시줄 강제 업데이트" Icon="Sync" Click="ForceTaskbarUpdate_Click"/>
+                                            <MenuFlyoutItem x:Uid="ForceUpdateMenu" Icon="Sync" Click="ForceTaskbarUpdate_Click"/>
                                         </MenuFlyout>
                                     </Button.Flyout>
                                 </Button>
@@ -284,7 +282,7 @@
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditButton_Click" ToolTipService.ToolTip="그룹 수정">
+                                            <Button Grid.Column="1" x:Uid="EditGroupButton" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditButton_Click">
                                                 <FontIcon Glyph="&#xe70f;" FontSize="15" />
                                             </Button>
 
@@ -292,9 +290,9 @@
                                                 <FontIcon Glyph="&#xe712;" FontSize="15" />
                                                 <Button.Flyout>
                                                     <MenuFlyout>
-                                                        <MenuFlyoutItem Text="파일 위치 열기" Icon="Folder" Click="OpenLocationButton_Click"/>
-                                                        <MenuFlyoutItem Text="복제" Icon="Copy" Click="DuplicateButton_Click"/>
-                                                        <MenuFlyoutItem Text="삭제" Icon="Delete" Click="DeleteButton_Click"/>
+                                                        <MenuFlyoutItem x:Uid="OpenLocationMenu" Icon="Folder" Click="OpenLocationButton_Click"/>
+                                                        <MenuFlyoutItem x:Uid="DuplicateMenu" Icon="Copy" Click="DuplicateButton_Click"/>
+                                                        <MenuFlyoutItem x:Uid="DeleteMenu" Icon="Delete" Click="DeleteButton_Click"/>
                                                     </MenuFlyout>
                                                 </Button.Flyout>
                                             </Button>
@@ -306,8 +304,8 @@
                                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <Image Source="/Assets/tm.png" Height="60" Margin="0,0,0,20" />
                                     <StackPanel Spacing="10">
-                                        <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="Bold">그룹이 없습니다!</TextBlock>
-                                        <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="Normal">+ 버튼을 클릭하여 그룹을 만드세요</TextBlock>
+                                        <TextBlock x:Uid="EmptyGroupsTitle" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
+                                        <TextBlock x:Uid="EmptyGroupsDesc" HorizontalAlignment="Center" FontSize="14" FontWeight="Normal"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -326,10 +324,10 @@
 
                         <!-- 시작 메뉴 검색 및 추가 버튼 -->
                         <StackPanel Grid.Row="0" Margin="20,0,20,0" Orientation="Vertical">
-                            <TextBlock FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">트레이 아이콘을 클릭하면 등록된 폴더가 표시됩니다.</TextBlock>
+                            <TextBlock x:Uid="StartMenuDescription" FontSize="12" Margin="0,0,0,0" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
 
                             <Grid Margin="0,24,0,0">                             
-                                <TextBox x:Name="StartMenuSearchTextBox" Height="35" VerticalContentAlignment="Center" PlaceholderText="폴더 검색..." Padding="40,7,10,0"   BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding StartMenuSearchText, Mode=TwoWay}" TextChanged="StartMenuSearchTextBox_TextChanged"/>
+                                <TextBox x:Name="StartMenuSearchTextBox" x:Uid="SearchFoldersPlaceholder" Height="35" VerticalContentAlignment="Center" Padding="40,7,10,0" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Text="{Binding StartMenuSearchText, Mode=TwoWay}" TextChanged="StartMenuSearchTextBox_TextChanged"/>
                                 <FontIcon Glyph="&#xe71e;" FontSize="16" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             </Grid>
                         </StackPanel>
@@ -348,10 +346,10 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Padding="10" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="폴더 추가" Click="AddStartMenuFolder_Click">
+                                    <Button Grid.Column="0" x:Uid="AddFolderButton" Padding="10" Background="Transparent" BorderThickness="0" Click="AddStartMenuFolder_Click">
                                         <FontIcon Glyph="&#xe710;" FontSize="17" />
                                     </Button>
-                                    <Button Grid.Column="1" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="StartMenuSettingsButton_Click" ToolTipService.ToolTip="설정">
+                                    <Button Grid.Column="1" x:Uid="SettingsButton" Margin="0,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="StartMenuSettingsButton_Click">
                                         <FontIcon Glyph="&#xE713;" FontSize="17" />
                                     </Button>                                    
                                 </Grid>
@@ -409,15 +407,15 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <Button Grid.Column="1" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditStartMenuButton_Click" ToolTipService.ToolTip="수정">
+                                            <Button Grid.Column="1" x:Uid="EditFolderButton" Margin="10,0,0,0" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right" Click="EditStartMenuButton_Click">
                                                 <FontIcon Glyph="&#xe70f;" FontSize="15" />
                                             </Button>
                                             <Button Grid.Column="2" Padding="10" BorderThickness="0" Background="Transparent" HorizontalAlignment="Right">
                                             <FontIcon Glyph="&#xe712;" FontSize="15" />
                                             <Button.Flyout>
                                                 <MenuFlyout>
-                                                    <MenuFlyoutItem Text="파일 위치 열기" Icon="Folder" Click="StartMenuOpenLocationButton_Click"/>
-                                                    <MenuFlyoutItem Text="삭제" Icon="Delete" Click="StartMenuDeleteButton_Click"/>
+                                                    <MenuFlyoutItem x:Uid="OpenLocationMenu" Icon="Folder" Click="StartMenuOpenLocationButton_Click"/>
+                                                    <MenuFlyoutItem x:Uid="DeleteMenu" Icon="Delete" Click="StartMenuDeleteButton_Click"/>
                                                 </MenuFlyout>
                                             </Button.Flyout>
                                         </Button>
@@ -431,8 +429,8 @@
                             <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <FontIcon Glyph="&#xe8f7;" FontSize="60" Margin="0,0,0,20" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                                 <StackPanel Spacing="10">
-                                    <TextBlock HorizontalAlignment="Center" FontSize="20" FontWeight="Bold">폴더가 없습니다!</TextBlock>
-                                    <TextBlock HorizontalAlignment="Center" FontSize="14" FontWeight="Normal" TextWrapping="Wrap" MaxWidth="300" TextAlignment="Center">폴더를 드래그하여 추가하세요</TextBlock>
+                                    <TextBlock x:Uid="EmptyFoldersTitle" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
+                                    <TextBlock x:Uid="EmptyFoldersDesc" HorizontalAlignment="Center" FontSize="14" FontWeight="Normal" TextWrapping="Wrap" MaxWidth="300" TextAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -469,8 +467,8 @@
                                             <ColumnDefinition Width="50"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                                            <TextBlock Text="시작 시 실행" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
-                                            <TextBlock Text="Windows 시작 시 자동으로 앱 실행" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                            <TextBlock x:Uid="RunAtStartup" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                            <TextBlock x:Uid="RunAtStartupDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
                                         </StackPanel>
                                         <ToggleSwitch x:Name="SettingsStartupToggle" Grid.Column="1" IsOn="{Binding RunAtStartup, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                                     </Grid>
@@ -486,15 +484,15 @@
                                         <ColumnDefinition Width="50"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
-                                        <TextBlock Text="시스템 트레이 아이콘 표시" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
-                                        <TextBlock Text="시스템 트레이에 앱 아이콘 표시" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        <TextBlock x:Uid="ShowSystemTrayIcon" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                        <TextBlock x:Uid="ShowSystemTrayIconDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <ToggleSwitch x:Name="SettingsSystemTrayToggle" Grid.Column="1" IsOn="{Binding ShowSystemTrayIcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
 
                             <!-- About Section -->
-                            <TextBlock Text="정보" Style="{StaticResource SectionHeaderStyle}"/>
+                            <TextBlock x:Uid="InformationSection" Style="{StaticResource SectionHeaderStyle}"/>
 
                             <Border Style="{StaticResource SettingsCardStyle}">
                                 <StackPanel>
@@ -506,13 +504,13 @@
                                             <TextBlock Text="MIT License" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </HyperlinkButton>
-                                    <TextBlock Text="이 앱은 오픈소스 프로젝트 AppGroup를 기반으로 하여 UI 개선 및 기능 추가 등 일부 커스터마이징을 적용한 버전입니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
-                                    <TextBlock Text="원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다." FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Uid="AppGroupDescription" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Uid="AppGroupOriginalNote" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Open Source Licenses -->
-                            <TextBlock Text="Open Source Licenses" Style="{StaticResource SectionHeaderStyle}"/>
+                            <TextBlock x:Uid="OpenSourceLicensesSection" Style="{StaticResource SectionHeaderStyle}"/>
 
                             <Border Style="{StaticResource SettingsCardStyle}">
                                 <StackPanel Spacing="8">

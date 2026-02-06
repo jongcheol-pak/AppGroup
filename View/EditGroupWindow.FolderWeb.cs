@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Storage.Pickers;
 using AppGroup.Models;
 using File = System.IO.File;
@@ -16,6 +17,7 @@ namespace AppGroup.View {
     /// 폴더/웹 항목 추가 및 편집 기능을 담당합니다.
     /// </summary>
     public sealed partial class EditGroupWindow {
+        private static readonly ResourceLoader _folderWebResourceLoader = new ResourceLoader();
 
         #region FolderWeb Dialog Handlers
 
@@ -266,7 +268,7 @@ namespace AppGroup.View {
                         // 다이얼로그를 먼저 숨기고 에러 표시
                         FolderWebIconDialog.Hide();
                         await Task.Delay(50);
-                        await ShowDialog("알림", "사용 가능한 리소스 아이콘이 없습니다.");
+                        await ShowDialog(_folderWebResourceLoader.GetString("NotificationTitle"), _folderWebResourceLoader.GetString("NoResourceIconsAvailable"));
                         await Task.Delay(50);
                         FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                         _ = FolderWebDialog.ShowAsync();
@@ -277,7 +279,7 @@ namespace AppGroup.View {
                     // 다이얼로그를 먼저 숨기고 에러 표시
                     FolderWebIconDialog.Hide();
                     await Task.Delay(50);
-                    await ShowDialog("오류", $"아이콘 폴더를 찾을 수 없습니다:\n{iconFolderPath}");
+                    await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), string.Format(_folderWebResourceLoader.GetString("IconFolderNotFoundFormat"), iconFolderPath));
                     await Task.Delay(50);
                     FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                     _ = FolderWebDialog.ShowAsync();
@@ -288,7 +290,7 @@ namespace AppGroup.View {
                 // 다이얼로그를 먼저 숨기고 에러 표시
                 FolderWebIconDialog.Hide();
                 await Task.Delay(50);
-                await ShowDialog("오류", $"아이콘 로드 중 오류 발생: {ex.Message}");
+                await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), string.Format(_folderWebResourceLoader.GetString("IconLoadErrorFormat"), ex.Message));
                 await Task.Delay(50);
                 FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                 _ = FolderWebDialog.ShowAsync();
@@ -320,7 +322,7 @@ namespace AppGroup.View {
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorDialog("오류", $"아이콘 선택 중 오류 발생: {ex.Message}");
+                    ShowErrorDialog(_folderWebResourceLoader.GetString("ErrorTitle"), string.Format(_folderWebResourceLoader.GetString("IconSelectionErrorFormat"), ex.Message));
                 }
             }
         }
@@ -338,7 +340,7 @@ namespace AppGroup.View {
                     // 다이얼로그를 먼저 숨기고 에러 표시 후 다시 열기
                     FolderWebDialog.Hide();
                     await Task.Delay(50);
-                    await ShowDialog("오류", "이름을 입력하세요.");
+                    await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), _folderWebResourceLoader.GetString("EnterNameError"));
                     await Task.Delay(50);
                     FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                     _ = FolderWebDialog.ShowAsync();
@@ -357,7 +359,7 @@ namespace AppGroup.View {
                         // 다이얼로그를 먼저 숨기고 에러 표시 후 다시 열기
                         FolderWebDialog.Hide();
                         await Task.Delay(50);
-                        await ShowDialog("오류", "유효한 폴더 경로를 선택하세요.");
+                        await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), _folderWebResourceLoader.GetString("SelectValidFolderPathError"));
                         await Task.Delay(50);
                         FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                         _ = FolderWebDialog.ShowAsync();
@@ -373,7 +375,7 @@ namespace AppGroup.View {
                         // 다이얼로그를 먼저 숨기고 에러 표시 후 다시 열기
                         FolderWebDialog.Hide();
                         await Task.Delay(50);
-                        await ShowDialog("오류", "웹 URL을 입력하세요.");
+                        await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), _folderWebResourceLoader.GetString("EnterWebUrlError"));
                         await Task.Delay(50);
                         FolderWebDialog.XamlRoot = this.Content.XamlRoot;
                         _ = FolderWebDialog.ShowAsync();
@@ -434,9 +436,9 @@ namespace AppGroup.View {
                 ExeListView.ItemsSource = _viewModel.ExeFiles;
                 lastSelectedItem = GroupColComboBox.SelectedItem as string;
                 _viewModel.ApplicationCountText = ExeListView.Items.Count > 1
-                    ? ExeListView.Items.Count.ToString() + "개 항목"
+                    ? string.Format(_folderWebResourceLoader.GetString("ItemsCountFormat"), ExeListView.Items.Count)
                     : ExeListView.Items.Count == 1
-                    ? "1개 항목"
+                    ? _folderWebResourceLoader.GetString("OneItem")
                     : "";
 
                 IconGridComboBox.Items.Clear();
@@ -466,7 +468,7 @@ namespace AppGroup.View {
                 // 다이얼로그를 먼저 숨기고 에러 표시
                 FolderWebDialog.Hide();
                 await Task.Delay(50);
-                await ShowDialog("오류", $"저장 중 오류가 발생했습니다: {ex.Message}");
+                await ShowDialog(_folderWebResourceLoader.GetString("ErrorTitle"), string.Format(_folderWebResourceLoader.GetString("SaveErrorFormat"), ex.Message));
             }
             finally
             {

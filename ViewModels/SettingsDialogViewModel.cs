@@ -3,10 +3,12 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.ApplicationModel;
 
 namespace AppGroup.ViewModels {
 public partial class SettingsDialogViewModel : ObservableObject {
+    private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
     private SettingsHelper.AppSettings? _settings;
     private bool _isLoading = true;
     private string _versionText = "";
@@ -72,10 +74,10 @@ public partial class SettingsDialogViewModel : ObservableObject {
         var assembly = System.Reflection.Assembly.GetExecutingAssembly();
         var version = assembly.GetName().Version;
         if (version != null) {
-            VersionText = $"버전 {version.Major}.{version.Minor}.{version.Build}";
+            VersionText = string.Format(_resourceLoader.GetString("VersionFormat"), version.Major, version.Minor, version.Build);
         }
         else {
-            VersionText = "버전 Unknown";
+            VersionText = _resourceLoader.GetString("VersionUnknown");
         }
     }
 
@@ -101,13 +103,13 @@ public partial class SettingsDialogViewModel : ObservableObject {
                 case StartupTaskState.DisabledByUser:
                     RunAtStartup = false;
                     IsStartupBlocked = true;
-                    StartupStatusMessage = "Windows 설정에서 차단됨. 설정 > 앱 > 시작프로그램에서 허용하세요.";
+                    StartupStatusMessage = _resourceLoader.GetString("StartupBlockedByUser");
                     break;
 
                 case StartupTaskState.DisabledByPolicy:
                     RunAtStartup = false;
                     IsStartupBlocked = true;
-                    StartupStatusMessage = "그룹 정책에 의해 차단됨";
+                    StartupStatusMessage = _resourceLoader.GetString("StartupBlockedByPolicy");
                     break;
 
                 case StartupTaskState.Disabled:
@@ -192,7 +194,7 @@ public partial class SettingsDialogViewModel : ObservableObject {
 
                     if (result == StartupTaskState.DisabledByUser) {
                         // 사용자가 Windows 설정에서 거부함
-                        StartupStatusMessage = "Windows 설정에서 차단됨. 설정 > 앱 > 시작프로그램에서 허용하세요.";
+                        StartupStatusMessage = _resourceLoader.GetString("StartupBlockedByUser");
                         IsStartupBlocked = true;
                         RunAtStartup = false;
 
@@ -205,7 +207,7 @@ public partial class SettingsDialogViewModel : ObservableObject {
                     }
                     else if (result == StartupTaskState.DisabledByPolicy) {
                         // 그룹 정책에 의해 차단됨
-                        StartupStatusMessage = "그룹 정책에 의해 차단됨";
+                        StartupStatusMessage = _resourceLoader.GetString("StartupBlockedByPolicy");
                         IsStartupBlocked = true;
                         RunAtStartup = false;
 
@@ -224,7 +226,7 @@ public partial class SettingsDialogViewModel : ObservableObject {
                     else if (result == StartupTaskState.Disabled) {
                         // 요청은 했지만 여전히 Disabled 상태 - 재시도 또는 사용자 알림
                         Debug.WriteLine("[Settings] Startup still disabled after request");
-                        StartupStatusMessage = "시작 프로그램 등록에 실패했습니다. 다시 시도해주세요.";
+                        StartupStatusMessage = _resourceLoader.GetString("StartupRegistrationFailed");
                         IsStartupBlocked = true;
                         RunAtStartup = false;
 
@@ -246,7 +248,7 @@ public partial class SettingsDialogViewModel : ObservableObject {
             }
             catch (Exception ex) {
                 Debug.WriteLine($"Error applying startup settings: {ex.Message}");
-                StartupStatusMessage = $"오류: {ex.Message}";
+                StartupStatusMessage = string.Format(_resourceLoader.GetString("ErrorFormat"), ex.Message);
                 IsStartupBlocked = true;
                 return false;
             }

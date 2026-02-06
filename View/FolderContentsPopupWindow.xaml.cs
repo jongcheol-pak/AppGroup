@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,6 +23,7 @@ namespace AppGroup.View
     /// </summary>
     public sealed partial class FolderContentsPopupWindow : Window, IDisposable
     {
+        private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
         #region UI 크기 상수
 
         /// <summary>
@@ -343,7 +345,7 @@ namespace AppGroup.View
             {
                 if (!Directory.Exists(folderPath))
                 {
-                    ShowEmptyState("폴더가 존재하지 않습니다.");
+                    ShowEmptyState(_resourceLoader.GetString("FolderNotFound"));
                     return;
                 }
 
@@ -359,7 +361,7 @@ namespace AppGroup.View
 
                 if (files.Count == 0 && folders.Count == 0)
                 {
-                    ShowEmptyState("내용이 없습니다.");
+                    ShowEmptyState(_resourceLoader.GetString("EmptyFolder"));
                     return;
                 }
 
@@ -401,12 +403,12 @@ namespace AppGroup.View
             }
             catch (UnauthorizedAccessException)
             {
-                ShowEmptyState("액세스가 거부되었습니다.");
+                ShowEmptyState(_resourceLoader.GetString("AccessDenied"));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"폴더 내용 로드 오류: {ex.Message}");
-                ShowEmptyState("오류가 발생했습니다.");
+                ShowEmptyState(_resourceLoader.GetString("ErrorOccurred"));
             }
         }
 
