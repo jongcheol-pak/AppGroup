@@ -71,13 +71,22 @@ public partial class SettingsDialogViewModel : ObservableObject {
         IsStartupBlocked ? Visibility.Visible : Visibility.Collapsed;
 
     public void InitializeVersionText() {
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-        var version = assembly.GetName().Version;
-        if (version != null) {
-            VersionText = string.Format(_resourceLoader.GetString("VersionFormat"), version.Major, version.Minor, version.Build);
+        try {
+            // 패키지 버전 가져오기 (Package.appxmanifest의 Version)
+            var packageVersion = Windows.ApplicationModel.Package.Current.Id.Version;
+            VersionText = string.Format(_resourceLoader.GetString("VersionFormat"), 
+                packageVersion.Major, packageVersion.Minor, packageVersion.Build);
         }
-        else {
-            VersionText = _resourceLoader.GetString("VersionUnknown");
+        catch {
+            // 패키지 버전을 가져올 수 없는 경우 어셈블리 버전 사용
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var version = assembly.GetName().Version;
+            if (version != null) {
+                VersionText = string.Format(_resourceLoader.GetString("VersionFormat"), version.Major, version.Minor, version.Build);
+            }
+            else {
+                VersionText = _resourceLoader.GetString("VersionUnknown");
+            }
         }
     }
 

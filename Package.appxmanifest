@@ -10,7 +10,7 @@
 
   <Identity
     Publisher="CN=C4E87E75-D777-4282-B3A5-57BFD2309B52"
-    Version="1.0.10.0"  Name="JongCheol.3110498EE6730"/>
+    Version="1.1.10.0"  Name="JongCheol.3110498EE6730"/>
 
   <mp:PhoneIdentity PhoneProductId="7b5fbc4d-4b46-429e-ae24-17c5fbb43016" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
