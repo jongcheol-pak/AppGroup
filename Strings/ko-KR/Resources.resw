@@ -594,4 +594,7 @@
   <data name="EmptyFoldersDesc.Text" xml:space="preserve">
     <value>폴더를 드래그하여 추가하세요</value>
   </data>
+  <data name="SelectedAppsCountFormat" xml:space="preserve">
+    <value>{0}개 선택됨</value>
+  </data>
 </root>

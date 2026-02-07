@@ -55,7 +55,7 @@ namespace AppGroup.View {
                 _viewModel.AllInstalledApps.Clear();
                 AllAppsListView.ItemsSource = _viewModel.InstalledApps;
                 AppSearchTextBox.Text = "";
-                _viewModel.SelectedAppsCountText = "0개 선택됨";
+                _viewModel.SelectedAppsCountText = string.Format(_resourceLoader.GetString("SelectedAppsCountFormat"), 0);
 
                 _ = AllAppsDialog.ShowAsync();
 
@@ -513,7 +513,7 @@ namespace AppGroup.View {
         private void UpdateSelectedAppsCount()
         {
             var count = _viewModel.AllInstalledApps.Count(a => a.IsSelected);
-            _viewModel.SelectedAppsCountText = $"{count}개 선택됨";
+            _viewModel.SelectedAppsCountText = string.Format(_resourceLoader.GetString("SelectedAppsCountFormat"), count);
         }
 
         /// <summary>
@@ -553,9 +553,9 @@ namespace AppGroup.View {
             ExeListView.ItemsSource = _viewModel.ExeFiles;
             lastSelectedItem = GroupColComboBox.SelectedItem as string;
             _viewModel.ApplicationCountText = ExeListView.Items.Count > 1
-                ? ExeListView.Items.Count.ToString() + "개 항목"
+                ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), ExeListView.Items.Count)
                 : ExeListView.Items.Count == 1
-                ? "1개 항목"
+                ? _resourceLoader.GetString("OneItem")
                 : "";
 
             IconGridComboBox.Items.Clear();

@@ -622,11 +622,12 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                             catch (Exception ex)
                             {
                                 Debug.WriteLine($"Failed to load group icon: {ex.Message}");
-                                // 아이콘 로드 실패 시 기본 상태로 유지 (사용자가 새 아이콘 선택 가능)
+                                // 아이콘 로드 실패 시 기본 이미지 표시
                                 DispatcherQueue.TryEnqueue(() =>
                                 {
                                     selectedIconPath = string.Empty;
-                                    IconPreviewBorder.Visibility = Visibility.Collapsed;
+                                    IconPreviewImage.Source = new BitmapImage(new Uri("ms-appx:///default_preview.png"));
+                                    IconPreviewBorder.Visibility = Visibility.Visible;
                                     _viewModel.ApplicationCountText = paths?.Count > 1
                                         ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
                                         : paths?.Count == 1
@@ -637,11 +638,12 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                         }
                         else
                         {
-                            // 아이콘 파일이 없는 경우 - 사용자가 새 아이콘 선택 가능
+                            // 아이콘 파일이 없는 경우 - 기본 이미지 표시
                             DispatcherQueue.TryEnqueue(() =>
                             {
                                 selectedIconPath = string.Empty;
-                                IconPreviewBorder.Visibility = Visibility.Collapsed;
+                                IconPreviewImage.Source = new BitmapImage(new Uri("ms-appx:///default_preview.png"));
+                                IconPreviewBorder.Visibility = Visibility.Visible;
                                 _viewModel.ApplicationCountText = paths?.Count > 1
                                     ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
                                     : paths?.Count == 1

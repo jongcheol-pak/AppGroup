@@ -194,87 +194,7 @@ namespace AppGroup.View
         private static readonly SolidColorBrush TransparentBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(TRANSPARENT_BACKGROUND_A, TRANSPARENT_BACKGROUND_R, TRANSPARENT_BACKGROUND_G, TRANSPARENT_BACKGROUND_B));
         private static readonly SolidColorBrush HoverBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(HOVER_BACKGROUND_A, HOVER_BACKGROUND_R, HOVER_BACKGROUND_G, HOVER_BACKGROUND_B));
 
-        /// <summary>
-        /// 확장자별 아이콘 경로 매핑 (추후 확장자 추가 시 여기에 추가)
-        /// </summary>
-        private static readonly Dictionary<string, string> ExtensionIconMap = new(StringComparer.OrdinalIgnoreCase)
-        {
-            // 이미지 파일
-            { ".png", "Assets/icon/png_2.png" },
-            { ".jpg", "Assets/icon/jpg_2.png" },
-            { ".jpeg", "Assets/icon/jpg_2.png" },
-            
-            // 오디오 파일
-            { ".mp3", "Assets/icon/mp3_2.png" },
-            
-            // 비디오 파일
-            { ".mp4", "Assets/icon/mp4_2.png" },
-            
-            // 문서 파일
-            { ".md", "Assets/icon/md.png" },
-            { ".doc", "Assets/icon/doc_2.png" },
-            { ".docx", "Assets/icon/doc_2.png" },
-            { ".pdf", "Assets/icon/pdf_2.png" },
-            { ".ppt", "Assets/icon/ppt_2.png" },
-            { ".pptx", "Assets/icon/ppt_2.png" },
-            { ".txt", "Assets/icon/txt_3.png" },
-            { ".xls", "Assets/icon/xls_2.png" },
-            { ".xlsx", "Assets/icon/xls_2.png" },
-            { ".csv", "Assets/icon/csv.png" },
-            
-            // 코드/개발 파일
-            { ".php", "Assets/icon/php.png" },
-            { ".cs", "Assets/icon/cs.png" },
-            { ".css", "Assets/icon/css.png" },
-            { ".html", "Assets/icon/html.png" },
-            { ".xaml", "Assets/icon/xaml.png" },
-            { ".json", "Assets/icon/json.png" },
-            { ".xml", "Assets/icon/xml.png" },
-            
-            // 시스템/실행 파일
-            { ".dll", "Assets/icon/dll.png" },
-            { ".exe", "Assets/icon/exe.png" },
-            { ".inf", "Assets/icon/inf.png" },
-            { ".ini", "Assets/icon/ini.png" },
-            
-            // 압축 파일
-            { ".zip", "Assets/icon/zip_2.png" },
-        };
-
-        /// <summary>
-        /// 카테고리별 확장자 목록 (폴백 아이콘용)
-        /// </summary>
-        private static readonly HashSet<string> ArchiveExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".cab", ".iso"
-        };
-
-        private static readonly HashSet<string> DocumentExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".txt", ".doc", ".docx", ".pdf", ".rtf", ".odt", ".md", ".log", ".ppt", ".pptx", ".xls", ".xlsx", ".csv"
-        };
-
-        private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg", ".webp", ".tiff", ".tif"
-        };
-
-        private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg"
-        };
-
-        private static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a", ".aiff"
-        };
-
-        // 폴백 아이콘 경로
-        private const string FallbackArchiveIcon = "Assets/icon/zip.png";
-        private const string FallbackDocumentIcon = "Assets/icon/txt.png";
-        private const string FallbackImageIcon = "Assets/icon/png.png";
-        private const string FallbackVideoIcon = "Assets/icon/mp4.png";
-        private const string FallbackAudioIcon = "Assets/icon/mp3.png";
+        // 기본 파일 아이콘 경로
         private const string FallbackDefaultIcon = "Assets/icon/file_4.png";
 
         public FolderContentsPopupWindow()
@@ -532,12 +452,10 @@ namespace AppGroup.View
                 imageControl.Tag = filePath;
 
                 // 먼저 기본 아이콘으로 설정 (로딩 중 표시)
-                var extension = Path.GetExtension(filePath);
-                var fallbackIconPath = GetIconPathForExtension(extension);
-                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{fallbackIconPath}"));
+                imageControl.Source = new BitmapImage(new Uri($"{APP_RESOURCE_PREFIX}{FallbackDefaultIcon}"));
 
                 // 비동기로 실제 아이콘 로드 시작 (Fire-and-forget)
-                _ = LoadFileIconAsync(imageControl, filePath, fallbackIconPath);
+                _ = LoadFileIconAsync(imageControl, filePath);
             }
             catch (Exception ex)
             {
@@ -549,7 +467,7 @@ namespace AppGroup.View
         /// <summary>
         /// 파일 아이콘 비동기 로드 (실제 파일 아이콘 추출)
         /// </summary>
-        private async Task LoadFileIconAsync(Image imageControl, string filePath, string fallbackIconPath)
+        private async Task LoadFileIconAsync(Image imageControl, string filePath)
         {
             try
             {
@@ -641,47 +559,6 @@ namespace AppGroup.View
                     }
                 });
             }
-        }
-
-        /// <summary>
-        /// 확장자에 해당하는 아이콘 경로를 반환합니다.
-        /// </summary>
-        private static string GetIconPathForExtension(string extension)
-        {
-            // 1. 정확한 확장자 매핑이 있으면 사용
-            if (ExtensionIconMap.TryGetValue(extension, out var iconPath))
-            {
-                return iconPath;
-            }
-
-            // 2. 카테고리별 폴백 아이콘 사용
-            if (ArchiveExtensions.Contains(extension))
-            {
-                return FallbackArchiveIcon;
-            }
-
-            if (ImageExtensions.Contains(extension))
-            {
-                return FallbackImageIcon;
-            }
-
-            if (VideoExtensions.Contains(extension))
-            {
-                return FallbackVideoIcon;
-            }
-
-            if (AudioExtensions.Contains(extension))
-            {
-                return FallbackAudioIcon;
-            }
-
-            if (DocumentExtensions.Contains(extension))
-            {
-                return FallbackDocumentIcon;
-            }
-
-            // 3. 기본 파일 아이콘
-            return FallbackDefaultIcon;
         }
 
         /// <summary>

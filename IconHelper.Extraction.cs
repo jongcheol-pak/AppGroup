@@ -189,42 +189,28 @@ namespace AppGroup
                         Debug.WriteLine($"[IconSize] {iconBitmap.Width}x{iconBitmap.Height} - {Path.GetFileName(filePath)}");
 
                         Directory.CreateDirectory(outputDirectory);
-                        
-                        // 아이콘을 지정된 크기로 리사이즈 (기본 48x48)
-                        Bitmap resizedBitmap = iconBitmap;
-                        if (iconBitmap.Width != size || iconBitmap.Height != size)
-                        {
-                            resizedBitmap = new Bitmap(size, size);
-                            using (var graphics = Graphics.FromImage(resizedBitmap))
-                            {
-                                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                                graphics.DrawImage(iconBitmap, 0, 0, size, size);
-                            }
-                            iconBitmap.Dispose();
-                            Debug.WriteLine($"[IconSize] Resized to {size}x{size} - {Path.GetFileName(filePath)}");
-                        }
 
-                        string iconFileName = GenerateUniqueIconFileName(filePath, resizedBitmap);
+                        string iconFileName = GenerateUniqueIconFileName(filePath, iconBitmap);
                         string iconFilePath = Path.Combine(outputDirectory, iconFileName);
 
                         if (File.Exists(iconFilePath))
                         {
-                            Debug.WriteLine($"[IconSize] {resizedBitmap.Width}x{resizedBitmap.Height} - {Path.GetFileName(filePath)} (cached)");
-                            resizedBitmap.Dispose();
+                            Debug.WriteLine($"[IconSize] {iconBitmap.Width}x{iconBitmap.Height} - {Path.GetFileName(filePath)} (cached)");
+                            iconBitmap.Dispose();
                             return iconFilePath;
                         }
+
+                        int savedWidth = iconBitmap.Width;
+                        int savedHeight = iconBitmap.Height;
 
                         using (var stream = new FileStream(iconFilePath, FileMode.Create))
                         {
                             cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                            resizedBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            iconBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                         }
-                        resizedBitmap.Dispose();
+                        iconBitmap.Dispose();
 
-                        Debug.WriteLine($"Icon saved to: {iconFilePath} ({size}x{size})");
+                        Debug.WriteLine($"Icon saved to: {iconFilePath} ({savedWidth}x{savedHeight})");
                         return iconFilePath;
                     }
                     catch (OperationCanceledException)
@@ -553,8 +539,8 @@ namespace AppGroup
                         {
                             using (var rawBitmap = new Bitmap(icon.ToBitmap()))
                             {
-                                var bitmap = CropToActualContent(rawBitmap);
-                                Debug.WriteLine($"ExtractSpecificIcon: Got icon via ExtractIconEx for {iconPath} ({rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height})");
+                                var bitmap = new Bitmap(rawBitmap);
+                                Debug.WriteLine($"ExtractSpecificIcon: Got icon via ExtractIconEx for {iconPath} ({bitmap.Width}x{bitmap.Height})");
                                 return bitmap;
                             }
                         }
@@ -584,8 +570,8 @@ namespace AppGroup
                             {
                                 using (var rawBitmap = new Bitmap(icon.ToBitmap()))
                                 {
-                                    var bitmap = CropToActualContent(rawBitmap);
-                                    Debug.WriteLine($"ExtractSpecificIcon: Got icon via SHGetFileInfo for {iconPath} ({rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height})");
+                                    var bitmap = new Bitmap(rawBitmap);
+                                    Debug.WriteLine($"ExtractSpecificIcon: Got icon via SHGetFileInfo for {iconPath} ({bitmap.Width}x{bitmap.Height})");
                                     return bitmap;
                                 }
                             }
@@ -653,8 +639,8 @@ namespace AppGroup
                         {
                             using (var rawBitmap = new Bitmap(icon.ToBitmap()))
                             {
-                                var bitmap = CropToActualContent(rawBitmap);
-                                Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via ExtractIconEx for {targetPath} ({rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height})");
+                                var bitmap = new Bitmap(rawBitmap);
+                                Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via ExtractIconEx for {targetPath} ({bitmap.Width}x{bitmap.Height})");
                                 return bitmap;
                             }
                         }
@@ -680,8 +666,8 @@ namespace AppGroup
                             {
                                 using (var rawBitmap = new Bitmap(icon.ToBitmap()))
                                 {
-                                    var bitmap = CropToActualContent(rawBitmap);
-                                    Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via SHGetFileInfo for {targetPath} ({rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height})");
+                                    var bitmap = new Bitmap(rawBitmap);
+                                    Debug.WriteLine($"ExtractIconWithoutArrow: Successfully extracted via SHGetFileInfo for {targetPath} ({bitmap.Width}x{bitmap.Height})");
                                     return bitmap;
                                 }
                             }
@@ -705,8 +691,8 @@ namespace AppGroup
                     {
                         using (var rawBitmap = icon2.ToBitmap())
                         {
-                            var bitmap = CropToActualContent(rawBitmap);
-                            Debug.WriteLine($"ExtractIconWithoutArrow: Fallback to ExtractAssociatedIcon for {targetPath} ({rawBitmap.Width}x{rawBitmap.Height} -> {bitmap.Width}x{bitmap.Height})");
+                            var bitmap = new Bitmap(rawBitmap);
+                            Debug.WriteLine($"ExtractIconWithoutArrow: Fallback to ExtractAssociatedIcon for {targetPath} ({bitmap.Width}x{bitmap.Height})");
                             return bitmap;
                         }
                     }

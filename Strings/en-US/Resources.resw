@@ -594,4 +594,7 @@
   <data name="EmptyFoldersDesc.Text" xml:space="preserve">
     <value>Drag folders here to add them</value>
   </data>
+  <data name="SelectedAppsCountFormat" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
 </root>

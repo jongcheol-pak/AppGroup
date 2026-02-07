@@ -2,6 +2,71 @@
 
 ## 최근 변경 사항
 
+### 2026-02-07 - FolderContentsPopupWindow 파일 아이콘 로직 단순화
+
+#### 수행한 작업 요약
+- FolderContentsPopupWindow에서 파일 아이콘 로드 시 확장자별 fallback 아이콘 로직을 제거하고, 모든 파일에 대해 기본 아이콘(`file_4.png`)으로 초기화하도록 단순화
+
+#### 변경된 파일
+- `View/FolderContentsPopupWindow.xaml.cs`
+
+#### 변경 내용
+1. **`LoadFileIcon` 메서드**: 확장자 확인(`Path.GetExtension`) 및 `GetIconPathForExtension` 호출 제거, `FallbackDefaultIcon`으로 직접 초기화
+2. **`LoadFileIconAsync` 메서드**: 사용하지 않는 `fallbackIconPath` 파라미터 제거
+3. **삭제된 코드**:
+   - `GetIconPathForExtension` 메서드 전체 (확장자별 아이콘 경로 반환)
+   - `ExtensionIconMap` Dictionary (42개 확장자-아이콘 매핑)
+   - `ArchiveExtensions`, `DocumentExtensions`, `ImageExtensions`, `VideoExtensions`, `AudioExtensions` HashSet
+   - `FallbackArchiveIcon`, `FallbackDocumentIcon`, `FallbackImageIcon`, `FallbackVideoIcon`, `FallbackAudioIcon` 상수
+4. **유지된 코드**: `FallbackDefaultIcon` 상수 (기본 파일 아이콘으로 계속 사용)
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 내부 동작 변경이므로 갱신 불필요
+
+#### 제한 사항
+- 아이콘 추출 성공 전까지 모든 파일이 동일한 기본 아이콘으로 표시됨 (기존에는 확장자별 아이콘이 표시되었음)
+
+---
+
+### 2026-02-07 - 아이콘 추출 시 불필요한 크롭/리사이즈 제거
+
+#### 수행한 작업 요약
+- EditGroupWindow에서 설치된 앱 목록의 아이콘이 일부 작게 표시되는 문제 수정
+- 원인: `CropToActualContent`가 32x32 아이콘의 투명/배경 영역을 잘라내어 20x20 등으로 축소 후, 48x48로 업스케일하여 저장 → UI에서 24x24로 표시 시 실제 내용이 작게 보임
+- `CropToActualContent` 호출 제거 (5곳) + 48x48 강제 리사이즈 로직 제거
+
+#### 변경된 파일
+- `IconHelper.Extraction.cs`
+
+#### 변경 내용
+1. **`ExtractIconWithoutArrow` 메서드** (3곳)
+   - Method 3 (ExtractIconEx): `CropToActualContent(rawBitmap)` → `new Bitmap(rawBitmap)`
+   - Method 4 (SHGetFileInfo): `CropToActualContent(rawBitmap)` → `new Bitmap(rawBitmap)`
+   - Method 5 (ExtractAssociatedIcon): `CropToActualContent(rawBitmap)` → `new Bitmap(rawBitmap)`
+
+2. **`ExtractSpecificIcon` 메서드** (2곳)
+   - Method 3 (ExtractIconEx): `CropToActualContent(rawBitmap)` → `new Bitmap(rawBitmap)`
+   - Method 4 (SHGetFileInfo): `CropToActualContent(rawBitmap)` → `new Bitmap(rawBitmap)`
+
+3. **`ExtractIconAndSaveAsync` 메서드**
+   - 48x48 강제 리사이즈 블록 전체 삭제 (`resizedBitmap` 변수 및 Graphics 리사이즈 로직)
+   - `resizedBitmap` 참조를 모두 `iconBitmap`으로 변경
+   - Dispose 후 접근 방지를 위해 `savedWidth`/`savedHeight` 변수 사용
+   - `size` 파라미터는 유지 (Windows API 요청 크기 힌트로 사용됨)
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 내부 동작 변경이므로 갱신 불필요
+
+#### 제한 사항
+- `CropToActualContent` 메서드 자체는 삭제하지 않음 (다른 곳에서 사용될 수 있음)
+- 기존에 캐시된 아이콘 파일은 파일명 해시가 변경되므로 자동으로 새로 생성됨
+
+---
+
 ### 2026-02-06 - 코드 리뷰 심각한 문제 21건 수정
 
 #### 수정된 이슈
