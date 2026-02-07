@@ -1,18 +1,95 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
               <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
@@ -40,10 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
-  <!-- Settings Dialog -->
   <data name="SettingsTitle.Text" xml:space="preserve">
     <value>설정</value>
+  </data>
+  <data name="AppName.Text" xml:space="preserve">
+    <value>앱 그룹</value>
   </data>
   <data name="RunAtStartup.Text" xml:space="preserve">
     <value>시작 시 실행</value>
@@ -75,8 +153,6 @@
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
-  
-  <!-- Start Menu Settings Dialog -->
   <data name="StartMenuSettingsTitle.Text" xml:space="preserve">
     <value>시작 메뉴 설정</value>
   </data>
@@ -98,13 +174,9 @@
   <data name="ColumnCountDescription.Text" xml:space="preserve">
     <value>메뉴에 표시되는 폴더의 가로 개수를 설정합니다.</value>
   </data>
-  
-  <!-- Popup Window -->
   <data name="GroupEditButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>그룹 편집</value>
   </data>
-  
-  <!-- Edit Group Window -->
   <data name="TitleLabel.Text" xml:space="preserve">
     <value>제목</value>
   </data>
@@ -240,8 +312,6 @@
   <data name="FolderSelectButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>폴더 선택</value>
   </data>
-  
-  <!-- Folder Contents Popup Window -->
   <data name="FolderContentsHeader.Text" xml:space="preserve">
     <value>폴더 내용</value>
   </data>
@@ -254,16 +324,12 @@
   <data name="EmptyContents.Text" xml:space="preserve">
     <value>내용이 없습니다.</value>
   </data>
-  
-  <!-- Start Menu Popup Window -->
   <data name="FoldersHeader.Text" xml:space="preserve">
     <value>폴더</value>
   </data>
   <data name="SettingsButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>설정</value>
   </data>
-  
-  <!-- MainWindow -->
   <data name="AppGroupManagement.Text" xml:space="preserve">
     <value>앱 그룹 관리</value>
   </data>
@@ -276,8 +342,6 @@
   <data name="NavSettings.Text" xml:space="preserve">
     <value>설정</value>
   </data>
-  
-  <!-- MainWindow - EditStartMenuDialog -->
   <data name="EditFolderTitle.Text" xml:space="preserve">
     <value>폴더 수정</value>
   </data>
@@ -287,8 +351,6 @@
   <data name="FolderNameTextBox.PlaceholderText" xml:space="preserve">
     <value>폴더 이름 입력</value>
   </data>
-  
-  <!-- MainWindow - Taskbar Content -->
   <data name="TaskbarDescription.Text" xml:space="preserve">
     <value>앱을 그룹으로 지정해서 작업 표시줄에 고정할 수 있습니다.</value>
   </data>
@@ -328,24 +390,18 @@
   <data name="EmptyGroupsDesc.Text" xml:space="preserve">
     <value>+ 버튼을 클릭하여 그룹을 만드세요</value>
   </data>
-  
-  <!-- EditGroupViewModel -->
   <data name="ItemsLabel" xml:space="preserve">
     <value>항목</value>
   </data>
   <data name="ItemsSelectedFormat" xml:space="preserve">
     <value>{0}개 선택됨</value>
   </data>
-  
-  <!-- MainWindowViewModel -->
   <data name="GroupsLabel" xml:space="preserve">
     <value>그룹</value>
   </data>
   <data name="FoldersLabel" xml:space="preserve">
     <value>폴더</value>
   </data>
-  
-  <!-- SettingsDialogViewModel -->
   <data name="VersionFormat" xml:space="preserve">
     <value>버전 {0}.{1}.{2}</value>
   </data>
@@ -364,8 +420,6 @@
   <data name="ErrorFormat" xml:space="preserve">
     <value>오류: {0}</value>
   </data>
-  
-  <!-- EditGroupWindow.FolderWeb -->
   <data name="NotificationTitle" xml:space="preserve">
     <value>알림</value>
   </data>
@@ -403,8 +457,6 @@
   <data name="OneItem" xml:space="preserve">
     <value>1개 항목</value>
   </data>
-  
-  <!-- EditGroupWindow -->
   <data name="WindowActivatedTitle" xml:space="preserve">
     <value>창 활성화됨</value>
   </data>
@@ -471,8 +523,6 @@
   <data name="NoButton" xml:space="preserve">
     <value>아니오</value>
   </data>
-  
-  <!-- FolderContentsPopupWindow -->
   <data name="FolderNotFound" xml:space="preserve">
     <value>폴더가 존재하지 않습니다.</value>
   </data>
@@ -485,8 +535,6 @@
   <data name="ErrorOccurred" xml:space="preserve">
     <value>오류가 발생했습니다.</value>
   </data>
-  
-  <!-- MainWindow.xaml.cs -->
   <data name="GroupsCountFormat" xml:space="preserve">
     <value>{0}개 그룹</value>
   </data>
@@ -523,8 +571,6 @@
   <data name="AddFolderDialogTitle" xml:space="preserve">
     <value>폴더 추가</value>
   </data>
-  
-  <!-- PopupWindow.xaml.cs -->
   <data name="FolderNotFoundFormat" xml:space="preserve">
     <value>폴더를 찾을 수 없습니다: {0}</value>
   </data>
@@ -564,8 +610,6 @@
   <data name="LaunchAllMenuItem" xml:space="preserve">
     <value>Launch All</value>
   </data>
-  
-  <!-- App Manifest -->
   <data name="AppDisplayName" xml:space="preserve">
     <value>앱 그룹</value>
     <comment>Application display name shown in Start Menu and Taskbar</comment>
@@ -574,8 +618,6 @@
     <value>작업 표시줄 그룹 관리 앱</value>
     <comment>Application description</comment>
   </data>
-  
-  <!-- MainWindow - Start Menu Content -->
   <data name="StartMenuDescription.Text" xml:space="preserve">
     <value>트레이 아이콘을 클릭하면 등록된 폴더가 표시됩니다.</value>
   </data>

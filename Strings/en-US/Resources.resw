@@ -45,6 +45,9 @@
   <data name="SettingsTitle.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="AppName.Text" xml:space="preserve">
+    <value>AppGroup</value>
+  </data>
   <data name="RunAtStartup.Text" xml:space="preserve">
     <value>Run at Startup</value>
   </data>

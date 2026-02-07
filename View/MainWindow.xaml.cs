@@ -802,30 +802,6 @@ private bool _disposed = false;
             }
         }
 
-        // MainWindow.xaml.cs의 MainWindow 클래스에 이 메서드 추가
-
-        private async void SettingsButton_Click(object sender, RoutedEventArgs e) {
-            try {
-                SettingsDialog settingsDialog = new SettingsDialog {
-                    XamlRoot = this.Content.XamlRoot
-                };
-
-                await settingsDialog.ShowAsync();
-            }
-            catch (Exception ex) {
-                System.Diagnostics.Debug.WriteLine($"Error showing settings dialog: {ex.Message}");
-
-                // Optional: Show an error message to the user
-                ContentDialog errorDialog = new ContentDialog {
-                    Title = _resourceLoader.GetString("ErrorTitle"),
-                    Content = _resourceLoader.GetString("SettingsOpenError"),
-                    CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
-                    XamlRoot = this.Content.XamlRoot
-                };
-
-                await errorDialog.ShowAsync();
-            }
-        }
         private async void DuplicateButton_Click(object sender, RoutedEventArgs e) {
             if (sender is MenuFlyoutItem menuItem && menuItem.DataContext is GroupItem selectedGroup) {
                 string filePath = JsonConfigHelper.GetDefaultConfigPath();

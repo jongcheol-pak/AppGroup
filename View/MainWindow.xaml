@@ -496,7 +496,7 @@
 
                             <Border Style="{StaticResource SettingsCardStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="AppGroup" FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock  x:Uid="AppName" FontWeight="SemiBold" FontSize="14"/>
                                     <TextBlock x:Name="SettingsVersionText" Text="{Binding VersionText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
                                     <HyperlinkButton NavigateUri="https://github.com/iandiv/AppGroup" Padding="0" Margin="0,12,0,4">
                                         <StackPanel Orientation="Horizontal">

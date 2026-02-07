@@ -247,8 +247,11 @@ public partial class SettingsDialogViewModel : ObservableObject {
                 return true;
             }
             catch (Exception ex) {
-                Debug.WriteLine($"Error applying startup settings: {ex.Message}");
-                StartupStatusMessage = string.Format(_resourceLoader.GetString("ErrorFormat"), ex.Message);
+                Debug.WriteLine($"Error applying startup settings: {ex.GetType().Name} - {ex.Message}");
+                var errorMessage = !string.IsNullOrWhiteSpace(ex.Message) 
+                    ? ex.Message 
+                    : ex.GetType().Name;
+                StartupStatusMessage = string.Format(_resourceLoader.GetString("ErrorFormat"), errorMessage);
                 IsStartupBlocked = true;
                 return false;
             }
