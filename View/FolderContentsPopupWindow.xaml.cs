@@ -217,6 +217,7 @@ namespace AppGroup.View
 
             _uiSettings = new UISettings();
             _uiSettings.ColorValuesChanged += UiSettings_ColorValuesChanged;
+            this.Activated += Window_Activated;
         }
 
         private void UiSettings_ColorValuesChanged(UISettings sender, object args)
@@ -807,6 +808,17 @@ namespace AppGroup.View
         }
 
         /// <summary>
+        /// 윈도우 활성화 상태 변경 이벤트 - 포커스를 잃으면 팝업 숨기기
+        /// </summary>
+        private void Window_Activated(object sender, WindowActivatedEventArgs args)
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+            {
+                HidePopup();
+            }
+        }
+
+        /// <summary>
         /// 팝업 윈도우 숨기기
         /// </summary>
         public void HidePopup()
@@ -833,6 +845,8 @@ namespace AppGroup.View
 
             if (disposing)
             {
+                this.Activated -= Window_Activated;
+
                 if (_uiSettings != null)
                 {
                     _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;

@@ -12,12 +12,14 @@ using IWshRuntimeLibrary;
 using AppGroup.Models;
 using File = System.IO.File;
 
-namespace AppGroup.View {
+namespace AppGroup.View
+{
     /// <summary>
     /// EditGroupWindow - AllApps 다이얼로그 관련 partial class
     /// 설치된 앱 목록 표시 및 선택 기능을 담당합니다.
     /// </summary>
-    public sealed partial class EditGroupWindow {
+    public sealed partial class EditGroupWindow
+    {
 
         #region AllApps Dialog Handlers
 
@@ -99,7 +101,7 @@ namespace AppGroup.View {
                         }
 
                         // 2단계: exe 파일 경로에서 아이콘 추출
-                        if (string.IsNullOrEmpty(icon) && 
+                        if (string.IsNullOrEmpty(icon) &&
                             !string.IsNullOrEmpty(appInfo.ExecutablePath) &&
                             appInfo.ExecutablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
                             File.Exists(appInfo.ExecutablePath))
@@ -114,7 +116,7 @@ namespace AppGroup.View {
                                 Debug.WriteLine($"Failed to get icon for exe {appInfo.ExecutablePath}: {ex.Message}");
                             }
                         }
-                        
+
                         // 3단계: AUMID로 UWP 아이콘 추출 시도
                         if (string.IsNullOrEmpty(icon) && !string.IsNullOrEmpty(appInfo.AppUserModelId))
                         {

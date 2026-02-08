@@ -1318,14 +1318,16 @@ namespace AppGroup.View
         {
             try
             {
-                // explorer.exe 특수 처리: 새 창 열기
+                // 파일 탐색기 특수 처리: explorer.exe 또는 shell:AppsFolder\Microsoft.Windows.Explorer
                 string fileName = Path.GetFileName(path);
-                if (fileName.Equals("explorer.exe", StringComparison.OrdinalIgnoreCase))
+                bool isExplorer = fileName.Equals("explorer.exe", StringComparison.OrdinalIgnoreCase)
+                    || path.Equals(@"shell:AppsFolder\Microsoft.Windows.Explorer", StringComparison.OrdinalIgnoreCase);
+
+                if (isExplorer)
                 {
-                    // explorer.exe는 직접 실행 (args가 없으면 새 창 열기)
                     ProcessStartInfo explorerPsi = new ProcessStartInfo
                     {
-                        FileName = path,
+                        FileName = "explorer.exe",
                         Arguments = string.IsNullOrEmpty(args) ? "shell:MyComputerFolder" : args,
                         UseShellExecute = true
                     };
@@ -1423,6 +1425,14 @@ namespace AppGroup.View
         {
             try
             {
+                // 파일 탐색기 경로 정규화
+                if (path.Equals(@"shell:AppsFolder\Microsoft.Windows.Explorer", StringComparison.OrdinalIgnoreCase))
+                {
+                    path = "explorer.exe";
+                    if (string.IsNullOrEmpty(args))
+                        args = "shell:MyComputerFolder";
+                }
+
                 // PowerShell의 작은 따옴표 이스케이프 (작은 따옴표를 두 번 사용)
                 string escapedPath = path.Replace("'", "''");
                 string escapedArgs = args?.Replace("'", "''") ?? "";

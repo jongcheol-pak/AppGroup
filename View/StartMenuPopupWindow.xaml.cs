@@ -342,6 +342,7 @@ namespace AppGroup.View
             {
                 // 포커스를 잃으면 윈도우 숨기기
                 _isShowingPopup = false;
+                StopHoverTimer();
                 HideFolderContentsPopup();
                 this.Hide();
             }
@@ -705,6 +706,7 @@ namespace AppGroup.View
                     Debug.WriteLine($"폴더 열기 오류: {ex.Message}");
                 }
 
+                StopHoverTimer();
                 HideFolderContentsPopup();
                 this.Hide();
             }
@@ -745,7 +747,8 @@ namespace AppGroup.View
         /// </summary>
         private void HoverTimer_Tick(object? sender, object e)
         {
-            // Tick 이벤트는 DispatcherTimer가 자동으로 처리하므로 Stop() 불필요
+            // one-shot 동작: 틱 발생 시 즉시 중지하여 반복 호출 방지
+            _hoverTimer?.Stop();
             if (_currentHoveredButton != null && _currentHoveredButton.Tag is string folderPath)
             {
                 ShowFolderContentsPopup(_currentHoveredButton, folderPath);
@@ -773,12 +776,12 @@ namespace AppGroup.View
                 // 버튼의 화면 위치 계산
                 var transform = button.TransformToVisual(null);
                 var buttonPosition = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
-                
+
                 // 현재 윈도우의 위치와 크기 가져오기
                 var windowPos = this.AppWindow.Position;
                 var windowSize = this.AppWindow.Size;
                 var popupSize = _folderContentsPopup.AppWindow.Size;
-                
+
                 // 팝업 윈도우를 현재 윈도우의 왼쪽에 배치
                 int popupWidth = popupSize.Width; // 실제 팝업 크기 사용
                 int popupX = windowPos.X - popupWidth + POPUP_OVERLAP;
@@ -797,19 +800,19 @@ namespace AppGroup.View
                     {
                         popupX = windowPos.X + windowSize.Width - POPUP_OVERLAP;
                     }
-                    
+
                     // X가 오른쪽 경계를 넘으면 조정
                     if (popupX + popupWidth > monitorInfo.rcWork.right)
                     {
                         popupX = monitorInfo.rcWork.right - popupWidth;
                     }
-                    
+
                     // Y 위치 조정: 작업 영역 하단을 넘으면 위로 이동
                     if (popupY + popupSize.Height > monitorInfo.rcWork.bottom)
                     {
                         popupY = monitorInfo.rcWork.bottom - popupSize.Height;
                     }
-                    
+
                     // 상단 경계 확인: 최소 100픽셀 떨어지도록
                     if (popupY < monitorInfo.rcWork.top + TOP_MARGIN)
                     {
@@ -831,8 +834,18 @@ namespace AppGroup.View
         private void FolderContentsPopup_FileExecuted(object? sender, EventArgs e)
         {
             // 모든 윈도우 숨기기
+            StopHoverTimer();
             _folderContentsPopup?.HidePopup();
             this.Hide();
+        }
+
+        /// <summary>
+        /// 호버 타이머를 중지하고 현재 호버 버튼 참조를 해제합니다.
+        /// </summary>
+        private void StopHoverTimer()
+        {
+            _hoverTimer?.Stop();
+            _currentHoveredButton = null;
         }
 
         /// <summary>

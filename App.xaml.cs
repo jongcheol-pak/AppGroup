@@ -16,12 +16,14 @@ using WinRT.Interop;
 using WinUIEx;
 using AppGroup.View;
 
-namespace AppGroup {
+namespace AppGroup
+{
 
     /// <summary>
     /// 애플리케이션의 진입점과 수명 주기를 관리하는 클래스입니다.
     /// </summary>
-    public partial class App : Application {
+    public partial class App : Application
+    {
         // 메인 윈도우 인스턴스
         private MainWindow? m_window;
         // 팝업 윈도우 인스턴스 (그룹 선택/실행용)
@@ -50,23 +52,28 @@ namespace AppGroup {
         /// App 클래스의 생성자입니다.
         /// 애플리케이션 초기화, 중복 실행 방지, 명령줄 인수 처리 등을 수행합니다.
         /// </summary>
-        public App() {
-            try {
+        public App()
+        {
+            try
+            {
                 // 명령줄 인수 가져오기
                 string[] cmdArgs = Environment.GetCommandLineArgs();
                 bool isSilent = HasSilentFlag(cmdArgs);
 
                 // --silent 플래그와 그룹 이름이 함께 사용된 경우 종료 (잘못된 조합)
-                if (isSilent && cmdArgs.Length > 2) {
+                if (isSilent && cmdArgs.Length > 2)
+                {
                     Environment.Exit(0);
                     return;
                 }
 
                 // 인수가 없고 이미 실행 중인 인스턴스가 있는지 확인
-                if (cmdArgs.Length <= 1 && !isSilent) {
+                if (cmdArgs.Length <= 1 && !isSilent)
+                {
                     // 인수가 제공되지 않음 - 기존 메인 윈도우 인스턴스 확인
                     IntPtr existingMainHWnd = NativeMethods.FindWindow(null, "App Group");
-                    if (existingMainHWnd != IntPtr.Zero) {
+                    if (existingMainHWnd != IntPtr.Zero)
+                    {
                         // 기존 인스턴스를 맨 앞으로 가져오고 현재 인스턴스 종료
                         NativeMethods.SetForegroundWindow(existingMainHWnd);
                         NativeMethods.ShowWindow(existingMainHWnd, NativeMethods.SW_RESTORE);
@@ -76,19 +83,23 @@ namespace AppGroup {
                 }
 
                 // 인수가 있고 자동 실행 모드가 아닌 경우 처리
-                if (cmdArgs.Length > 1 && !isSilent) {
+                if (cmdArgs.Length > 1 && !isSilent)
+                {
                     string groupName = cmdArgs[1];
 
-                    if (groupName != "EditGroupWindow" && groupName != "LaunchAll") {
+                    if (groupName != "EditGroupWindow" && groupName != "LaunchAll")
+                    {
                         // JSON 데이터에서 그룹 존재 여부 빠르게 확인
-                        if (!JsonConfigHelper.GroupExistsInJson(groupName)) {
+                        if (!JsonConfigHelper.GroupExistsInJson(groupName))
+                        {
                             Environment.Exit(0);
                         }
                     }
                 }
 
                 // 기존 윈도우 찾기 - 인수가 있는 경우에만 확인 (첫 실행 아님)
-                if (!isSilent && cmdArgs.Length > 1) {
+                if (!isSilent && cmdArgs.Length > 1)
+                {
                     IntPtr existingPopupHWnd = NativeMethods.FindWindow(null, "Popup Window");
                     IntPtr existingEditHWnd = NativeMethods.FindWindow(null, "Edit Group");
                     IntPtr existingMainHWnd = NativeMethods.FindWindow(null, "App Group");
@@ -96,58 +107,68 @@ namespace AppGroup {
                     // 기존 윈도우를 생성자에서 처리하여 더 빠른 응답 제공
                     string command = cmdArgs[1];
 
-                    if (command == "EditGroupWindow") {
+                    if (command == "EditGroupWindow")
+                    {
                         // 그룹 편집 명령: AppGroup.exe EditGroupWindow --id
                         int groupId = ExtractIdFromCommandLine(cmdArgs);
                         AppPaths.SaveGroupIdToFile(groupId.ToString());
 
                         // 점프 목록 초기화는 기존 윈도우 처리 전에 수행
 
-                        if (existingEditHWnd != IntPtr.Zero) {
+                        if (existingEditHWnd != IntPtr.Zero)
+                        {
                             // 이미 편집 창이 열려있으면 활성화
                             EditGroupHelper editGroup = new EditGroupHelper("Edit Group", groupId);
-                            editGroup.Activate(); 
+                            editGroup.Activate();
                             Environment.Exit(0);
                             return;
                         }
-                        else if (existingMainHWnd != IntPtr.Zero || existingPopupHWnd != IntPtr.Zero) {
+                        else if (existingMainHWnd != IntPtr.Zero || existingPopupHWnd != IntPtr.Zero)
+                        {
                             // 메인 창이나 팝업 창이 열려있으면 종료
                             Environment.Exit(0);
                             return;
                         }
                     }
-                    else if (command == "LaunchAll") {
+                    else if (command == "LaunchAll")
+                    {
                         // 전체 실행 명령 처리 - 데드락 방지를 위해 동기 래퍼 대신 별도 처리
                         string targetGroupName = ExtractGroupNameFromCommandLine(cmdArgs);
                         // OnLaunched에서 비동기로 처리하도록 플래그 설정
                         _pendingLaunchAllGroupName = targetGroupName;
                         // 생성자에서는 초기화만 수행하고 실제 실행은 OnLaunched에서 처리
                     }
-                    else {
+                    else
+                    {
                         // LaunchAll이 아니면 그룹 이름으로 간주 (예: "CH")
                         // AppGroup.exe "GroupName"
-                        if (useFileMode) {
+                        if (useFileMode)
+                        {
                             AppPaths.SaveGroupNameToFile(command);
                         }
-                        
+
                         // 이 그룹 이름에 대한 그룹 ID 저장
-                        try {
+                        try
+                        {
                             int groupId = JsonConfigHelper.FindKeyByGroupName(command);
                             AppPaths.SaveGroupIdToFile(groupId.ToString());
                         }
-                        catch (Exception ex) {
+                        catch (Exception ex)
+                        {
                             System.Diagnostics.Debug.WriteLine($"Failed to find group ID for '{command}': {ex.Message}");
                         }
 
 
-                        if (existingPopupHWnd != IntPtr.Zero) {
+                        if (existingPopupHWnd != IntPtr.Zero)
+                        {
                             // 팝업 창이 이미 존재하면 점프 목록 동기화 후 종료
                             //BringWindowToFront(existingPopupHWnd);
                             InitializeJumpListSync();
                             Environment.Exit(0);
                             return;
                         }
-                        else if (existingMainHWnd != IntPtr.Zero || existingEditHWnd != IntPtr.Zero) {
+                        else if (existingMainHWnd != IntPtr.Zero || existingEditHWnd != IntPtr.Zero)
+                        {
                             // 다른 창이 열려있으면 종료
                             Environment.Exit(0);
                             return;
@@ -160,7 +181,8 @@ namespace AppGroup {
 
                 this.InitializeComponent();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"App initialization failed: {ex.Message}");
                 Environment.Exit(1);
             }
@@ -169,12 +191,15 @@ namespace AppGroup {
         /// <summary>
         /// 비동기적으로 설정을 초기화합니다.
         /// </summary>
-        private async Task InitializeSettingsAsync() {
-            try {
+        private async Task InitializeSettingsAsync()
+        {
+            try
+            {
                 // 설정 로드 - 필요한 경우 시작 프로그램 등록을 자동으로 처리
                 await SettingsHelper.LoadSettingsAsync();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Settings initialization failed: {ex.Message}");
             }
         }
@@ -183,16 +208,21 @@ namespace AppGroup {
         /// 생성자에서 사용할 점프 목록 초기화 (Fire-and-forget)
         /// .Wait() 제거로 데드락 위험 방지
         /// </summary>
-        private void InitializeJumpListSync() {
-            try {
+        private void InitializeJumpListSync()
+        {
+            try
+            {
                 // Fire-and-forget: 점프 목록 초기화는 비동기로 실행하고 완료를 기다리지 않음
-                _ = InitializeJumpListAsync().ContinueWith(t => {
-                    if (t.Exception != null) {
+                _ = InitializeJumpListAsync().ContinueWith(t =>
+                {
+                    if (t.Exception != null)
+                    {
                         System.Diagnostics.Debug.WriteLine($"Jump list initialization failed: {t.Exception.InnerException?.Message}");
                     }
                 }, TaskContinuationOptions.OnlyOnFaulted);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Sync jump list initialization failed: {ex.Message}");
             }
         }
@@ -202,22 +232,26 @@ namespace AppGroup {
         /// 작업 표시줄 점프 목록(Jump List)을 비동기적으로 초기화합니다.
         /// 가장 최근에 사용한 그룹을 점프 목록에 추가하여 빠른 접근을 돕습니다.
         /// </summary>
-        private async Task InitializeJumpListAsync() {
-            try {
+        private async Task InitializeJumpListAsync()
+        {
+            try
+            {
                 string[] cmdArgs = Environment.GetCommandLineArgs();
                 JumpList jumpList = await JumpList.LoadCurrentAsync();
 
                 System.Diagnostics.Debug.WriteLine($"Jump list initialization started with args: {string.Join(", ", cmdArgs)}");
 
                 // 인수가 있을 때만 점프 목록 수정
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     string command = cmdArgs[1];
 
                     System.Diagnostics.Debug.WriteLine($"Processing command: '{command}'");
 
                     jumpList.Items.Clear();
 
-                    if (command == "EditGroupWindow") {
+                    if (command == "EditGroupWindow")
+                    {
                         // 편집 창 명령인 경우
                         System.Diagnostics.Debug.WriteLine("Creating jump list for EditGroupWindow");
                         var jumpListItem = CreateJumpListItemTask();
@@ -226,16 +260,19 @@ namespace AppGroup {
                         jumpList.Items.Add(jumpListItem);
                         jumpList.Items.Add(launchAllItem);
                     }
-                    else if (command == "LaunchAll") {
+                    else if (command == "LaunchAll")
+                    {
                         // 전체 실행 명령인 경우 - 일회성 동작이므로 점프 목록 아이템 생성 안 함
                         System.Diagnostics.Debug.WriteLine("Creating jump list for LaunchAll");
                     }
-                    else {
+                    else
+                    {
                         // 그룹 이름인 경우 (예: "CH")
                         System.Diagnostics.Debug.WriteLine($"Creating jump list for group name: '{command}'");
 
                         // 그룹이 존재하는지 확인 후 점프 목록 아이템 생성
-                        if (JsonConfigHelper.GroupExistsInJson(command)) {
+                        if (JsonConfigHelper.GroupExistsInJson(command))
+                        {
                             var jumpListItem = CreateJumpListItemTask();
                             var launchAllItem = CreateLaunchAllJumpListItem();
 
@@ -244,7 +281,8 @@ namespace AppGroup {
 
                             System.Diagnostics.Debug.WriteLine($"Jump list items created for group '{command}'");
                         }
-                        else {
+                        else
+                        {
                             System.Diagnostics.Debug.WriteLine($"Group '{command}' does not exist in JSON");
                         }
                     }
@@ -252,11 +290,13 @@ namespace AppGroup {
                     await jumpList.SaveAsync();
                     System.Diagnostics.Debug.WriteLine("Jump list saved successfully");
                 }
-                else {
+                else
+                {
                     System.Diagnostics.Debug.WriteLine("No arguments provided, jump list not modified");
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Jump list initialization failed: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
@@ -266,25 +306,31 @@ namespace AppGroup {
         /// <summary>
         /// 그룹 편집을 위한 점프 목록 아이템을 생성합니다.
         /// </summary>
-        private JumpListItem CreateJumpListItemTask() {
-            try {
+        private JumpListItem CreateJumpListItemTask()
+        {
+            try
+            {
                 string[] cmdArgs = Environment.GetCommandLineArgs();
                 System.Diagnostics.Debug.WriteLine($"CreateJumpListItemTask called with args: {string.Join(", ", cmdArgs)}");
 
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     string command = cmdArgs[1];
                     System.Diagnostics.Debug.WriteLine($"Processing command: '{command}'");
 
-                    if (command == "EditGroupWindow") {
+                    if (command == "EditGroupWindow")
+                    {
                         int groupId = ExtractIdFromCommandLine(cmdArgs);
                         AppPaths.SaveGroupIdToFile(groupId.ToString());
                         var taskItem = JumpListItem.CreateWithArguments("EditGroupWindow --id=" + groupId, "그룹 편집"); // "이 그룹 편집"
                         System.Diagnostics.Debug.WriteLine($"Created EditGroupWindow jump list item with ID: {groupId}");
                         return taskItem;
                     }
-                    else if (command != "LaunchAll") {
+                    else if (command != "LaunchAll")
+                    {
                         // 그룹 이름 처리
-                        try {
+                        try
+                        {
                             int groupId = JsonConfigHelper.FindKeyByGroupName(command);
                             AppPaths.SaveGroupIdToFile(groupId.ToString());
 
@@ -292,7 +338,8 @@ namespace AppGroup {
                             System.Diagnostics.Debug.WriteLine($"Created jump list item for group '{command}' with ID: {groupId}");
                             return taskItem;
                         }
-                        catch (Exception ex) {
+                        catch (Exception ex)
+                        {
                             System.Diagnostics.Debug.WriteLine($"Failed to find group ID for '{command}': {ex.Message}");
                         }
                     }
@@ -302,7 +349,8 @@ namespace AppGroup {
                 System.Diagnostics.Debug.WriteLine("Using fallback jump list item");
                 return JumpListItem.CreateWithArguments("EditGroupWindow --id=0", "그룹 편집");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to create edit jump list item: {ex.Message}");
                 return JumpListItem.CreateWithArguments("EditGroupWindow --id=0", "그룹 편집");
             }
@@ -311,21 +359,26 @@ namespace AppGroup {
         /// <summary>
         /// '모두 실행' 기능을 위한 점프 목록 아이템을 생성합니다.
         /// </summary>
-        private JumpListItem CreateLaunchAllJumpListItem() {
-            try {
+        private JumpListItem CreateLaunchAllJumpListItem()
+        {
+            try
+            {
                 string[] cmdArgs = Environment.GetCommandLineArgs();
                 System.Diagnostics.Debug.WriteLine($"CreateLaunchAllJumpListItem called with args: {string.Join(", ", cmdArgs)}");
 
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     string command = cmdArgs[1];
 
-                    if (command == "EditGroupWindow") {
+                    if (command == "EditGroupWindow")
+                    {
                         int groupId = ExtractIdFromCommandLine(cmdArgs);
                         var taskItem = JumpListItem.CreateWithArguments($"LaunchAll --groupId={groupId}", "모두 실행"); // "모두 실행"
                         System.Diagnostics.Debug.WriteLine($"Created LaunchAll item for EditGroupWindow with ID: {groupId}");
                         return taskItem;
                     }
-                    else if (command != "LaunchAll") {
+                    else if (command != "LaunchAll")
+                    {
                         // 그룹 이름 처리
                         string groupName = command;
                         var taskItem = JumpListItem.CreateWithArguments($"LaunchAll --groupName=\"{groupName}\"", "모두 실행"); // "모두 실행"
@@ -338,7 +391,8 @@ namespace AppGroup {
                 System.Diagnostics.Debug.WriteLine("Using fallback LaunchAll item");
                 return JumpListItem.CreateWithArguments("LaunchAll", "모두 실행");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to create launch all jump list item: {ex.Message}");
                 return JumpListItem.CreateWithArguments("LaunchAll", "모두 실행");
             }
@@ -348,10 +402,13 @@ namespace AppGroup {
         /// 애플리케이션이 실행될 때 호출됩니다.
         /// </summary>
         /// <param name="args">실행 인수 등 이벤트 데이터</param>
-        protected async override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args) {
-            try {
+        protected async override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        {
+            try
+            {
                 // LaunchAll 명령이 생성자에서 설정된 경우 비동기로 처리
-                if (!string.IsNullOrEmpty(_pendingLaunchAllGroupName)) {
+                if (!string.IsNullOrEmpty(_pendingLaunchAllGroupName))
+                {
                     await JsonConfigHelper.LaunchAll(_pendingLaunchAllGroupName);
                     Environment.Exit(0);
                     return;
@@ -364,17 +421,19 @@ namespace AppGroup {
                 System.Diagnostics.Debug.WriteLine($"OnLaunched - isSilent: {isSilent}, args: {string.Join(", ", cmdArgs)}");
 
                 // --silent 플래그 처리 (자동 시작 등)
-                if (isSilent) {
+                if (isSilent)
+                {
                     System.Diagnostics.Debug.WriteLine("Silent mode detected - creating windows in hidden state");
-                    if (existingPopupHWnd != IntPtr.Zero) {
+                    if (existingPopupHWnd != IntPtr.Zero)
+                    {
                         Environment.Exit(0);
                         return;
                     }
                     CreateAllWindows(hideAll: true);
-                    
+
                     // Silent 모드에서 모든 윈도우가 확실히 숨겨지도록 재확인
                     HideAllWindows();
-                    
+
                     await InitializeJumpListAsync();
                     InitializeSystemTray();
                     System.Diagnostics.Debug.WriteLine("Silent mode initialization complete - only tray should be visible");
@@ -382,7 +441,8 @@ namespace AppGroup {
                 }
 
                 // 인수가 있으면 항상 점프 목록 업데이트
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     await InitializeJumpListAsync();
                 }
 
@@ -393,29 +453,34 @@ namespace AppGroup {
                 InitializeSystemTray();
 
                 // 인수에 따라 적절한 윈도우 표시
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     string command = cmdArgs[1];
 
-                    if (command == "EditGroupWindow") {
+                    if (command == "EditGroupWindow")
+                    {
                         ShowEditWindow();
                         HideMainWindow();
                         HidePopupWindow();
                     }
-                    else if (command != "LaunchAll") {
+                    else if (command != "LaunchAll")
+                    {
                         // 그룹 이름인 경우 팝업 창 표시
                         ShowPopupWindow();
                         HideMainWindow();
                         HideEditWindow();
                     }
                 }
-                else {
+                else
+                {
                     // 인수 없으면 메인 창 표시
                     HidePopupWindow();
                     HideEditWindow();
                     ShowMainWindow();
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"OnLaunched failed: {ex.Message}");
                 Environment.Exit(1);
             }
@@ -425,10 +490,14 @@ namespace AppGroup {
         /// 지정된 핸들의 윈도우를 최상위로 가져오고 화면에 표시합니다.
         /// </summary>
         /// <param name="hWnd">윈도우 핸들</param>
-        private void BringWindowToFront(IntPtr hWnd) {
-            if (useFileMode) {
-                try {
-                    if (hWnd != IntPtr.Zero) {
+        private void BringWindowToFront(IntPtr hWnd)
+        {
+            if (useFileMode)
+            {
+                try
+                {
+                    if (hWnd != IntPtr.Zero)
+                    {
                         NativeMethods.PositionWindowOffScreen(hWnd);
                         NativeMethods.ShowWindow(hWnd, NativeMethods.SW_SHOW);
                         NativeMethods.ForceForegroundWindow(hWnd);
@@ -440,19 +509,24 @@ namespace AppGroup {
 
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     System.Diagnostics.Debug.WriteLine($"Failed to bring window to front: {ex.Message}");
                 }
             }
-            else { 
-                try {
-                    if (hWnd != IntPtr.Zero) {
+            else
+            {
+                try
+                {
+                    if (hWnd != IntPtr.Zero)
+                    {
                         // 먼저 윈도우를 화면 밖으로 위치시키고 표시
                         NativeMethods.PositionWindowOffScreen(hWnd);
 
                         // 내용을 업데이트하기 위해 메시지 전송 (비동기, 논블로킹)
                         string[] cmdArgs = Environment.GetCommandLineArgs();
-                        if (cmdArgs.Length > 1) {
+                        if (cmdArgs.Length > 1)
+                        {
                             string command = cmdArgs[1];
                             NativeMethods.SendString(hWnd, command);
                         }
@@ -464,7 +538,8 @@ namespace AppGroup {
                         NativeMethods.PositionWindowAboveTaskbar(hWnd);
                     }
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     System.Diagnostics.Debug.WriteLine($"Failed to bring window to front: {ex.Message}");
                 }
             }
@@ -473,14 +548,17 @@ namespace AppGroup {
         /// 앱의 모든 윈도우(메인, 팝업, 편집)를 미리 생성합니다.
         /// </summary>
         /// <param name="hideAll">true이면 모든 윈도우를 숨긴 상태로 생성 (silent 모드용)</param>
-        private void CreateAllWindows(bool hideAll = false) {
-            try {
+        private void CreateAllWindows(bool hideAll = false)
+        {
+            try
+            {
                 editWindow = new EditGroupWindow(-1);
                 // InitializeComponent()는 생성자에서 이미 호출됨
 
                 // 편집 윈도우 즉시 숨기기
                 IntPtr editHWnd = WindowNative.GetWindowHandle(editWindow);
-                if (editHWnd != IntPtr.Zero) {
+                if (editHWnd != IntPtr.Zero)
+                {
                     NativeMethods.ShowWindow(editHWnd, NativeMethods.SW_HIDE);
                 }
 
@@ -490,31 +568,35 @@ namespace AppGroup {
 
                 // 메인 윈도우 즉시 숨기기 (silent 모드이거나 hideAll인 경우)
                 IntPtr mainHWnd = WindowNative.GetWindowHandle(m_window);
-                if (mainHWnd != IntPtr.Zero) {
+                if (mainHWnd != IntPtr.Zero)
+                {
                     NativeMethods.ShowWindow(mainHWnd, NativeMethods.SW_HIDE);
                 }
 
                 // 팝업 윈도우 생성 (숨김 상태)
                 popupWindow = new PopupWindow("Popup Window");
-                popupWindow.AppWindow.Resize(new SizeInt32(0,0));
+                popupWindow.AppWindow.Resize(new SizeInt32(0, 0));
                 // InitializeComponent()는 생성자에서 이미 호출됨
 
                 NativeMethods.PositionWindowOffScreen(popupWindow.GetWindowHandle());
 
                 // 팝업 윈도우도 숨기기
                 IntPtr popupHWnd = WindowNative.GetWindowHandle(popupWindow);
-                if (popupHWnd != IntPtr.Zero) {
+                if (popupHWnd != IntPtr.Zero)
+                {
                     NativeMethods.ShowWindow(popupHWnd, NativeMethods.SW_HIDE);
                 }
 
                 // 시작 메뉴 팝업 윈도우 생성 (숨김 상태)
                 startMenuPopupWindow = new StartMenuPopupWindow();
                 IntPtr startMenuPopupHWnd = WindowNative.GetWindowHandle(startMenuPopupWindow);
-                if (startMenuPopupHWnd != IntPtr.Zero) {
+                if (startMenuPopupHWnd != IntPtr.Zero)
+                {
                     NativeMethods.ShowWindow(startMenuPopupHWnd, NativeMethods.SW_HIDE);
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to create windows: {ex.Message}");
                 throw;
             }
@@ -523,49 +605,61 @@ namespace AppGroup {
         /// <summary>
         /// 메인 윈도우를 표시합니다.
         /// </summary>
-        private void ShowMainWindow() {
-            try {
+        private void ShowMainWindow()
+        {
+            try
+            {
                 m_window?.Activate();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to show main window: {ex.Message}");
             }
         }
 
-       
+
         /// <summary>
         /// 팝업 윈도우를 표시합니다.
         /// </summary>
-        private void ShowPopupWindow() {
-            try {
-                if (popupWindow != null) {
+        private void ShowPopupWindow()
+        {
+            try
+            {
+                if (popupWindow != null)
+                {
                     IntPtr popupHWnd = NativeMethods.FindWindow(null, "Popup Window");
 
                     System.Threading.Thread.Sleep(200);
                     BringWindowToFront(popupWindow.GetWindowHandle());
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to show popup window: {ex.Message}");
             }
         }
-       
+
 
         /// <summary>
         /// 그룹 편집 윈도우를 표시합니다.
         /// </summary>
-        private void ShowEditWindow() {
-            try {
-                if (editWindow != null) {
+        private void ShowEditWindow()
+        {
+            try
+            {
+                if (editWindow != null)
+                {
                     IntPtr editHWnd = WindowNative.GetWindowHandle(editWindow);
-                    if (editHWnd != IntPtr.Zero) {
+                    if (editHWnd != IntPtr.Zero)
+                    {
                         NativeMethods.SetForegroundWindow(editHWnd);
                         NativeMethods.ShowWindow(editHWnd, NativeMethods.SW_RESTORE);
                         editWindow.Activate();
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to show edit window: {ex.Message}");
             }
         }
@@ -573,16 +667,21 @@ namespace AppGroup {
         /// <summary>
         /// 메인 윈도우를 숨깁니다.
         /// </summary>
-        private void HideMainWindow() {
-            try {
-                if (m_window != null) {
+        private void HideMainWindow()
+        {
+            try
+            {
+                if (m_window != null)
+                {
                     IntPtr mainHWnd = WindowNative.GetWindowHandle(m_window);
-                    if (mainHWnd != IntPtr.Zero) {
+                    if (mainHWnd != IntPtr.Zero)
+                    {
                         NativeMethods.ShowWindow(mainHWnd, NativeMethods.SW_HIDE);
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide main window: {ex.Message}");
             }
         }
@@ -590,17 +689,22 @@ namespace AppGroup {
         /// <summary>
         /// 팝업 윈도우를 숨깁니다.
         /// </summary>
-        private void HidePopupWindow() {
-            try {
-                if (popupWindow != null) {
+        private void HidePopupWindow()
+        {
+            try
+            {
+                if (popupWindow != null)
+                {
                     IntPtr popupHWnd = WindowNative.GetWindowHandle(popupWindow);
 
-                    if (popupHWnd != IntPtr.Zero) {
+                    if (popupHWnd != IntPtr.Zero)
+                    {
                         NativeMethods.ShowWindow(popupHWnd, NativeMethods.SW_HIDE);
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide popup window: {ex.Message}");
             }
         }
@@ -608,16 +712,21 @@ namespace AppGroup {
         /// <summary>
         /// 그룹 편집 윈도우를 숨깁니다.
         /// </summary>
-        private void HideEditWindow() {
-            try {
-                if (editWindow != null) {
+        private void HideEditWindow()
+        {
+            try
+            {
+                if (editWindow != null)
+                {
                     IntPtr editHWnd = WindowNative.GetWindowHandle(editWindow);
-                    if (editHWnd != IntPtr.Zero) {
+                    if (editHWnd != IntPtr.Zero)
+                    {
                         NativeMethods.ShowWindow(editHWnd, NativeMethods.SW_HIDE);
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide edit window: {ex.Message}");
             }
         }
@@ -625,15 +734,18 @@ namespace AppGroup {
         /// <summary>
         /// 모든 윈도우를 숨깁니다 (silent 모드용).
         /// </summary>
-        private void HideAllWindows() {
-            try {
+        private void HideAllWindows()
+        {
+            try
+            {
                 HideMainWindow();
                 HidePopupWindow();
                 HideEditWindow();
                 HideStartMenuPopupWindow();
                 System.Diagnostics.Debug.WriteLine("All windows hidden for silent mode");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide all windows: {ex.Message}");
             }
         }
@@ -641,11 +753,14 @@ namespace AppGroup {
         /// <summary>
         /// 시작 메뉴 팝업 윈도우를 표시합니다.
         /// </summary>
-        private void ShowStartMenuPopupWindow() {
-            try {
+        private void ShowStartMenuPopupWindow()
+        {
+            try
+            {
                 startMenuPopupWindow?.ShowPopup();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to show start menu popup window: {ex.Message}");
             }
         }
@@ -653,16 +768,21 @@ namespace AppGroup {
         /// <summary>
         /// 시작 메뉴 팝업 윈도우를 숨깁니다.
         /// </summary>
-        private void HideStartMenuPopupWindow() {
-            try {
-                if (startMenuPopupWindow != null) {
+        private void HideStartMenuPopupWindow()
+        {
+            try
+            {
+                if (startMenuPopupWindow != null)
+                {
                     IntPtr hwnd = WindowNative.GetWindowHandle(startMenuPopupWindow);
-                    if (hwnd != IntPtr.Zero) {
+                    if (hwnd != IntPtr.Zero)
+                    {
                         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide start menu popup window: {ex.Message}");
             }
         }
@@ -670,26 +790,33 @@ namespace AppGroup {
         /// <summary>
         /// 시스템 트레이 아이콘을 초기화합니다.
         /// </summary>
-        private void InitializeSystemTray() {
-            try {
+        private void InitializeSystemTray()
+        {
+            try
+            {
                 SystemTrayManager.Initialize(
-                    showCallback: () => {
+                    showCallback: () =>
+                    {
                         ShowAppGroup();
                     },
-                    exitCallback: () => {
+                    exitCallback: () =>
+                    {
                         KillAppGroup();
                     },
-                    trayClickCallback: async () => {
+                    trayClickCallback: async () =>
+                    {
                         await HandleTrayClickAsync();
                     }
                 );
-                
+
                 // 더블클릭 시 팝업을 숨기기 위한 콜백 설정
-                SystemTrayManager.SetHidePopupCallback(() => {
+                SystemTrayManager.SetHidePopupCallback(() =>
+                {
                     HideStartMenuPopupWindow();
                 });
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize system tray: {ex.Message}");
             }
         }
@@ -698,17 +825,21 @@ namespace AppGroup {
         /// <summary>
         /// 트레이 아이콘 클릭 시 동작을 처리합니다.
         /// </summary>
-        private async Task HandleTrayClickAsync() {
-            try {
+        private async Task HandleTrayClickAsync()
+        {
+            try
+            {
                 var settings = await SettingsHelper.LoadSettingsAsync();
-                
-                if (settings.ShowStartMenuPopup) {
+
+                if (settings.ShowStartMenuPopup)
+                {
                     // 시작 메뉴 팝업 표시
                     ShowStartMenuPopupWindow();
                 }
                 // OFF인 경우 클릭 시 아무 동작도 하지 않음 (더블클릭 시에만 메인 창 표시)
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to handle tray click: {ex.Message}");
             }
         }
@@ -716,11 +847,14 @@ namespace AppGroup {
         /// <summary>
         /// 시스템 트레이 아이콘을 표시합니다.
         /// </summary>
-        public void ShowSystemTray() {
-            try {
+        public void ShowSystemTray()
+        {
+            try
+            {
                 SystemTrayManager.ShowSystemTray();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to show system tray: {ex.Message}");
             }
         }
@@ -728,11 +862,14 @@ namespace AppGroup {
         /// <summary>
         /// 시스템 트레이 아이콘을 숨깁니다.
         /// </summary>
-        public void HideSystemTray() {
-            try {
+        public void HideSystemTray()
+        {
+            try
+            {
                 SystemTrayManager.HideSystemTray();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Failed to hide system tray: {ex.Message}");
             }
         }
@@ -741,10 +878,13 @@ namespace AppGroup {
         /// AppGroup 애플리케이션 창을 화면에 표시합니다.
         /// 트레이 아이콘 더블 클릭 시 등에 호출됩니다.
         /// </summary>
-        private void ShowAppGroup() {
-            try {
+        private void ShowAppGroup()
+        {
+            try
+            {
                 IntPtr appGroupWindow = NativeMethods.FindWindow(null, "App Group");
-                if (appGroupWindow != IntPtr.Zero) {
+                if (appGroupWindow != IntPtr.Zero)
+                {
 
                     Debug.WriteLine("AppGroup.exe window found, bringing to front");
                     NativeMethods.ShowWindow(appGroupWindow, NativeMethods.SW_RESTORE);
@@ -754,10 +894,13 @@ namespace AppGroup {
 
                 // 프로세스 이름으로도 확인
                 Process[] existingProcesses = Process.GetProcessesByName("App Group");
-                if (existingProcesses.Length > 0) {
+                if (existingProcesses.Length > 0)
+                {
                     Debug.WriteLine("AppGroup.exe process found, attempting to show window");
-                    foreach (var process in existingProcesses) {
-                        if (process.MainWindowHandle != IntPtr.Zero) {
+                    foreach (var process in existingProcesses)
+                    {
+                        if (process.MainWindowHandle != IntPtr.Zero)
+                        {
                             NativeMethods.ShowWindow(process.MainWindowHandle, NativeMethods.SW_RESTORE);
                             NativeMethods.SetForegroundWindow(process.MainWindowHandle);
                             return;
@@ -765,24 +908,29 @@ namespace AppGroup {
                     }
 
                     // 창 핸들이 없는 좀비 프로세스 정리
-                    foreach (var process in existingProcesses) {
-                        try {
+                    foreach (var process in existingProcesses)
+                    {
+                        try
+                        {
                             process.Kill();
                             Debug.WriteLine($"Killed existing AppGroup process with ID: {process.Id}");
                         }
-                        catch (Exception ex) {
+                        catch (Exception ex)
+                        {
                             Debug.WriteLine($"Failed to kill process: {ex.Message}");
                         }
                     }
                 }
 
-                if (m_window == null) {
+                if (m_window == null)
+                {
                     m_window = new MainWindow();
                     m_window.InitializeComponent();
                 }
                 m_window.Activate();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Error showing AppGroup: {ex.Message}");
             }
         }
@@ -790,12 +938,15 @@ namespace AppGroup {
         /// <summary>
         /// AppGroup 애플리케이션 프로세스를 강제 종료합니다.
         /// </summary>
-        private static void KillAppGroup() {
-            try {
+        private static void KillAppGroup()
+        {
+            try
+            {
                 // 먼저 시스템 트레이 아이콘 정리
                 SystemTrayManager.Cleanup();
 
-                var startInfo = new ProcessStartInfo {
+                var startInfo = new ProcessStartInfo
+                {
                     FileName = "taskkill",
                     Arguments = "/f /t /im AppGroup.exe",
                     UseShellExecute = false,
@@ -804,30 +955,37 @@ namespace AppGroup {
                     RedirectStandardError = true
                 };
 
-                using (var process = Process.Start(startInfo)) {
-                    if (process != null) {
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process != null)
+                    {
                         process.WaitForExit();
 
                         string output = process.StandardOutput.ReadToEnd();
                         string error = process.StandardError.ReadToEnd();
 
-                        if (process.ExitCode == 0) {
+                        if (process.ExitCode == 0)
+                        {
                             Debug.WriteLine("Successfully killed all AppGroup.exe processes");
                             Debug.WriteLine(output);
                         }
-                        else {
+                        else
+                        {
                             Debug.WriteLine($"taskkill exit code: {process.ExitCode}");
-                            if (!string.IsNullOrEmpty(error)) {
+                            if (!string.IsNullOrEmpty(error))
+                            {
                                 Debug.WriteLine($"Error: {error}");
                             }
                         }
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Error running taskkill: {ex.Message}");
             }
-            finally {
+            finally
+            {
                 Application.Current?.Exit();
             }
         }
@@ -835,24 +993,30 @@ namespace AppGroup {
         /// <summary>
         /// 명령줄 인수에 무음(silent) 플래그가 있는지 확인합니다.
         /// </summary>
-        private bool HasSilentFlag(string[] args) {
-            try {
+        private bool HasSilentFlag(string[] args)
+        {
+            try
+            {
                 // 명령줄 인자에서 --silent 플래그 확인
-                foreach (string arg in args) {
-                    if (arg.Equals("--silent", StringComparison.OrdinalIgnoreCase)) {
+                foreach (string arg in args)
+                {
+                    if (arg.Equals("--silent", StringComparison.OrdinalIgnoreCase))
+                    {
                         return true;
                     }
                 }
 
                 // MSIX StartupTask에 의해 시작된 경우도 silent 모드로 처리
-                if (IsStartedByStartupTask()) {
+                if (IsStartedByStartupTask())
+                {
                     System.Diagnostics.Debug.WriteLine("App started by StartupTask - running in silent mode");
                     return true;
                 }
 
                 return false;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error checking silent flag: {ex.Message}");
                 return false;
             }
@@ -861,12 +1025,15 @@ namespace AppGroup {
         /// <summary>
         /// MSIX StartupTask에 의해 앱이 시작되었는지 확인
         /// </summary>
-        private bool IsStartedByStartupTask() {
-            try {
+        private bool IsStartedByStartupTask()
+        {
+            try
+            {
                 var activatedArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
                 return activatedArgs?.Kind == ExtendedActivationKind.StartupTask;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error checking StartupTask activation: {ex.Message}");
                 return false;
             }
@@ -875,21 +1042,28 @@ namespace AppGroup {
         /// <summary>
         /// 명령줄 인수에서 그룹 이름을 추출합니다.
         /// </summary>
-        private string ExtractGroupNameFromCommandLine(string[] args) {
-            try {
-                foreach (string arg in args) {
-                    if (arg.StartsWith("--groupName=")) {
+        private string ExtractGroupNameFromCommandLine(string[] args)
+        {
+            try
+            {
+                foreach (string arg in args)
+                {
+                    if (arg.StartsWith("--groupName="))
+                    {
                         return arg.Substring(12).Trim('"');
                     }
-                    else if (arg.StartsWith("--groupId=")) {
-                        if (int.TryParse(arg.Substring(10), out int groupId)) {
+                    else if (arg.StartsWith("--groupId="))
+                    {
+                        if (int.TryParse(arg.Substring(10), out int groupId))
+                        {
                             return JsonConfigHelper.FindGroupNameByKey(groupId);
                         }
                     }
                 }
                 return string.Empty;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error extracting group name: {ex.Message}");
                 return string.Empty;
             }
@@ -898,11 +1072,16 @@ namespace AppGroup {
         /// <summary>
         /// 명령줄 인수에서 ID를 추출합니다.
         /// </summary>
-        private int ExtractIdFromCommandLine(string[] args) {
-            try {
-                foreach (string arg in args) {
-                    if (arg.StartsWith("--id=")) {
-                        if (int.TryParse(arg.Substring(5), out int id)) {
+        private int ExtractIdFromCommandLine(string[] args)
+        {
+            try
+            {
+                foreach (string arg in args)
+                {
+                    if (arg.StartsWith("--id="))
+                    {
+                        if (int.TryParse(arg.Substring(5), out int id))
+                        {
                             return id;
                         }
                     }
@@ -910,7 +1089,8 @@ namespace AppGroup {
                 // ID가 없으면 새 ID 생성
                 return JsonConfigHelper.GetNextGroupId();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error extracting ID: {ex.Message}");
                 return JsonConfigHelper.GetNextGroupId();
             }

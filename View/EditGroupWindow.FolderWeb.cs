@@ -11,12 +11,14 @@ using Windows.Storage.Pickers;
 using AppGroup.Models;
 using File = System.IO.File;
 
-namespace AppGroup.View {
+namespace AppGroup.View
+{
     /// <summary>
     /// EditGroupWindow - FolderWeb 다이얼로그 관련 partial class
     /// 폴더/웹 항목 추가 및 편집 기능을 담당합니다.
     /// </summary>
-    public sealed partial class EditGroupWindow {
+    public sealed partial class EditGroupWindow
+    {
         private static readonly ResourceLoader _folderWebResourceLoader = new ResourceLoader();
 
         #region FolderWeb Dialog Handlers

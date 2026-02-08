@@ -2,6 +2,56 @@
 
 ## 최근 변경 사항
 
+### 2026-02-08 - 파일 탐색기(shell:AppsFolder\Microsoft.Windows.Explorer) 실행 시 기존 탐색기 종료 버그 수정
+
+#### 수행한 작업 요약
+- `shell:AppsFolder\Microsoft.Windows.Explorer`를 AppGroup에 등록하여 실행하면 기존 파일 탐색기 창이 모두 닫히는 버그 수정
+- 원인: `Path.GetFileName`이 `Microsoft.Windows.Explorer`를 반환하여 기존 `explorer.exe` 특수 처리 분기를 타지 않음
+- 결과적으로 `cmd.exe /c start`로 실행되어 Explorer 셸 프로세스가 재시작됨
+
+#### 변경된 파일
+- `View/PopupWindow.xaml.cs` - `TryLaunchApp`, `TryRunAsAdmin`
+- `JsonConfigHelper.cs` - `LaunchAll`
+
+#### 변경 내용
+1. **`TryLaunchApp`**: explorer.exe 감지 조건에 `shell:AppsFolder\Microsoft.Windows.Explorer` 경로 비교 추가, `FileName`을 `"explorer.exe"`로 고정
+2. **`TryRunAsAdmin`**: `shell:AppsFolder\Microsoft.Windows.Explorer`일 때 `explorer.exe`로 경로 정규화하는 로직 추가
+3. **`LaunchAll`**: 병렬 실행 시 동일한 경로 정규화 로직 추가
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 내부 버그 수정이므로 갱신 불필요
+
+---
+
+### 2026-02-08 - 팝업 윈도우 숨김 실패 버그 수정
+
+#### 수행한 작업 요약
+- StartMenuPopupWindow, FolderContentsPopupWindow 팝업이 목록 항목 클릭 후에도 사라지지 않는 버그 수정
+- 원인: `_hoverTimer`(DispatcherTimer)가 팝업 숨김 시 중지되지 않아 200ms마다 `ShowAt()`으로 FolderContentsPopupWindow를 반복 표시
+
+#### 변경된 파일
+- `View/StartMenuPopupWindow.xaml.cs`
+- `View/FolderContentsPopupWindow.xaml.cs`
+
+#### 변경 내용
+1. **`HoverTimer_Tick`**: `_hoverTimer?.Stop()` 추가 (one-shot 동작으로 변경), 잘못된 주석 수정
+2. **`StopHoverTimer()` 헬퍼 메서드 추가**: 타이머 중지 + `_currentHoveredButton` null 처리
+3. **팝업 숨기는 3개 경로에 `StopHoverTimer()` 호출 추가**:
+   - `Window_Activated` Deactivated 분기
+   - `FolderButton_Click`
+   - `FolderContentsPopup_FileExecuted`
+4. **FolderContentsPopupWindow에 `Window_Activated` 이벤트 핸들러 추가**: 포커스 잃으면 자동 숨김
+5. **FolderContentsPopupWindow `Dispose`에 이벤트 해제 추가**: `this.Activated -= Window_Activated`
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 내부 버그 수정이므로 갱신 불필요
+
+---
+
 ### 2026-02-07 - FolderContentsPopupWindow 파일 아이콘 로직 단순화
 
 #### 수행한 작업 요약

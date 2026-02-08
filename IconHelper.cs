@@ -1,4 +1,4 @@
-namespace AppGroup
+﻿namespace AppGroup
 {
     /// <summary>
     /// IconHelper - 아이콘 추출 및 변환 관련 메인 partial class

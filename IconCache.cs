@@ -13,7 +13,8 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace AppGroup
 {
 
-    public static class IconCache {
+    public static class IconCache
+    {
         // LRU 캐시를 위한 구조: (캐시 키, (아이콘 경로, 마지막 접근 시간))
         private static readonly ConcurrentDictionary<string, (string path, DateTime lastAccess)> _iconCache
             = new ConcurrentDictionary<string, (string, DateTime)>();
@@ -29,26 +30,34 @@ namespace AppGroup
         public static ConcurrentDictionary<string, string> IconCacheData =>
             new ConcurrentDictionary<string, string>(_iconCache.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.path));
 
-        static IconCache() {
+        static IconCache()
+        {
             LoadIconCache();
         }
 
-        private static string GetCacheFilePath() {
+        private static string GetCacheFilePath()
+        {
             string folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string appGroupFolder = Path.Combine(folder, "AppGroup");
-            Directory.CreateDirectory(appGroupFolder); 
+            Directory.CreateDirectory(appGroupFolder);
             return Path.Combine(appGroupFolder, "icon_cache.json");
         }
 
-        private static void LoadIconCache() {
-            try {
-                if (File.Exists(CacheFilePath)) {
+        private static void LoadIconCache()
+        {
+            try
+            {
+                if (File.Exists(CacheFilePath))
+                {
                     string json = File.ReadAllText(CacheFilePath);
                     var cacheData = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
 
-                    if (cacheData != null) {
-                        foreach (var kvp in cacheData) {
-                            if (!string.IsNullOrEmpty(kvp.Value) && File.Exists(kvp.Value)) {
+                    if (cacheData != null)
+                    {
+                        foreach (var kvp in cacheData)
+                        {
+                            if (!string.IsNullOrEmpty(kvp.Value) && File.Exists(kvp.Value))
+                            {
                                 // LRU: 로드 시점을 접근 시간으로 설정
                                 _iconCache.TryAdd(kvp.Key, (kvp.Value, DateTime.Now));
                             }
@@ -57,21 +66,24 @@ namespace AppGroup
                     Debug.WriteLine($"Cache loaded from {CacheFilePath}");
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Failed to load cache: {ex.Message}");
             }
         }
-       
+
         /// <summary>
         /// 이미지 파일을 BitmapImage로 로드합니다.
         /// DecodePixelWidth/Height를 설정하여 고품질 스케일링을 수행합니다.
         /// </summary>
         /// <param name="filePath">이미지 파일 경로</param>
         /// <param name="decodeSize">디코딩할 크기 (논리 픽셀). DPI 스케일링이 자동 적용됩니다.</param>
-        public static async Task<BitmapImage> LoadImageFromPathAsync(string filePath, int decodeSize = 48) {
+        public static async Task<BitmapImage> LoadImageFromPathAsync(string filePath, int decodeSize = 48)
+        {
             BitmapImage bitmapImage = new BitmapImage();
 
-            try {
+            try
+            {
                 // DecodePixel 설정으로 고품질 스케일링 (SetSourceAsync 전에 설정해야 함)
                 bitmapImage.DecodePixelWidth = decodeSize;
                 bitmapImage.DecodePixelHeight = decodeSize;
@@ -81,18 +93,21 @@ namespace AppGroup
                 using var randomAccessStream = stream.AsRandomAccessStream();
                 await bitmapImage.SetSourceAsync(randomAccessStream);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Failed to load image: {ex.Message}");
             }
 
             return bitmapImage;
         }
-        public static async Task<string> GetIconPathAsync(string filePath) {
+        public static async Task<string> GetIconPathAsync(string filePath)
+        {
             if (string.IsNullOrEmpty(filePath)) return null;
 
             // Check for valid path - either file exists or it's a UWP app path
             bool isUwpApp = filePath.StartsWith("shell:AppsFolder", StringComparison.OrdinalIgnoreCase);
-            if (!isUwpApp && !File.Exists(filePath)) {
+            if (!isUwpApp && !File.Exists(filePath))
+            {
                 Debug.WriteLine($"GetIconPathAsync: File does not exist: {filePath}");
                 return null;
             }
@@ -100,9 +115,11 @@ namespace AppGroup
             string cacheKey = ComputeFileCacheKey(filePath);
 
             // LRU: 캐시 히트 시 접근 시간 갱신
-            if (_iconCache.TryGetValue(cacheKey, out var cachedEntry)) {
+            if (_iconCache.TryGetValue(cacheKey, out var cachedEntry))
+            {
                 // 캐시된 아이콘 파일이 실제로 존재하는지 확인
-                if (File.Exists(cachedEntry.path)) {
+                if (File.Exists(cachedEntry.path))
+                {
                     // 접근 시간 갱신 (LRU)
                     _iconCache.TryUpdate(cacheKey, (cachedEntry.path, DateTime.Now), cachedEntry);
                     return cachedEntry.path;
@@ -111,7 +128,8 @@ namespace AppGroup
                 _iconCache.TryRemove(cacheKey, out _);
             }
 
-            try {
+            try
+            {
                 string outputDirectory = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "AppGroup",
@@ -128,9 +146,11 @@ namespace AppGroup
 
                 var extractedIconPath = await IconHelper.ExtractIconAndSaveAsync(filePath, outputDirectory, timeout, size: 48);
 
-                if (extractedIconPath != null && File.Exists(extractedIconPath)) {
+                if (extractedIconPath != null && File.Exists(extractedIconPath))
+                {
                     // 캐시 크기 제한 확인 및 정리
-                    if (_iconCache.Count >= MAX_CACHE_SIZE) {
+                    if (_iconCache.Count >= MAX_CACHE_SIZE)
+                    {
                         await CleanupOldCacheEntriesAsync();
                     }
                     // LRU: 현재 시간과 함께 캐시에 추가
@@ -139,31 +159,38 @@ namespace AppGroup
                     Debug.WriteLine($"GetIconPathAsync: Successfully extracted icon to {extractedIconPath}");
                     return extractedIconPath;
                 }
-                else {
+                else
+                {
                     Debug.WriteLine($"GetIconPathAsync: Failed to extract icon for {filePath}");
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Icon extraction failed for {filePath}: {ex.Message}");
             }
 
             return null;
         }
-        public static void SaveIconCache() {
+        public static void SaveIconCache()
+        {
             // Fire and forget for backward compatibility
             _ = SaveIconCacheAsync();
         }
 
-        public static async Task SaveIconCacheAsync() {
-            if (!await _saveLock.WaitAsync(TimeSpan.FromSeconds(2))) {
+        public static async Task SaveIconCacheAsync()
+        {
+            if (!await _saveLock.WaitAsync(TimeSpan.FromSeconds(2)))
+            {
                 Debug.WriteLine("SaveIconCacheAsync: Skipped due to lock timeout (2초). Cache save may have failed or is taking too long.");
                 return;
             }
 
-            try {
+            try
+            {
                 // LRU 구조에서 일반 Dictionary로 변환 (접근 시간 제외)
                 var cacheSnapshot = new Dictionary<string, string>();
-                foreach (var kvp in _iconCache) {
+                foreach (var kvp in _iconCache)
+                {
                     cacheSnapshot[kvp.Key] = kvp.Value.path;
                 }
 
@@ -171,25 +198,31 @@ namespace AppGroup
                 await File.WriteAllTextAsync(CacheFilePath, json);
                 Debug.WriteLine($"Cache saved to {CacheFilePath}");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Failed to save cache: {ex.Message}");
             }
-            finally {
+            finally
+            {
                 _saveLock.Release();
             }
         }
 
-        public static string ComputeFileCacheKey(string filePath) {
-            if (string.IsNullOrEmpty(filePath)) {
+        public static string ComputeFileCacheKey(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
                 return string.Empty;
             }
 
             // shell:AppsFolder 경로 (UWP 앱)는 경로 자체를 키로 사용
-            if (filePath.StartsWith("shell:AppsFolder", StringComparison.OrdinalIgnoreCase)) {
+            if (filePath.StartsWith("shell:AppsFolder", StringComparison.OrdinalIgnoreCase))
+            {
                 return filePath;
             }
 
-            if (!File.Exists(filePath)) {
+            if (!File.Exists(filePath))
+            {
                 return filePath;
             }
 
@@ -200,8 +233,10 @@ namespace AppGroup
         /// <summary>
         /// 캐시 크기 제한 초과 시 오래된 항목 정리 (LRU 전략)
         /// </summary>
-        private static async Task CleanupOldCacheEntriesAsync() {
-            try {
+        private static async Task CleanupOldCacheEntriesAsync()
+        {
+            try
+            {
                 int removeCount = (int)(_iconCache.Count * CLEANUP_RATIO);
                 if (removeCount < 1) removeCount = 1;
 
@@ -209,27 +244,33 @@ namespace AppGroup
 
                 // 존재하지 않는 파일을 먼저 제거
                 var keysToRemove = new List<string>();
-                foreach (var kvp in _iconCache) {
-                    if (!File.Exists(kvp.Value.path)) {
+                foreach (var kvp in _iconCache)
+                {
+                    if (!File.Exists(kvp.Value.path))
+                    {
                         keysToRemove.Add(kvp.Key);
                     }
                 }
 
-                foreach (var key in keysToRemove) {
+                foreach (var key in keysToRemove)
+                {
                     _iconCache.TryRemove(key, out _);
                 }
 
                 // 아직 더 제거해야 할 경우, LRU (가장 오래된 항목) 제거
-                if (_iconCache.Count >= MAX_CACHE_SIZE) {
+                if (_iconCache.Count >= MAX_CACHE_SIZE)
+                {
                     int remaining = removeCount - keysToRemove.Count;
-                    if (remaining > 0) {
+                    if (remaining > 0)
+                    {
                         // LRU: 접근 시간 기준 정렬 후 가장 오래된 항목 제거
                         var oldestEntries = _iconCache
                             .OrderBy(kvp => kvp.Value.lastAccess)
                             .Take(remaining)
                             .ToList();
 
-                        foreach (var entry in oldestEntries) {
+                        foreach (var entry in oldestEntries)
+                        {
                             _iconCache.TryRemove(entry.Key, out _);
                             Debug.WriteLine($"IconCache: Removed old entry (last access: {entry.Value.lastAccess})");
                         }
@@ -239,7 +280,8 @@ namespace AppGroup
                 await SaveIconCacheAsync();
                 Debug.WriteLine($"IconCache: Cleanup complete (new size: {_iconCache.Count})");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"IconCache cleanup error: {ex.Message}");
             }
         }
@@ -247,24 +289,31 @@ namespace AppGroup
         /// <summary>
         /// 존재하지 않는 아이콘 파일 참조를 캐시에서 제거
         /// </summary>
-        public static async Task InvalidateMissingEntriesAsync() {
-            try {
+        public static async Task InvalidateMissingEntriesAsync()
+        {
+            try
+            {
                 var keysToRemove = new List<string>();
-                foreach (var kvp in _iconCache) {
-                    if (!File.Exists(kvp.Value.path)) {
+                foreach (var kvp in _iconCache)
+                {
+                    if (!File.Exists(kvp.Value.path))
+                    {
                         keysToRemove.Add(kvp.Key);
                     }
                 }
 
-                if (keysToRemove.Count > 0) {
-                    foreach (var key in keysToRemove) {
+                if (keysToRemove.Count > 0)
+                {
+                    foreach (var key in keysToRemove)
+                    {
                         _iconCache.TryRemove(key, out _);
                     }
                     await SaveIconCacheAsync();
                     Debug.WriteLine($"IconCache: Removed {keysToRemove.Count} invalid entries");
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"IconCache invalidation error: {ex.Message}");
             }
         }
@@ -272,7 +321,8 @@ namespace AppGroup
         /// <summary>
         /// 캐시 전체 초기화
         /// </summary>
-        public static void ClearCache() {
+        public static void ClearCache()
+        {
             _iconCache.Clear();
             Debug.WriteLine("IconCache: Cache cleared");
         }

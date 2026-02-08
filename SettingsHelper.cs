@@ -5,8 +5,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 
-namespace AppGroup {
-    public class SettingsHelper {
+namespace AppGroup
+{
+    public class SettingsHelper
+    {
         private const string STARTUP_TASK_ID = "AppGroupStartupTask";
         private static readonly string SettingsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -17,22 +19,26 @@ namespace AppGroup {
         /// <summary>
         /// 앱이 패키지 컨텍스트에서 실행 중인지 확인
         /// </summary>
-        private static bool IsPackagedApp() {
-            try {
+        private static bool IsPackagedApp()
+        {
+            try
+            {
                 // Package.Current에 접근 가능하면 패키지된 앱
                 _ = Package.Current.Id;
                 return true;
             }
-            catch {
+            catch
+            {
                 return false;
             }
         }
 
-        public class AppSettings {
+        public class AppSettings
+        {
             public bool ShowSystemTrayIcon { get; set; } = true;
             public bool RunAtStartup { get; set; } = true;
             public bool UseGrayscaleIcon { get; set; } = false;
-            
+
             // 시작 메뉴 설정
             public string TrayClickAction { get; set; } = "FolderList";
             public bool ShowFolderPath { get; set; } = true;
@@ -43,13 +49,17 @@ namespace AppGroup {
 
         private static AppSettings _currentSettings;
 
-        public static async Task<AppSettings> LoadSettingsAsync() {
-            try {
-                if (File.Exists(SettingsPath)) {
+        public static async Task<AppSettings> LoadSettingsAsync()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
                     string jsonContent = await File.ReadAllTextAsync(SettingsPath);
                     _currentSettings = JsonSerializer.Deserialize<AppSettings>(jsonContent) ?? new AppSettings();
                 }
-                else {
+                else
+                {
                     _currentSettings = new AppSettings();
                     await SaveSettingsAsync(_currentSettings);
                 }
@@ -57,7 +67,8 @@ namespace AppGroup {
                 // Apply startup setting if this is the first time loading
                 await EnsureStartupSettingIsApplied();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error loading settings: {ex.Message}");
                 _currentSettings = new AppSettings();
                 // Even if loading failed, try to apply default startup setting
@@ -70,29 +81,35 @@ namespace AppGroup {
         /// <summary>
         /// 설정 파일의 시작 프로그램 설정과 실제 시스템 설정을 동기화
         /// </summary>
-        private static async Task EnsureStartupSettingIsApplied() {
-            try {
+        private static async Task EnsureStartupSettingIsApplied()
+        {
+            try
+            {
                 // 패키지 컨텍스트 확인
-                if (!IsPackagedApp()) {
+                if (!IsPackagedApp())
+                {
                     System.Diagnostics.Debug.WriteLine("[SettingsHelper] Not running in packaged context, skipping startup sync");
                     return;
                 }
 
                 bool isEnabled = await IsInStartupAsync();
 
-                if (_currentSettings.RunAtStartup && !isEnabled) {
+                if (_currentSettings.RunAtStartup && !isEnabled)
+                {
                     // 설정에서는 시작 시 실행인데 실제로는 비활성화 - 활성화
                     await AddToStartupAsync();
                     System.Diagnostics.Debug.WriteLine("Applied default startup setting: Added to startup");
                 }
-                else if (!_currentSettings.RunAtStartup && isEnabled) {
+                else if (!_currentSettings.RunAtStartup && isEnabled)
+                {
                     // 설정에서는 시작 시 실행 안함인데 실제로는 활성화 - 비활성화
                     await RemoveFromStartupAsync();
                     System.Diagnostics.Debug.WriteLine("Applied startup setting: Removed from startup");
                 }
                 // 이미 일치하면 조치 불필요
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error ensuring startup setting is applied: {ex.Message}");
             }
         }
@@ -100,17 +117,21 @@ namespace AppGroup {
         /// <summary>
         /// 시작 프로그램에 등록 (비동기)
         /// </summary>
-        public static async Task<StartupTaskState?> AddToStartupAsync() {
-            try {
+        public static async Task<StartupTaskState?> AddToStartupAsync()
+        {
+            try
+            {
                 // 패키지 컨텍스트 확인
-                if (!IsPackagedApp()) {
+                if (!IsPackagedApp())
+                {
                     System.Diagnostics.Debug.WriteLine("[SettingsHelper] Not running in packaged context, cannot add to startup");
                     return null;
                 }
 
                 var startupTask = await StartupTask.GetAsync(STARTUP_TASK_ID);
 
-                switch (startupTask.State) {
+                switch (startupTask.State)
+                {
                     case StartupTaskState.Disabled:
                         var result = await startupTask.RequestEnableAsync();
                         System.Diagnostics.Debug.WriteLine($"StartupTask enable result: {result}");
@@ -133,11 +154,13 @@ namespace AppGroup {
                         return startupTask.State;
                 }
             }
-            catch (COMException comEx) {
+            catch (COMException comEx)
+            {
                 System.Diagnostics.Debug.WriteLine($"COMException adding to startup: 0x{comEx.HResult:X8} - {comEx.Message}");
                 return null;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error adding to startup: {ex.Message}");
                 return null;
             }
@@ -146,10 +169,13 @@ namespace AppGroup {
         /// <summary>
         /// 시작 프로그램에서 제거 (비동기)
         /// </summary>
-        public static async Task RemoveFromStartupAsync() {
-            try {
+        public static async Task RemoveFromStartupAsync()
+        {
+            try
+            {
                 // 패키지 컨텍스트 확인
-                if (!IsPackagedApp()) {
+                if (!IsPackagedApp())
+                {
                     System.Diagnostics.Debug.WriteLine("[SettingsHelper] Not running in packaged context, cannot remove from startup");
                     return;
                 }
@@ -158,10 +184,12 @@ namespace AppGroup {
                 startupTask.Disable();
                 System.Diagnostics.Debug.WriteLine("StartupTask disabled");
             }
-            catch (COMException comEx) {
+            catch (COMException comEx)
+            {
                 System.Diagnostics.Debug.WriteLine($"COMException removing from startup: 0x{comEx.HResult:X8} - {comEx.Message}");
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error removing from startup: {ex.Message}");
             }
         }
@@ -169,10 +197,13 @@ namespace AppGroup {
         /// <summary>
         /// 시작 프로그램 등록 여부 확인 (비동기)
         /// </summary>
-        public static async Task<bool> IsInStartupAsync() {
-            try {
+        public static async Task<bool> IsInStartupAsync()
+        {
+            try
+            {
                 // 패키지 컨텍스트 확인
-                if (!IsPackagedApp()) {
+                if (!IsPackagedApp())
+                {
                     System.Diagnostics.Debug.WriteLine("[SettingsHelper] Not running in packaged context");
                     return false;
                 }
@@ -180,11 +211,13 @@ namespace AppGroup {
                 var startupTask = await StartupTask.GetAsync(STARTUP_TASK_ID);
                 return startupTask.State == StartupTaskState.Enabled;
             }
-            catch (COMException comEx) {
+            catch (COMException comEx)
+            {
                 System.Diagnostics.Debug.WriteLine($"COMException checking startup status: 0x{comEx.HResult:X8}");
                 return false;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error checking startup status: {ex.Message}");
             }
             return false;
@@ -193,10 +226,13 @@ namespace AppGroup {
         /// <summary>
         /// 시작 프로그램 상태 조회 (비동기)
         /// </summary>
-        public static async Task<StartupTaskState> GetStartupStateAsync() {
-            try {
+        public static async Task<StartupTaskState> GetStartupStateAsync()
+        {
+            try
+            {
                 // 패키지 컨텍스트 확인
-                if (!IsPackagedApp()) {
+                if (!IsPackagedApp())
+                {
                     System.Diagnostics.Debug.WriteLine("[SettingsHelper] Not running in packaged context, skipping StartupTask");
                     return StartupTaskState.Disabled;
                 }
@@ -205,12 +241,14 @@ namespace AppGroup {
                 System.Diagnostics.Debug.WriteLine($"[SettingsHelper] StartupTask state: {startupTask.State}");
                 return startupTask.State;
             }
-            catch (COMException comEx) {
+            catch (COMException comEx)
+            {
                 // 0x80073D54: 패키지가 없거나 StartupTask가 등록되지 않음
                 System.Diagnostics.Debug.WriteLine($"COMException getting startup state: 0x{comEx.HResult:X8} - {comEx.Message}");
                 return StartupTaskState.Disabled;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error getting startup state: {ex.Message}");
                 return StartupTaskState.Disabled;
             }
@@ -221,24 +259,29 @@ namespace AppGroup {
         /// <summary>
         /// 시작 프로그램에 등록 (동기 - 레거시 호환용)
         /// </summary>
-        public static void AddToStartup() {
+        public static void AddToStartup()
+        {
             AddToStartupAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>
         /// 시작 프로그램에서 제거 (동기 - 레거시 호환용)
         /// </summary>
-        public static void RemoveFromStartup() {
+        public static void RemoveFromStartup()
+        {
             RemoveFromStartupAsync().GetAwaiter().GetResult();
         }
 
         #endregion
 
-        public static async Task SaveSettingsAsync(AppSettings settings) {
-            try {
+        public static async Task SaveSettingsAsync(AppSettings settings)
+        {
+            try
+            {
                 Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath));
 
-                var options = new JsonSerializerOptions {
+                var options = new JsonSerializerOptions
+                {
                     WriteIndented = true
                 };
 
@@ -247,12 +290,14 @@ namespace AppGroup {
 
                 _currentSettings = settings;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error saving settings: {ex.Message}");
             }
         }
 
-        public static AppSettings GetCurrentSettings() {
+        public static AppSettings GetCurrentSettings()
+        {
             return _currentSettings ?? new AppSettings();
         }
     }

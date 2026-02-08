@@ -11,8 +11,10 @@ using WinRT.Interop;
 using WinRT;
 using System.Diagnostics;
 using System.Drawing;
-namespace AppGroup {
-    public class WindowHelper : IDisposable {
+namespace AppGroup
+{
+    public class WindowHelper : IDisposable
+    {
         private bool _disposed = false;
         private readonly Window _window;
         private AppWindow _appWindow;
@@ -26,7 +28,8 @@ namespace AppGroup {
         private int _minWidth = 0;
         private int _minHeight = 0;
 
-        public enum BackdropType {
+        public enum BackdropType
+        {
             None,
             Mica,
             AcrylicBase,
@@ -49,7 +52,8 @@ namespace AppGroup {
 
         // Windows API 호환을 위한 구조체 - 모든 필드 필요
 #pragma warning disable CS0649
-        private struct MINMAXINFO {
+        private struct MINMAXINFO
+        {
             public System.Drawing.Point ptReserved;
             public System.Drawing.Point ptMaxSize;
             public System.Drawing.Point ptMaxPosition;
@@ -57,7 +61,7 @@ namespace AppGroup {
             public System.Drawing.Point ptMaxTrackSize;
         }
 #pragma warning restore CS0649
-   
+
 
 
 
@@ -70,7 +74,8 @@ namespace AppGroup {
 
         private readonly SUBCLASSPROC _subClassDelegate;
 
-        public WindowHelper(Window window) {
+        public WindowHelper(Window window)
+        {
             _window = window ?? throw new ArgumentNullException(nameof(window));
             _subClassDelegate = new SUBCLASSPROC(WindowSubClass);
             InitializeWindow();
@@ -78,53 +83,71 @@ namespace AppGroup {
 
         public BackdropType CurrentBackdropType => _currentBackdropType;
 
-        public bool IsMaximizable {
+        public bool IsMaximizable
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsMaximizable;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.IsMaximizable = value;
                 }
             }
         }
-        public bool IsAlwaysOnTop {
+        public bool IsAlwaysOnTop
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsAlwaysOnTop;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.IsAlwaysOnTop = value;
                 }
             }
         }
-        public bool IsResizable {
+        public bool IsResizable
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsResizable;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.IsResizable = value;
                 }
             }
         }
 
-        public bool HasBorder {
+        public bool HasBorder
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.HasBorder;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.SetBorderAndTitleBar(value, HasTitleBar);
                 }
             }
         }
 
-        public bool HasTitleBar {
+        public bool HasTitleBar
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.HasTitleBar;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.SetBorderAndTitleBar(HasBorder, value);
                 }
             }
         }
 
-        public bool IsMinimizable {
+        public bool IsMinimizable
+        {
             get => _appWindow.Presenter is OverlappedPresenter presenter && presenter.IsMinimizable;
-            set {
-                if (_appWindow.Presenter is OverlappedPresenter presenter) {
+            set
+            {
+                if (_appWindow.Presenter is OverlappedPresenter presenter)
+                {
                     presenter.IsMinimizable = value;
                 }
             }
@@ -134,30 +157,36 @@ namespace AppGroup {
 
         public IntPtr WindowHandle => _hWnd;
 
-     
 
-        public bool CenterWindow {
+
+        public bool CenterWindow
+        {
             get => _centerWindow;
-            set {
+            set
+            {
                 _centerWindow = value;
                 CenterOnScreen();
             }
         }
 
-        public (int Width, int Height) MinimumSize {
+        public (int Width, int Height) MinimumSize
+        {
             get => (_minWidth, _minHeight);
-            set {
+            set
+            {
                 _minWidth = value.Width;
                 _minHeight = value.Height;
             }
         }
 
-        public (int Width, int Height) WindowSize {
+        public (int Width, int Height) WindowSize
+        {
             get => (_appWindow.Size.Width, _appWindow.Size.Height);
             set => SetSize(value.Width, value.Height);
         }
 
-        private void InitializeWindow() {
+        private void InitializeWindow()
+        {
             _hWnd = WindowNative.GetWindowHandle(_window);
             var windowId = Win32Interop.GetWindowIdFromWindow(_hWnd);
             _appWindow = AppWindow.GetFromWindowId(windowId);
@@ -165,18 +194,22 @@ namespace AppGroup {
             SetWindowSubclass(_hWnd, _subClassDelegate, 0, 0);
 
 
-            if (_window.Content is FrameworkElement root) {
+            if (_window.Content is FrameworkElement root)
+            {
                 // Initialize theme based on current content
                 UpdateTheme(root.ActualTheme);
 
-                root.ActualThemeChanged += (sender, args) => {
+                root.ActualThemeChanged += (sender, args) =>
+                {
                     UpdateTheme(root.ActualTheme);
                 };
             }
         }
 
-        private void UpdateTheme(ElementTheme newTheme) {
-            if (_configurationSource != null) {
+        private void UpdateTheme(ElementTheme newTheme)
+        {
+            if (_configurationSource != null)
+            {
                 _configurationSource.Theme = newTheme == ElementTheme.Dark
                     ? SystemBackdropTheme.Dark
                     : SystemBackdropTheme.Light;
@@ -190,44 +223,55 @@ namespace AppGroup {
         }
 
 
-        public static float GetDpiScaleForMonitor(IntPtr hMonitor) {
-            try {
+        public static float GetDpiScaleForMonitor(IntPtr hMonitor)
+        {
+            try
+            {
                 if (Environment.OSVersion.Version.Major > 6 ||
-                    (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor >= 3)) {
+                    (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor >= 3))
+                {
 
                     uint dpiX, dpiY;
 
                     // Try to get DPI for the monitor
-                    if (NativeMethods.GetDpiForMonitor(hMonitor, NativeMethods.MDT_EFFECTIVE_DPI, out dpiX, out dpiY) == 0) {
+                    if (NativeMethods.GetDpiForMonitor(hMonitor, NativeMethods.MDT_EFFECTIVE_DPI, out dpiX, out dpiY) == 0)
+                    {
                         return dpiX / 96.0f;
                     }
                 }
 
-                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
                     return g.DpiX / 96.0f;
                 }
             }
-            catch {
+            catch
+            {
                 return 1.0f;
             }
         }
-     
-        private void RefreshThemeResources() {
-            if (_window.Content is FrameworkElement root) {
+
+        private void RefreshThemeResources()
+        {
+            if (_window.Content is FrameworkElement root)
+            {
                 root.Resources.MergedDictionaries.Clear();
                 root.RequestedTheme = root.ActualTheme;
             }
         }
 
-        public void SetSize(int width, int height) {
+        public void SetSize(int width, int height)
+        {
             _appWindow.Resize(new SizeInt32(width, height));
         }
 
-     
-        public BackdropType SetSystemBackdrop(BackdropType backdropType) {
+
+        public BackdropType SetSystemBackdrop(BackdropType backdropType)
+        {
             CleanupSystemBackdrop();
 
-            switch (backdropType) {
+            switch (backdropType)
+            {
                 case BackdropType.Mica:
                     return TrySetMicaBackdrop();
                 case BackdropType.AcrylicBase:
@@ -241,17 +285,21 @@ namespace AppGroup {
             }
         }
 
-        private BackdropType TrySetMicaBackdrop() {
-            if (!MicaController.IsSupported() || !_micaEnabled) {
+        private BackdropType TrySetMicaBackdrop()
+        {
+            if (!MicaController.IsSupported() || !_micaEnabled)
+            {
                 _window.SystemBackdrop = null;
                 return BackdropType.None;
             }
 
-            if (_micaBackdrop == null) {
+            if (_micaBackdrop == null)
+            {
                 _micaBackdrop = new MicaBackdrop();
             }
 
-            if (_configurationSource == null) {
+            if (_configurationSource == null)
+            {
                 _configurationSource = new SystemBackdropConfiguration();
             }
 
@@ -264,8 +312,10 @@ namespace AppGroup {
             return BackdropType.Mica;
         }
 
-        private BackdropType TrySetAcrylicBackdrop(bool useThin) {
-            if (!DesktopAcrylicController.IsSupported()) {
+        private BackdropType TrySetAcrylicBackdrop(bool useThin)
+        {
+            if (!DesktopAcrylicController.IsSupported())
+            {
                 _window.SystemBackdrop = null;
                 _currentBackdropType = BackdropType.None;
                 return BackdropType.None;
@@ -288,7 +338,8 @@ namespace AppGroup {
             var dispatcherQueueHelper = new WindowsSystemDispatcherQueueHelper();
             dispatcherQueueHelper.EnsureWindowsSystemDispatcherQueueController();
 
-            if (_configurationSource == null) {
+            if (_configurationSource == null)
+            {
                 _configurationSource = new SystemBackdropConfiguration();
             }
 
@@ -310,8 +361,10 @@ namespace AppGroup {
             return _currentBackdropType;
         }
 
-        private void CleanupSystemBackdrop() {
-            if (_acrylicController != null) {
+        private void CleanupSystemBackdrop()
+        {
+            if (_acrylicController != null)
+            {
                 _acrylicController.Dispose();
                 _acrylicController = null;
             }
@@ -319,14 +372,16 @@ namespace AppGroup {
             _window.SystemBackdrop = null;
         }
 
-        private void CenterOnScreen() {
+        private void CenterOnScreen()
+        {
             var displayArea = DisplayArea.GetFromWindowId(_appWindow.Id, DisplayAreaFallback.Primary);
             var centerX = (displayArea.WorkArea.Width - _appWindow.Size.Width) / 2;
             var centerY = (displayArea.WorkArea.Height - _appWindow.Size.Height) / 2;
             _appWindow.Move(new PointInt32(centerX, centerY));
         }
 
-        private void ExtendContentIntoTitleBar() {
+        private void ExtendContentIntoTitleBar()
+        {
             if (_appWindow == null) return;
 
             var titleBar = _appWindow.TitleBar;
@@ -337,15 +392,18 @@ namespace AppGroup {
             _window.SetTitleBar(null);
         }
 
-        private void UpdateTitleBarColors() {
+        private void UpdateTitleBarColors()
+        {
             var titleBar = _appWindow.TitleBar;
             var isDarkMode = (_window.Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
 
             titleBar.ButtonForegroundColor = isDarkMode ? Colors.White : Colors.Black;
         }
 
-        private int WindowSubClass(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, uint dwRefData) {
-            if (uMsg == WM_GETMINMAXINFO) {
+        private int WindowSubClass(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, uint dwRefData)
+        {
+            if (uMsg == WM_GETMINMAXINFO)
+            {
                 MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
                 mmi.ptMinTrackSize.X = _minWidth;
                 mmi.ptMinTrackSize.Y = _minHeight;
@@ -356,7 +414,8 @@ namespace AppGroup {
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
 
-        private class WindowsSystemDispatcherQueueHelper {
+        private class WindowsSystemDispatcherQueueHelper
+        {
             [DllImport("CoreMessaging.dll")]
             private static extern int CreateDispatcherQueueController(
                 DispatcherQueueOptions options,
@@ -365,11 +424,13 @@ namespace AppGroup {
 
             private IntPtr m_dispatcherQueueController = IntPtr.Zero;
 
-            public void EnsureWindowsSystemDispatcherQueueController() {
-                if (m_dispatcherQueueController == IntPtr.Zero) {
+            public void EnsureWindowsSystemDispatcherQueueController()
+            {
+                if (m_dispatcherQueueController == IntPtr.Zero)
+                {
                     DispatcherQueueOptions options;
                     options.dwSize = Marshal.SizeOf(typeof(DispatcherQueueOptions));
-                    options.threadType = 2;    
+                    options.threadType = 2;
                     options.apartmentType = 0;
 
                     CreateDispatcherQueueController(options, out m_dispatcherQueueController);
@@ -378,28 +439,33 @@ namespace AppGroup {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct DispatcherQueueOptions {
+        private struct DispatcherQueueOptions
+        {
             public int dwSize;
             public int threadType;
             public int apartmentType;
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        private void Dispose(bool disposing) {
+        private void Dispose(bool disposing)
+        {
             if (_disposed) return;
 
-            if (_hWnd != IntPtr.Zero && _subClassDelegate != null) {
+            if (_hWnd != IntPtr.Zero && _subClassDelegate != null)
+            {
                 RemoveWindowSubclass(_hWnd, _subClassDelegate, 0);
             }
 
             _disposed = true;
         }
 
-        ~WindowHelper() {
+        ~WindowHelper()
+        {
             Dispose(false);
         }
     }

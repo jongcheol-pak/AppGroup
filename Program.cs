@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-namespace AppGroup {
-    public class Program {
+namespace AppGroup
+{
+    public class Program
+    {
         [STAThread]
         //static int Main(string[] args) {
         //    WinRT.ComWrappersSupport.InitializeComWrappers();
@@ -25,7 +27,8 @@ namespace AppGroup {
         //    return 0;
         //}
 
-        static void Main(string[] args) {
+        static void Main(string[] args)
+        {
             // Register the same message as your receiver
             int msgId = NativeMethods.WM_UPDATE_GROUP;
 
@@ -33,14 +36,16 @@ namespace AppGroup {
             IntPtr targetWindow = NativeMethods.FindWindow(null, "Popup Window");
             string[] cmdArgs = Environment.GetCommandLineArgs();
 
-            if (targetWindow != IntPtr.Zero) {
+            if (targetWindow != IntPtr.Zero)
+            {
                 // FIRST: Position and show the window immediately
 
                 // THEN: Send the message to update content (async, non-blocking)
-                if (cmdArgs.Length > 1) {
+                if (cmdArgs.Length > 1)
+                {
                     string command = cmdArgs[1];
                     NativeMethods.ShowWindow(targetWindow, NativeMethods.SW_SHOW);
-                  
+
 
 
                     NativeMethods.SendString(targetWindow, command);
@@ -52,15 +57,17 @@ namespace AppGroup {
 
 
             }
-           
-                WinRT.ComWrappersSupport.InitializeComWrappers();
+
+            WinRT.ComWrappersSupport.InitializeComWrappers();
 
             bool isSilent = HasSilentFlag(cmdArgs);
 
-            if (cmdArgs.Length <= 1 && !isSilent) {
+            if (cmdArgs.Length <= 1 && !isSilent)
+            {
                 // No arguments provided - check for existing main window instance
                 IntPtr existingMainHWnd = NativeMethods.FindWindow(null, "App Group");
-                if (existingMainHWnd != IntPtr.Zero) {
+                if (existingMainHWnd != IntPtr.Zero)
+                {
                     // Bring existing instance to foreground and exit
                     NativeMethods.SetForegroundWindow(existingMainHWnd);
                     NativeMethods.ShowWindow(existingMainHWnd, NativeMethods.SW_RESTORE);
@@ -70,40 +77,49 @@ namespace AppGroup {
 
 
 
-                Application.Start((p) => {
-                    var context = new DispatcherQueueSynchronizationContext(
-                        DispatcherQueue.GetForCurrentThread());
-                    SynchronizationContext.SetSynchronizationContext(context);
-                    _ = new App();
-                });
+            Application.Start((p) =>
+            {
+                var context = new DispatcherQueueSynchronizationContext(
+                    DispatcherQueue.GetForCurrentThread());
+                SynchronizationContext.SetSynchronizationContext(context);
+                _ = new App();
+            });
 
 
         }
-        private  static bool HasSilentFlag(string[] args) {
-            try {
-                foreach (string arg in args) {
-                    if (arg.Equals("--silent", StringComparison.OrdinalIgnoreCase)) {
+        private static bool HasSilentFlag(string[] args)
+        {
+            try
+            {
+                foreach (string arg in args)
+                {
+                    if (arg.Equals("--silent", StringComparison.OrdinalIgnoreCase))
+                    {
                         return true;
                     }
                 }
                 return false;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 System.Diagnostics.Debug.WriteLine($"Error checking silent flag: {ex.Message}");
                 return false;
             }
         }
 
-        private static bool DecideRedirection() {
+        private static bool DecideRedirection()
+        {
             bool isRedirect = false;
             AppActivationArguments args = AppInstance.GetCurrent().GetActivatedEventArgs();
             ExtendedActivationKind kind = args.Kind;
             AppInstance keyInstance = AppInstance.FindOrRegisterForKey("MySingleInstanceApp");
 
-            if (keyInstance.IsCurrent) {
+            if (keyInstance.IsCurrent)
+            {
                 keyInstance.Activated += OnActivated;
             }
-            else {
+            else
+            {
                 isRedirect = true;
             }
 
@@ -131,7 +147,8 @@ namespace AppGroup {
         // Do the redirection on another thread, and use a non-blocking
         // wait method to wait for the redirection to complete.
         public static void RedirectActivationTo(AppActivationArguments args,
-                                                AppInstance keyInstance) {
+                                                AppInstance keyInstance)
+        {
             redirectEventHandle = CreateEvent(IntPtr.Zero, true, false, null);
 
             // .Wait() 제거로 데드락 위험 방지: async/await 사용하여 비동기 처리
@@ -165,7 +182,8 @@ namespace AppGroup {
             NativeMethods.ForceForegroundWindow(process.MainWindowHandle);
         }
 
-        private static void OnActivated(object sender, AppActivationArguments args) {
+        private static void OnActivated(object sender, AppActivationArguments args)
+        {
             ExtendedActivationKind kind = args.Kind;
         }
     }

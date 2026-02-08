@@ -31,36 +31,38 @@ using AppGroup.ViewModels;
 using System.Threading;
 
 
-namespace AppGroup.View {
-public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
-    private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
-    private bool _disposed = false;
-    public int GroupId { get; private set; }
-    private string selectedIconPath = string.Empty;
-    private string selectedFilePath = string.Empty;
-    private readonly EditGroupViewModel _viewModel;
-    private bool regularIcon = true;
-    private string? lastSelectedItem;
-    private string tempIcon;
-    private string? groupName;
-    private FileSystemWatcher fileWatcher;
-    private string? groupIdFilePath = null;
-    private int? lastGroupId = null;
-    private ExeFileModel CurrentItem { get; set; }
-    private string originalItemIconPath = null;
-
-    // 폴더/웹 편집 모드 플래그
-    private bool _isEditingFolderWebItem = false;
-    private ExeFileModel _editingFolderWebItem = null;
-
-    // 설치된 앱 로딩 취소를 위한 CancellationTokenSource
-    private CancellationTokenSource _appLoadingCts;
-
-    private const int DEFAULT_LABEL_SIZE = 12;
-    private const string DEFAULT_LABEL_POSITION = "Bottom";
-
-    public EditGroupWindow(int groupId)
+namespace AppGroup.View
+{
+    public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable
     {
+        private static readonly ResourceLoader _resourceLoader = new ResourceLoader();
+        private bool _disposed = false;
+        public int GroupId { get; private set; }
+        private string selectedIconPath = string.Empty;
+        private string selectedFilePath = string.Empty;
+        private readonly EditGroupViewModel _viewModel;
+        private bool regularIcon = true;
+        private string? lastSelectedItem;
+        private string tempIcon;
+        private string? groupName;
+        private FileSystemWatcher fileWatcher;
+        private string? groupIdFilePath = null;
+        private int? lastGroupId = null;
+        private ExeFileModel CurrentItem { get; set; }
+        private string originalItemIconPath = null;
+
+        // 폴더/웹 편집 모드 플래그
+        private bool _isEditingFolderWebItem = false;
+        private ExeFileModel _editingFolderWebItem = null;
+
+        // 설치된 앱 로딩 취소를 위한 CancellationTokenSource
+        private CancellationTokenSource _appLoadingCts;
+
+        private const int DEFAULT_LABEL_SIZE = 12;
+        private const string DEFAULT_LABEL_POSITION = "Bottom";
+
+        public EditGroupWindow(int groupId)
+        {
 
             this.InitializeComponent();
 
@@ -79,7 +81,8 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             }
 
             _viewModel = new EditGroupViewModel();
-            if (Content is FrameworkElement rootElement) {
+            if (Content is FrameworkElement rootElement)
+            {
                 rootElement.DataContext = _viewModel;
             }
             ExeListView.ItemsSource = _viewModel.ExeFiles;
@@ -565,7 +568,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                                 LabelPositionPanel.Opacity = 0.5;
                                 LabelPositionComboBox.IsEnabled = false;
                             }
-                            
+
                             // 헤더 텍스트 패널 상태 업데이트
                             if (_viewModel.GroupHeaderIsOn)
                             {
@@ -611,12 +614,12 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                                         await bitmapImage.SetSourceAsync(memoryStream.AsRandomAccessStream());
                                     }
                                     IconPreviewImage.Source = bitmapImage;
-                                IconPreviewBorder.Visibility = Visibility.Visible;
-                                _viewModel.ApplicationCountText = paths.Count > 1
-                                    ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
-                                    : paths.Count == 1
-                                    ? _resourceLoader.GetString("OneItem")
-                                    : "";
+                                    IconPreviewBorder.Visibility = Visibility.Visible;
+                                    _viewModel.ApplicationCountText = paths.Count > 1
+                                        ? string.Format(_resourceLoader.GetString("ItemsCountFormat"), paths.Count)
+                                        : paths.Count == 1
+                                        ? _resourceLoader.GetString("OneItem")
+                                        : "";
                                 });
                             }
                             catch (Exception ex)
@@ -657,15 +660,15 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                             foreach (var path in paths)
                             {
                                 string filePath = path.Key;
-                                
+
                                 // ItemType 확인 (폴더/웹 항목은 파일 존재 여부와 무관)
                                 string itemTypeStr = path.Value["itemType"]?.GetValue<string>();
                                 bool isFolder = itemTypeStr?.Equals("Folder", StringComparison.OrdinalIgnoreCase) == true;
                                 bool isWeb = itemTypeStr?.Equals("Web", StringComparison.OrdinalIgnoreCase) == true;
-                                
+
                                 // 일반 파일, shell:AppsFolder 경로 (UWP 앱), 폴더 또는 웹 URL 확인
                                 bool isValidPath = !string.IsNullOrEmpty(filePath) &&
-                                    (File.Exists(filePath) || 
+                                    (File.Exists(filePath) ||
                                      filePath.StartsWith("shell:AppsFolder", StringComparison.OrdinalIgnoreCase) ||
                                      isFolder && Directory.Exists(filePath) ||
                                      isWeb ||
@@ -959,7 +962,7 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
                     ResourceIconGridView.SelectedItem = null;
                     ResourceIconGridView.Visibility = Visibility.Collapsed;
                     IconSelectionOptionsPanel.Visibility = Visibility.Visible;
-                    
+
                     if (CustomDialog.XamlRoot != null)
                     {
                         CustomDialog.Hide();
@@ -1173,13 +1176,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
 
                 // 원본 아이콘 경로 저장 (exe에서 추출됨)
                 originalItemIconPath = await IconCache.GetIconPathAsync(item.FilePath);
-                
+
                 // 추출 실패 시 item.Icon으로 폴백
                 if (string.IsNullOrEmpty(originalItemIconPath) && !string.IsNullOrEmpty(item.Icon))
                 {
                     originalItemIconPath = item.Icon;
                 }
-                
+
                 // 사용 가능한 경우 기존 사용자 지정 아이콘 로드, 그렇지 않으면 원본 표시
                 if (!string.IsNullOrEmpty(item.IconPath) && item.IconPath != originalItemIconPath && File.Exists(item.IconPath))
                 {
@@ -1668,11 +1671,13 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
         /// </summary>
         /// <param name="groupName">검증할 그룹 이름</param>
         /// <returns>유효하면 true, 그렇지 않으면 false</returns>
-        private static bool IsValidGroupName(string groupName) {
+        private static bool IsValidGroupName(string groupName)
+        {
             if (string.IsNullOrWhiteSpace(groupName)) return false;
 
             // 경로 이동 공격 방지
-            if (groupName.Contains("..") || groupName.Contains("/") || groupName.Contains("\\")) {
+            if (groupName.Contains("..") || groupName.Contains("/") || groupName.Contains("\\"))
+            {
                 return false;
             }
 
@@ -1791,42 +1796,51 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
         /// <summary>
         /// IDisposable 패턴 구현 - 리소스 해제
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
-        private void Dispose(bool disposing) {
+        private void Dispose(bool disposing)
+        {
             if (_disposed) return;
 
-            if (disposing) {
+            if (disposing)
+            {
                 // CancellationTokenSource 정리
                 _appLoadingCts?.Cancel();
                 _appLoadingCts?.Dispose();
                 _appLoadingCts = null;
 
                 // FileSystemWatcher 정리
-                if (fileWatcher != null) {
+                if (fileWatcher != null)
+                {
                     fileWatcher.EnableRaisingEvents = false;
                     fileWatcher.Dispose();
                     fileWatcher = null;
                 }
 
                 // 임시 아이콘 폴더 정리 (temp 폴더에 있는 경우에만, 원본 폴더 보호)
-                if (!string.IsNullOrEmpty(tempIcon) && tempIcon.Contains(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase)) {
-                    try {
+                if (!string.IsNullOrEmpty(tempIcon) && tempIcon.Contains(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
                         string tempFolder = Path.GetDirectoryName(tempIcon);
-                        if (Directory.Exists(tempFolder)) {
+                        if (Directory.Exists(tempFolder))
+                        {
                             Directory.Delete(tempFolder, true);
                         }
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         Debug.WriteLine($"Temp folder cleanup error: {ex.Message}");
                     }
                 }
 
                 // 이미지 참조 정리
-                foreach (var exeFile in _viewModel.ExeFiles) {
+                foreach (var exeFile in _viewModel.ExeFiles)
+                {
                     exeFile.Icon = null;
                 }
                 _viewModel.ExeFiles.Clear();
@@ -1840,7 +1854,8 @@ public sealed partial class EditGroupWindow : WinUIEx.WindowEx, IDisposable {
             _disposed = true;
         }
 
-        ~EditGroupWindow() {
+        ~EditGroupWindow()
+        {
             Dispose(disposing: false);
         }
     }
