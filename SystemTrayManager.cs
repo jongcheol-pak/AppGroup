@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.ApplicationModel.Resources;
 using WinRT.Interop;
 
 namespace AppGroup
@@ -26,6 +27,8 @@ namespace AppGroup
 
         // TaskbarCreated 메시지 ID 저장을 위한 필드
         private static int WM_TASKBARCREATED;
+
+        private static readonly ResourceLoader _resourceLoader = new();
 
         /// <summary>
         /// SystemTrayManager를 초기화합니다.
@@ -199,7 +202,7 @@ namespace AppGroup
                     uFlags = NativeMethods.NIF_MESSAGE | NativeMethods.NIF_ICON | NativeMethods.NIF_TIP,
                     uCallbackMessage = NativeMethods.WM_TRAYICON,
                     hIcon = hIcon,
-                    szTip = "App Group"
+                    szTip = _resourceLoader.GetString("AppDisplayName")
                 };
 
                 bool result = NativeMethods.Shell_NotifyIcon(NativeMethods.NIM_ADD, ref notifyIconData);
@@ -212,8 +215,8 @@ namespace AppGroup
                 if (hMenu == IntPtr.Zero)
                 {
                     hMenu = NativeMethods.CreatePopupMenu();
-                    NativeMethods.AppendMenu(hMenu, 0, (uint)NativeMethods.ID_SHOW, "설정");
-                    NativeMethods.AppendMenu(hMenu, 0, (uint)NativeMethods.ID_EXIT, "종료");
+                    NativeMethods.AppendMenu(hMenu, 0, (uint)NativeMethods.ID_SHOW, _resourceLoader.GetString("TrayMenuSettings"));
+                    NativeMethods.AppendMenu(hMenu, 0, (uint)NativeMethods.ID_EXIT, _resourceLoader.GetString("TrayMenuExit"));
                 }
             }
             catch (Exception ex)

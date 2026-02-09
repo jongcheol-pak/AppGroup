@@ -639,4 +639,10 @@
   <data name="SelectedAppsCountFormat" xml:space="preserve">
     <value>{0}개 선택됨</value>
   </data>
+  <data name="TrayMenuSettings" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="TrayMenuExit" xml:space="preserve">
+    <value>종료</value>
+  </data>
 </root>
