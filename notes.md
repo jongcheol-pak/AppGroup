@@ -2,6 +2,46 @@
 
 ## 최근 변경 사항
 
+### 2026-02-10 - 시작 탭 중복 폴더 등록 방지 메시지 추가
+
+#### 수행한 작업 요약
+- 시작 탭에 이미 등록된 폴더를 드래그앤드롭 또는 다이얼로그로 추가하려 할 때 중복 메시지를 표시하도록 기능 추가
+- 폴더 경로를 기준으로 대소문자 무시 비교하여 중복 판별
+- 드래그앤드롭: 중복 폴더는 ContentDialog로 표시, 중복이 아닌 폴더만 추가
+- 다이얼로그 추가 모드: EditStartMenuDialog 내부에 TextBlock(`FolderDuplicateMessage`)으로 인라인 메시지 표시 (ContentDialog 중첩 불가 문제 해결)
+
+#### 변경된 파일
+- `View/MainWindow.xaml` - `FolderDuplicateMessage` TextBlock 추가
+- `View/MainWindow.xaml.cs` - `StartMenuGrid_Drop`에 중복 검사 및 ContentDialog 표시, `SaveFolderEdit_Click`에 인라인 메시지 표시, 다이얼로그 열기 시 메시지 초기화
+- `Strings/en-US/Resources.resw` - `FolderAlreadyExists` 리소스 문자열 추가
+- `Strings/ko-KR/Resources.resw` - `FolderAlreadyExists` 리소스 문자열 추가
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 내부 검증 로직 추가이므로 갱신 불필요
+
+---
+
+### 2026-02-10 - 시작 탭 목록 드래그 순서 변경 기능 추가
+
+#### 수행한 작업 요약
+- 시작 탭(StartMenu)의 폴더 목록에 드래그로 순서를 변경할 수 있는 기능 추가
+- 기존 Taskbar 탭의 드래그 순서 변경과 동일한 패턴(ListView `CanDragItems`/`CanReorderItems`/`DragItemsStarting`/`DragItemsCompleted`) 적용
+- 변경된 순서를 JSON 파일에 영속 저장하고, 로드 시 JSON 키 순서를 유지하도록 정렬 제거
+
+#### 변경된 파일
+- `View/MainWindow.xaml` - StartMenuListView 드래그 속성 활성화 (`CanDragItems`, `AllowDrop`, `CanReorderItems`, 이벤트 바인딩)
+- `View/MainWindow.xaml.cs` - `_isStartMenuReordering` 필드, `StartMenuListView_DragItemsStarting`/`StartMenuListView_DragItemsCompleted` 핸들러, `UpdateStartMenuJsonWithNewOrderAsync` 메서드 추가, `StartMenuGrid_DragOver`에 내부 재정렬 시 외부 드롭 차단 로직 추가
+- `JsonConfigHelper.cs` - `LoadStartMenuFoldersAsync`에서 `.OrderBy(f => f.FolderId)` 제거하여 JSON 키 순서 유지
+
+#### 검증 결과
+- 빌드: 성공 (오류 0개)
+- 포맷팅: `dotnet format` 통과
+- README.md: 기능 추가이므로 갱신 필요 (Drag & Drop 섹션에 시작 메뉴 폴더 순서 변경 추가)
+
+---
+
 ### 2026-02-08 - 파일 탐색기(shell:AppsFolder\Microsoft.Windows.Explorer) 실행 시 기존 탐색기 종료 버그 수정
 
 #### 수행한 작업 요약

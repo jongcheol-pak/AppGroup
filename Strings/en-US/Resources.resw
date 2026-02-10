@@ -526,7 +526,10 @@
   <data name="AddFolderDialogTitle" xml:space="preserve">
     <value>Add Folder</value>
   </data>
-  
+  <data name="FolderAlreadyExists" xml:space="preserve">
+    <value>The folder "{0}" is already registered.</value>
+  </data>
+
   <!-- PopupWindow.xaml.cs -->
   <data name="FolderNotFoundFormat" xml:space="preserve">
     <value>Folder not found: {0}</value>

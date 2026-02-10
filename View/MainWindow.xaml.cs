@@ -289,6 +289,7 @@ namespace AppGroup.View
             }
         }
         private bool _isReordering = false;
+        private bool _isStartMenuReordering = false;
 
         // 드래그 중인 파일 추적용 딕셔너리
         private readonly Dictionary<int, string> _tempDragFiles = new Dictionary<int, string>();
@@ -1128,11 +1129,89 @@ namespace AppGroup.View
         }
 
         /// <summary>
+        /// 시작 메뉴 목록 드래그 시작 이벤트 핸들러
+        /// </summary>
+        private void StartMenuListView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+        {
+            _isStartMenuReordering = true;
+        }
+
+        /// <summary>
+        /// 시작 메뉴 목록 드래그 완료 이벤트 핸들러
+        /// </summary>
+        private async void StartMenuListView_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+        {
+            try
+            {
+                _isStartMenuReordering = false;
+
+                if (args.DropResult == DataPackageOperation.Move)
+                {
+                    var reorderedItems = new List<StartMenuItem>();
+                    for (int i = 0; i < StartMenuListView.Items.Count; i++)
+                    {
+                        if (StartMenuListView.Items[i] is StartMenuItem item)
+                        {
+                            reorderedItems.Add(item);
+                        }
+                    }
+                    await UpdateStartMenuJsonWithNewOrderAsync(reorderedItems);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시작 메뉴 드래그 완료 오류: {ex.Message}");
+                _ = LoadStartMenuItemsAsync();
+            }
+        }
+
+        /// <summary>
+        /// 시작 메뉴 폴더 순서를 JSON 파일에 저장합니다.
+        /// </summary>
+        private async Task UpdateStartMenuJsonWithNewOrderAsync(List<StartMenuItem> reorderedItems)
+        {
+            try
+            {
+                string jsonFilePath = JsonConfigHelper.GetStartMenuConfigPath();
+                string jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                JsonNode jsonObject = JsonNode.Parse(jsonContent ?? "{}") ?? new JsonObject();
+                var folderDictionary = jsonObject.AsObject();
+
+                var newJsonObject = new JsonObject();
+                for (int i = 0; i < reorderedItems.Count; i++)
+                {
+                    var item = reorderedItems[i];
+                    string key = item.FolderId.ToString();
+                    if (folderDictionary.ContainsKey(key))
+                    {
+                        newJsonObject[key] = folderDictionary[key]?.DeepClone();
+                    }
+                }
+
+                string updatedJson = newJsonObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(jsonFilePath, updatedJson);
+
+                Debug.WriteLine("시작 메뉴 JSON 파일 순서 업데이트 완료");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"시작 메뉴 JSON 순서 업데이트 오류: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// 시작 메뉴 Grid 드래그 오버 이벤트 핸들러
         /// </summary>
         private void StartMenuGrid_DragOver(object sender, DragEventArgs e)
         {
-            // StorageItems 포함 여부만 동기적으로 확인하고, 폴더 검증은 Drop에서 수행
+            // 내부 재정렬 중에는 외부 드롭을 수용하지 않음
+            if (_isStartMenuReordering)
+            {
+                e.AcceptedOperation = DataPackageOperation.None;
+                return;
+            }
+
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
                 e.AcceptedOperation = DataPackageOperation.Copy;
@@ -1155,17 +1234,51 @@ namespace AppGroup.View
                     var items = await e.DataView.GetStorageItemsAsync();
                     if (items.Count > 0)
                     {
+                        // 현재 등록된 폴더 경로 목록
+                        var existingPaths = _viewModel.StartMenuItems
+                            .Select(s => s.FolderPath)
+                            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                        var duplicateNames = new List<string>();
+                        bool added = false;
+
                         foreach (var item in items)
                         {
                             if (item is StorageFolder folder)
                             {
-                                // 폴더인 경우 JSON에 추가 (folderName, folderPath 순서)
-                                JsonConfigHelper.AddStartMenuFolder(folder.Name, folder.Path);
+                                if (existingPaths.Contains(folder.Path))
+                                {
+                                    duplicateNames.Add(folder.Name);
+                                }
+                                else
+                                {
+                                    JsonConfigHelper.AddStartMenuFolder(folder.Name, folder.Path);
+                                    added = true;
+                                }
                             }
                         }
 
-                        // 목록 다시 로드
-                        await LoadStartMenuItemsAsync();
+                        if (added)
+                        {
+                            await LoadStartMenuItemsAsync();
+                        }
+
+                        // 중복 폴더가 있으면 메시지 표시
+                        if (duplicateNames.Count > 0)
+                        {
+                            string message = string.Join("\n",
+                                duplicateNames.Select(name =>
+                                    string.Format(_resourceLoader.GetString("FolderAlreadyExists"), name)));
+
+                            ContentDialog dialog = new ContentDialog
+                            {
+                                Title = _resourceLoader.GetString("AddFolderDialogTitle"),
+                                Content = message,
+                                CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                                XamlRoot = this.Content.XamlRoot
+                            };
+                            await dialog.ShowAsync();
+                        }
                     }
                 }
             }
@@ -1264,6 +1377,7 @@ namespace AppGroup.View
 
                         // 다이얼로그 표시
                         Debug.WriteLine("다이얼로그 표시 중...");
+                        FolderDuplicateMessage.Visibility = Visibility.Collapsed;
                         EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
                         var result = await EditStartMenuDialog.ShowAsync();
                         Debug.WriteLine($"다이얼로그 결과: {result}");
@@ -1471,6 +1585,8 @@ namespace AppGroup.View
         {
             try
             {
+                FolderDuplicateMessage.Visibility = Visibility.Collapsed;
+
                 string newName = FolderNameTextBox.Text.Trim();
                 string folderPath = FolderPathTextBlock.Text?.Trim();
 
@@ -1491,7 +1607,17 @@ namespace AppGroup.View
                 }
                 else
                 {
-                    // 추가 모드
+                    // 추가 모드 - 중복 폴더 경로 검사
+                    bool isDuplicate = _viewModel.StartMenuItems
+                        .Any(s => string.Equals(s.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase));
+
+                    if (isDuplicate)
+                    {
+                        FolderDuplicateMessage.Text = string.Format(_resourceLoader.GetString("FolderAlreadyExists"), newName);
+                        FolderDuplicateMessage.Visibility = Visibility.Visible;
+                        return;
+                    }
+
                     JsonConfigHelper.AddStartMenuFolder(newName, folderPath, _selectedFolderIconPath);
                 }
 
@@ -1519,6 +1645,7 @@ namespace AppGroup.View
                 FolderNameTextBox.Text = "";
                 FolderPathTextBlock.Text = "";
                 BrowseFolderPathButton.Visibility = Visibility.Visible;
+                FolderDuplicateMessage.Visibility = Visibility.Collapsed;
                 LoadFolderIconPreview("ms-appx:///Assets/icon/folder_3.png");
 
                 // 다이얼로그 표시
@@ -1554,8 +1681,11 @@ namespace AppGroup.View
                     // 폴더 이름이 비어있으면 폴더명으로 자동 설정
                     if (string.IsNullOrEmpty(FolderNameTextBox.Text))
                     {
-                        FolderNameTextBox.Text = folder.Name;
+                        FolderNameTextBox.Text = folder.Name;                       
                     }
+
+                    FolderDuplicateMessage.Visibility = Visibility.Collapsed;
+                    FolderDuplicateMessage.Text = "";
                 }
             }
             catch (Exception ex)

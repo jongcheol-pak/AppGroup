@@ -802,7 +802,7 @@ namespace AppGroup
                     }
                 }
 
-                return folders.OrderBy(f => f.FolderId).ToList();
+                return folders;
             }
             catch (Exception ex)
             {

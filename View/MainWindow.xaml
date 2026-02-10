@@ -67,6 +67,12 @@
                             </Grid>
                         </StackPanel>
                     </StackPanel>
+                    <TextBlock x:Name="FolderDuplicateMessage"
+                               Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                               FontSize="12"
+                               Margin="0,5,0,0"
+                               TextWrapping="Wrap"
+                               Visibility="Collapsed"/>
                     <Grid Margin="0,10,0,0">
                         <Button x:Uid="SaveButton" HorizontalAlignment="Right" Click="SaveFolderEdit_Click" Style="{StaticResource AccentButtonStyle}"/>
                     </Grid>
@@ -366,10 +372,14 @@
                           Drop="StartMenuGrid_Drop"
                           Background="Transparent">
 
-                        <!-- ListView (드래그 비활성화) -->
+                        <!-- ListView (드래그 순서 변경 활성화) -->
                         <ListView x:Name="StartMenuListView"
                                    ItemsSource="{Binding FilteredStartMenuItems}"
-                                   CanDragItems="False"
+                                   CanDragItems="True"
+                                   AllowDrop="True"
+                                   CanReorderItems="True"
+                                   DragItemsStarting="StartMenuListView_DragItemsStarting"
+                                   DragItemsCompleted="StartMenuListView_DragItemsCompleted"
                                    SelectionMode="None"
                                    CornerRadius="10"
                                    Padding="0,0,0,6"
