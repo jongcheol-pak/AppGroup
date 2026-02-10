@@ -436,6 +436,9 @@
             </StackPanel>
         </ContentDialog>
 
+        <!-- 타이틀 바 드래그 영역 -->
+        <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top" IsHitTestVisible="true" Background="Transparent"/>
+
         <Grid Padding="20,50,20,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>

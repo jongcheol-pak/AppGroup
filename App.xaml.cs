@@ -36,6 +36,8 @@ namespace AppGroup
         private bool useFileMode = false;
         // LaunchAll 명령의 데드락 방지를 위한 지연 실행용 필드
         private string? _pendingLaunchAllGroupName = null;
+        // 점프 목록 업데이트 후 종료를 위한 플래그
+        private bool _pendingJumpListUpdateAndExit = false;
 
         /// <summary>
         /// 현재 App 인스턴스를 반환합니다.
@@ -161,11 +163,8 @@ namespace AppGroup
 
                         if (existingPopupHWnd != IntPtr.Zero)
                         {
-                            // 팝업 창이 이미 존재하면 점프 목록 동기화 후 종료
-                            //BringWindowToFront(existingPopupHWnd);
-                            InitializeJumpListSync();
-                            Environment.Exit(0);
-                            return;
+                            // 팝업 창이 이미 존재하면 OnLaunched에서 점프 목록 업데이트 후 종료
+                            _pendingJumpListUpdateAndExit = true;
                         }
                         else if (existingMainHWnd != IntPtr.Zero || existingEditHWnd != IntPtr.Zero)
                         {
@@ -410,6 +409,14 @@ namespace AppGroup
                 if (!string.IsNullOrEmpty(_pendingLaunchAllGroupName))
                 {
                     await JsonConfigHelper.LaunchAll(_pendingLaunchAllGroupName);
+                    Environment.Exit(0);
+                    return;
+                }
+
+                // 기존 팝업 윈도우가 있을 때 점프 목록 업데이트 후 종료
+                if (_pendingJumpListUpdateAndExit)
+                {
+                    await InitializeJumpListAsync();
                     Environment.Exit(0);
                     return;
                 }

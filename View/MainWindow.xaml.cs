@@ -471,30 +471,18 @@ namespace AppGroup.View
                 JsonNode jsonObject = JsonNode.Parse(jsonContent ?? "{}") ?? new JsonObject();
                 var groupDictionary = jsonObject.AsObject();
 
-                // 정렬된 새 JSON 객체 생성
+                // 원래 GroupId를 유지하면서 새 순서로 JSON 객체 재구성
                 var newJsonObject = new JsonObject();
 
-                // 순서를 보존하기 위해 새 순차 ID 매핑 생성
-                var orderMapping = new Dictionary<int, int>();
-                for (int i = 0; i < reorderedItems.Count; i++)
-                {
-                    int newId = i + 1; // 1부터 시작
-                    int oldId = reorderedItems[i].GroupId;
-                    orderMapping[oldId] = newId;
-                }
-
-                // 새 순서와 ID로 JSON 다시 빌드
                 for (int i = 0; i < reorderedItems.Count; i++)
                 {
                     var item = reorderedItems[i];
-                    int newId = i + 1;
-                    string oldKey = item.GroupId.ToString();
-                    string newKey = newId.ToString();
+                    string key = item.GroupId.ToString();
 
-                    if (groupDictionary.ContainsKey(oldKey))
+                    if (groupDictionary.ContainsKey(key))
                     {
-                        var groupData = groupDictionary[oldKey];
-                        newJsonObject[newKey] = groupData?.DeepClone();
+                        var groupData = groupDictionary[key];
+                        newJsonObject[key] = groupData?.DeepClone();
                     }
                 }
 
@@ -505,12 +493,6 @@ namespace AppGroup.View
                 });
 
                 await File.WriteAllTextAsync(jsonFilePath, updatedJsonContent);
-
-                // 새 ID와 일치하도록 ObservableCollection의 GroupId 속성 업데이트
-                for (int i = 0; i < reorderedItems.Count; i++)
-                {
-                    reorderedItems[i].GroupId = i + 1;
-                }
 
                 // 파일 쓰기가 완료되도록 잠시 지연
                 await Task.Delay(100);
@@ -624,7 +606,11 @@ namespace AppGroup.View
                 CancellationToken = cancellationToken
             };
 
-            var newGroupItems = new ConcurrentBag<GroupItem>();
+            // JSON 프로퍼티 순서를 보존하기 위해 인덱스를 키로 사용
+            var indexedItems = new ConcurrentDictionary<int, GroupItem>();
+            var keyIndexMap = groupDictionary
+                .Select((kvp, index) => (kvp.Key, index))
+                .ToDictionary(x => x.Key, x => x.index);
 
             await Parallel.ForEachAsync(
                 groupDictionary,
@@ -636,7 +622,7 @@ namespace AppGroup.View
                         try
                         {
                             var groupItem = await CreateGroupItemAsync(groupId, property.Value);
-                            newGroupItems.Add(groupItem);
+                            indexedItems[keyIndexMap[property.Key]] = groupItem;
                         }
                         catch (Exception ex)
                         {
@@ -645,8 +631,9 @@ namespace AppGroup.View
                     }
                 });
 
-            return newGroupItems
-                 .OrderBy(g => g.GroupId)
+            return indexedItems
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => kvp.Value)
                 .ToList();
         }
 
@@ -675,9 +662,7 @@ namespace AppGroup.View
                 }
             }
 
-            return newGroupItems
-        .OrderBy(g => g.GroupId)
-        .ToList();
+            return newGroupItems;
         }
 
         private void HandleLoadingError(Exception ex)

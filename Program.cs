@@ -44,14 +44,17 @@ namespace AppGroup
                 if (cmdArgs.Length > 1)
                 {
                     string command = cmdArgs[1];
-                    NativeMethods.ShowWindow(targetWindow, NativeMethods.SW_SHOW);
 
+                    // EditGroupWindow/LaunchAll은 팝업이 아닌 별도 명령이므로 팝업에 전달하지 않음
+                    if (command != "EditGroupWindow" && command != "LaunchAll")
+                    {
+                        NativeMethods.ShowWindow(targetWindow, NativeMethods.SW_SHOW);
 
+                        NativeMethods.SendString(targetWindow, command);
+                        NativeMethods.ForceForegroundWindow(targetWindow);
 
-                    NativeMethods.SendString(targetWindow, command);
-                    NativeMethods.ForceForegroundWindow(targetWindow);
-
-                    NativeMethods.PositionWindowAboveTaskbar(targetWindow);
+                        NativeMethods.PositionWindowAboveTaskbar(targetWindow);
+                    }
                 }
 
 

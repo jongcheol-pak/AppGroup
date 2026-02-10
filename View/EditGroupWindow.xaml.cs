@@ -90,6 +90,7 @@ namespace AppGroup.View
             MinHeight = 600;
             MinWidth = 530;
             ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
 
 
             ThemeHelper.UpdateTitleBarColors(this);
@@ -136,6 +137,9 @@ namespace AppGroup.View
 
             if (e.WindowActivationState == WindowActivationState.CodeActivated)
             {
+                // Hide() 후 다시 표시될 때 타이틀 바 바인딩이 유실되므로 재설정
+                SetTitleBar(AppTitleBar);
+
                 // 비교할 현재 그룹 ID 저장
                 int previousGroupId = GroupId;
                 int newGroupId = -1; // 기본값
