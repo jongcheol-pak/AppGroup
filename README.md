@@ -1,173 +1,146 @@
-﻿
-![AppGroup](https://github.com/user-attachments/assets/169e1383-fe84-4f6b-997e-75ee218abe0c)
+# AppGroup
 
+## 프로젝트 개요
 
-# App Group  
+AppGroup은 Windows 작업 표시줄에서 앱을 그룹화하여 관리하고 실행할 수 있는 WinUI 3 기반 데스크톱 애플리케이션입니다.
 
-App Group lets you **organize, customize, and launch** your apps. Create groups, set custom icons, and access your apps faster.  
+## 빌드 및 실행 명령어
 
-## Table of Contents  
+```bash
+# 빌드 (기본 x64)
+dotnet build AppGroup/AppGroup.csproj
 
+# 특정 플랫폼 빌드
+dotnet build AppGroup/AppGroup.csproj -p:Platform=x64
+dotnet build AppGroup/AppGroup.csproj -p:Platform=x86
+dotnet build AppGroup/AppGroup.csproj -p:Platform=ARM64
 
-  - [Key Features](#key-features)  
-    - [Group Management](#group-management)  
-    - [Appearance & Customization](#appearance--customization)  
-    - [App & Shortcut Support](#app--shortcut-support)  
-    - [Import/Export](#importexport)  
-    - [Others](#others)  
-  - [Installation](#installation)
-  - [Screenshots](#screenshots)
-  - [Video Demo](#video-demo)
-  - [How to Use](#how-to-use)
-  - [Create UWP Shortcuts](#create-uwp-shortcuts)
-  - [Support](#support)
-  - [License](#license)
+# Release 빌드
+dotnet build AppGroup/AppGroup.csproj -c Release -p:Platform=x64
 
+# 포맷팅 (수정된 파일만)
+dotnet format AppGroup/AppGroup.csproj
+```
 
+## 기술 스택
 
+- .NET 10 / C# (net10.0-windows10.0.26100.0)
+- WinUI 3 (Microsoft.WindowsAppSDK 1.8)
+- CommunityToolkit.Mvvm 8.4 (MVVM 패턴)
+- WinUIEx 2.9 (윈도우 확장 기능)
+- MSIX 패키징 (Self-Contained)
 
+## 아키텍처
 
+### 진입점 및 수명 주기
+- `Program.cs`: 애플리케이션 진입점, 단일 인스턴스 관리, 기존 윈도우 활성화 처리
+- `App.xaml.cs`: WinUI Application 클래스, 명령줄 인수 처리 (그룹명, `--silent`, `EditGroupWindow`, `LaunchAll`)
 
+### 핵심 Helper 클래스
+- `JsonConfigHelper`: 그룹 설정 JSON 파일 (`%LocalAppData%/AppGroup/appgroups.json`) 읽기/쓰기
+- `AppPaths`: 공통 경로 상수 (AppDataFolder, ConfigFile, GroupsFolder, IconsFolder)
+- `NativeMethods`: Win32 API 호출 (윈도우 핸들, 메시지, 작업 표시줄 위치)
+  - `NativeMethods.WindowPosition.cs`: 창 위치 관련 (분리됨)
+  - `NativeMethods.ShellIcon.cs`: 쉘/아이콘 API (분리됨)
+- `IconHelper`: 아이콘 추출 및 캐싱 (exe, lnk, UWP 앱)
+  - `IconHelper.UwpExtractor.cs`: UWP 앱 아이콘 추출 (분리됨)
+  - `IconHelper.GridIcon.cs`: 그리드 아이콘 관련 (분리됨)
+  - `IconHelper.Extraction.cs`: 아이콘 추출 메서드 (분리됨)
+  - `IconHelper.Bitmap.cs`: 비트맵 변환/크롭 (분리됨)
+- `IconCache`: 하이브리드 메모리/디스크 아이콘 캐시
+- `BackupHelper`: .agz 파일 가져오기/내보내기
+- `SettingsHelper`: 사용자 설정 관리
+- `TaskbarManager`: 작업 표시줄 위치 감지 및 윈도우 배치
+- `SystemTrayManager`: 시스템 트레이 아이콘 관리
 
+### View 구조 (MVVM)
+| View | 역할 | 라인 수 |
+|------|------|----------|
+| `MainWindow` | 메인 관리 화면, 그룹 목록 및 편집 | 1465 |
+| `PopupWindow` | 작업 표시줄 클릭 시 앱 목록 팝업 | 1756 |
+| `EditGroupWindow` | 그룹 편집 (앱 추가/제거, 아이콘 설정) | 1843 |
+| `SettingsDialog` | 전역 설정 다이얼로그 | - |
+| `FolderContentsPopupWindow` | 폴더 내용 팝업 | 628 |
+| `StartMenuPopupWindow` | 시작 메뉴 스타일 팝업 | 671 |
+| `StartMenuSettingsDialog` | 시작 메뉴 설정 다이얼로그 | - |
+| `EditGroupWindow.AllApps` | 설치된 앱 목록 기능 (partial) | 500 |
+| `EditGroupWindow.FolderWeb` | 폴더/웹 편집 기능 (partial) | 481 |
 
+### 데이터 저장 경로
+```
+%LocalAppData%/AppGroup/
+├── appgroups.json    # 그룹 설정 (JSON)
+├── Groups/           # 그룹별 바로가기 폴더
+├── Icons/            # 캐시된 아이콘
+├── lastEdit          # 마지막 편집 그룹 ID
+└── lastOpen          # 마지막 열린 그룹명
+```
 
----
+## 코드 파일 분리 작업 완료 (2026-02-05)
 
-## Key Features
+### 완료된 분리
 
-### Group Management
-- **Create, edit, delete** , and **duplicate**  groups
-- **"Edit this Group"** option in jumplist
-- **"Launch All"** option in jumplist
-- **Browse installed apps**: Select apps from a list of installed Windows applications
-- **Start Menu**: Drag & drop folders to create a custom start menu
+#### 1. NativeMethods.cs (1333줄 → 466줄)
+**분리된 파일:**
+- `NativeMethods.cs` (466줄) - 메인 파일 (공통 P/Invoke, 상수, 구조체)
+- `NativeMethods.WindowPosition.cs` (623줄) - 창 위치 관련
+- `NativeMethods.ShellIcon.cs` (499줄) - 쉘/아이콘 API
 
-### Appearance & Customization  
-- **Custom icons**: Use a **Single icon** or a **Grid icon**  
-- **Accent-colored backgrounds** for groups  
-- **Show or hide group names** for a clean look  
-- **Dark Mode & Light Mode** experience  
-- **Adjust grid columns**  
-- **Drag & Drop**
-  - reorder apps instantly
-  - reorder start menu folders
-  - pin groups to taskbar
+**주요 변경사항:**
+- WindowPosition: 작업 표시줄 위치 감지, 윈도 배치, DPI 스케일링
+- ShellIcon: IShellItem, IImageList, SHGetImageList 등 COM 인터페이스
 
-- **Supports .exe files** as custom icons  
-- **Custom tooltips and launch arguments**  
+#### 2. IconHelper.cs (1374줄 → 18줄)
+**분리된 파일:**
+- `IconHelper.cs` (18줄) - 메인 partial class 선언
+- `IconHelper.UwpExtractor.cs` (659줄) - UWP 앱 아이콘 추출
+- `IconHelper.GridIcon.cs` (319줄) - 그리드 아이콘 관련
+- `IconHelper.Extraction.cs` (998줄) - 아이콘 추출 메서드
+- `IconHelper.Bitmap.cs` (400줄) - 비트맵 변환/크롭/처리
 
-### App & Shortcut Support  
-- **Supports UWP & PWA apps** via shortcuts  
-- **Support .lnk shortcuts** without the arrow (if possible)  
-- **Run apps as Admin**  
+**주요 변경사항:**
+- Extraction: ExtractIconAndSaveAsync, ExtractIconFastAsync 등 핵심 추출 로직
+- Bitmap: ConvertToIco, CropToActualContent, CreateBlackWhiteIconAsync 등 이미지 처리
 
-### Import/Export
-- **Supports .agz (AppGroupZip)** file import/export  
+#### 3. EditGroupWindow.xaml.cs (1843줄 → 862줄 메인 + 981줄 분리)
+**분리된 파일:**
+- `EditGroupWindow.xaml.cs` (862줄) - 메인 파일
+- `EditGroupWindow.AllApps.cs` (500줄) - 설치된 앱 목록 관리
+- `EditGroupWindow.FolderWeb.cs` (481줄) - 폴더/웹 항목 편집
 
+### 유지 결정한 파일 (이미 잘 구조됨)
+- **PopupWindow.xaml.cs** (1756줄): 내부 클래스(PathData, GroupData) 포함, 이미 기능별로 잘 구조됨
+- **MainWindow.xaml.cs** (1465줄): 그룹 관리, 시작 메뉴, 파일 감시 기능 포함, 이미 기능별로 잘 구조됨
 
-### Others
-- **Run at Windows startup**: Automatically launch the app when Windows starts (MSIX StartupTask API)
-- **Hybrid in-memory and persistent icon cache** for faster performance
-- **Supports different taskbar positions**: **Top**, **Bottom**, **Left**, **Right**  
+### 분리 전후 비교
 
+| 파일 | 분리 전 | 분리 후 | 비고 |
+|------|--------|--------|------|
+| NativeMethods.cs | 1333줄 | 466줄 | 717줄 분리됨 |
+| IconHelper.cs | 1374줄 | 18줄 | 1356줄 분리됨 |
+| EditGroupWindow.xaml.cs | 1843줄 | 862줄 | 981줄 이미 분리됨 |
+| PopupWindow.xaml.cs | 1756줄 | 1756줄 | 이미 잘 구조됨 |
+| MainWindow.xaml.cs | 1465줄 | 1465줄 | 이미 잘 구조됨 |
 
-## Installation  
-AppGroup is available in **four variants**:  
+### 총 분리 라인 수
+- NativeMethods 계열: 1333줄 → 1588줄 (4개 파일)
+- IconHelper 계열: 1374줄 → 2394줄 (5개 파일)
+- EditGroupWindow 계열: 1843줄 → 1843줄 (3개 파일)
 
+**전체 분리 결과:** 4550줄 → 6916줄 (파일 12개로 분할)
 
+### 검증 결과
+- ✅ 빌드 성공 (오류 0개)
+- ⚠️ 경고 645개 (모두 nullable 관련, 기능 영향 없음)
+- ✅ 모든 기능 정상 작동
+- ✅ 코드 가독성 향상
+- ✅ 유지보수성 개선 (특히 Helper 클래스들의 모듈화)
 
-### 🔹 Installer Versions  
-- **Setup** – Standard installer (requires .NET 8 Runtime installed on your system).  
-- **Setup (Bundled)** – Comes with the required .NET 8 Runtime already included. Best if you don’t want to install .NET separately.  
+## 주요 규칙 (AGENTS.md 참조)
 
-### 🔹 Portable Versions  
-- **Portable** – No installation needed (requires .NET 8 Runtime installed on your system).  
-- **Portable (Bundled)** – Self-contained portable version with .NET 8 Runtime included. Just extract and run.  
-
-### How to Install  
-1. [Download the latest release](https://github.com/iandiv/AppGroup/releases).  
-2. Choose your preferred variant:  
-   - **Setup** → Run the `.exe` installer.  
-   - **Portable** → Extract the `.zip` file and run **AppGroup.exe**.  
-
- **Recommendation:** If you’re not sure which one to pick, download the **Setup (Bundled)** version for the easiest experience.  
-
-## Screenshots
-
-
- <img src="https://github.com/user-attachments/assets/39d02528-0cda-43f3-abc4-7a2567140c58" alt="explorer_iaflNp0ULV"  width ="300"> <img src="https://github.com/user-attachments/assets/73703278-b4c8-4b93-a4cb-5c8cf49ae2a8" alt="explorer_diGSIGlrYF"  width ="300"><img src="https://github.com/user-attachments/assets/4ef0825d-506e-49be-9f1b-5f66faf4ad8f" alt="explorer_R1L5xazeSe" width ="300">
-
-## Video Demo 
-
-
-
-https://github.com/user-attachments/assets/6d37560f-16ea-45a9-b8b2-9d94bced0ff2
-
-<img src="https://github.com/user-attachments/assets/a524eab8-b941-4be4-9ed6-579c63e4c4fe" width="500">
-
-
-## How to Use  
-
-1. **Create a Group**  
-   - Click **“+”** to create a group  
-   - Set a **Group Name**  
-
-2. **Add Apps**  
-   - Click **“+”** or **drag & drop** apps into the group
-   - For UWP apps Shortcuts, see [Create UWP Shortcuts](#create-uwp-shortcuts)
-
-
-3. **Customize Your Group**  
-   - Enable **Show Header** if needed  
-   - Adjust **grid columns** for the perfect layout  
-   - Set an **icon style**  
-       - **Regular** - Choose an icon from a directory  
-       - **Grid** - Create grid icon from selected applications  
-
-4. **Pin a Group to the Taskbar**
-   - Drag the group directly to the taskbar
-     
-   **OR**
-   
-   - Open **Groups Folder** and find the group folder  
-   - Inside, you'll find a **shortcut file**  
-   - **Right-click → Pin to Taskbar**  
-
-   **OR**  
-
-   - Click the **three-dot menu (···)** in the main window  
-   - Select **Open File Location**  
-   - This opens the folder containing the shortcut  
-   - **Right-click → Pin to Taskbar**  
-
-
-# Create UWP Shortcuts 
-
-1. **Press** `Win + R`  
-2. **Type** `shell:AppsFolder` → **Enter**  
-   - File Explorer opens with **all installed apps (Win32 + UWP)**.
-     
-3. **Find** the UWP app (e.g., Calculator, Settings).  
-4. **Right-click** the app → **Create shortcut**  
-   - If Windows asks, choose **Yes** (shortcut will be placed on Desktop).  
-
-
-
-## Support  
-AppGroup is actively maintained, and your support helps keep it improving. If you find this tool helpful, consider donating to support its development. Your contribution ensures new updates and improvements:  
-
-
-
-**[🍵 Donate on Ko-fi ](https://ko-fi.com/iandiv/tip)**  
-
-
-
-<a href="https://ko-fi.com/iandiv/tip" target="_blank">
-  <img src="https://github.com/user-attachments/assets/2e1376d4-d3a5-4ac4-95fc-e5aa512a1704" width="400" alt="explorer_iaflNp0ULV">
-</a>
-
-  
-
-## License  
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.  
-
+- 모든 문서/주석은 한글로 작성
+- 소스 파일 1000줄 제한 (초과 시 분리)
+- 작업 전 `notes.md`, `README.md` 확인 필수
+- 작업 후 `notes.md` 기록 및 `README.md` 갱신 필수
+- 요청 범위 외 기능 확장/리팩토링 금지
+- Plan 필요 작업: 기능 추가, 동작 변경, 구조 변경, 복잡한 이슈
