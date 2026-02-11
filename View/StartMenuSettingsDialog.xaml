@@ -78,7 +78,27 @@
                     </Grid>
                 </Border>
 
-                
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="200"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock x:Uid="SubfolderDepth" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                            <TextBlock x:Uid="SubfolderDepthDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ComboBox x:Name="SubfolderDepthComboBox" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" SelectionChanged="SubfolderDepthComboBox_SelectionChanged">
+                            <ComboBoxItem Content="1"/>
+                            <ComboBoxItem Content="2"/>
+                            <ComboBoxItem Content="3"/>
+                            <ComboBoxItem Content="4"/>
+                            <ComboBoxItem Content="5"/>
+                        </ComboBox>
+                    </Grid>
+                </Border>
+
+
             </StackPanel>
         </ScrollViewer>
     </StackPanel>

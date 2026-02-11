@@ -68,6 +68,10 @@ namespace AppGroup.View
                 // 폴더 열 개수 설정 (1~5, 인덱스는 0~4)
                 int columnIndex = Math.Max(0, Math.Min(4, settings.FolderColumnCount - 1));
                 FolderColumnCountComboBox.SelectedIndex = columnIndex;
+
+                // 하위 폴더 탐색 개수 설정 (1~5, 인덱스는 0~4)
+                int depthIndex = Math.Max(0, Math.Min(4, settings.SubfolderDepth - 1));
+                SubfolderDepthComboBox.SelectedIndex = depthIndex;
             }
             catch (Exception ex)
             {
@@ -89,6 +93,9 @@ namespace AppGroup.View
 
                 // 폴더 열 개수 설정
                 settings.FolderColumnCount = FolderColumnCountComboBox.SelectedIndex + 1;
+
+                // 하위 폴더 탐색 개수 설정
+                settings.SubfolderDepth = SubfolderDepthComboBox.SelectedIndex + 1;
 
                 await SettingsHelper.SaveSettingsAsync(settings);
             }
@@ -138,6 +145,15 @@ namespace AppGroup.View
         /// 시작 메뉴 팝업 표시 토글 변경 이벤트 핸들러
         /// </summary>
         private async void ShowStartMenuPopupToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_isLoading) return;
+            await SaveSettingsAsync();
+        }
+
+        /// <summary>
+        /// 하위 폴더 탐색 개수 변경 이벤트 핸들러
+        /// </summary>
+        private async void SubfolderDepthComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_isLoading) return;
             await SaveSettingsAsync();

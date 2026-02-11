@@ -172,7 +172,7 @@
     <value>열 개수</value>
   </data>
   <data name="ColumnCountDescription.Text" xml:space="preserve">
-    <value>메뉴에 표시되는 폴더의 가로 개수를 설정합니다.</value>
+    <value>메뉴 패널에 표시되는 폴더의 가로 개수를 설정합니다.</value>
   </data>
   <data name="GroupEditButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>그룹 편집</value>
@@ -647,5 +647,11 @@
   </data>
   <data name="TrayMenuExit" xml:space="preserve">
     <value>종료</value>
+  </data>
+  <data name="SubfolderDepth.Text" xml:space="preserve">
+    <value>하위 폴더 탐색 개수</value>
+  </data>
+  <data name="SubfolderDepthDescription.Text" xml:space="preserve">
+    <value>트레이 시작 메뉴에서 폴더 선택 시 설정된 개수의 하위 폴더 위치까지 표시합니다.</value>
   </data>
 </root>

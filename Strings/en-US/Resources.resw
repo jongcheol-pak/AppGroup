@@ -1,18 +1,95 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
               <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
@@ -40,8 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
-  <!-- Settings Dialog -->
   <data name="SettingsTitle.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -78,8 +153,6 @@
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
-  
-  <!-- Start Menu Settings Dialog -->
   <data name="StartMenuSettingsTitle.Text" xml:space="preserve">
     <value>Start Menu Settings</value>
   </data>
@@ -99,15 +172,11 @@
     <value>Column Count</value>
   </data>
   <data name="ColumnCountDescription.Text" xml:space="preserve">
-    <value>Set the horizontal number of folders displayed in the menu.</value>
+    <value>Sets the horizontal number of folders displayed in the menu panel.</value>
   </data>
-  
-  <!-- Popup Window -->
   <data name="GroupEditButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Edit Group</value>
   </data>
-  
-  <!-- Edit Group Window -->
   <data name="TitleLabel.Text" xml:space="preserve">
     <value>Title</value>
   </data>
@@ -243,8 +312,6 @@
   <data name="FolderSelectButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Select Folder</value>
   </data>
-  
-  <!-- Folder Contents Popup Window -->
   <data name="FolderContentsHeader.Text" xml:space="preserve">
     <value>Folder Contents</value>
   </data>
@@ -257,16 +324,12 @@
   <data name="EmptyContents.Text" xml:space="preserve">
     <value>No contents.</value>
   </data>
-  
-  <!-- Start Menu Popup Window -->
   <data name="FoldersHeader.Text" xml:space="preserve">
     <value>Folders</value>
   </data>
   <data name="SettingsButton.ToolTipService.ToolTip" xml:space="preserve">
     <value>Settings</value>
   </data>
-  
-  <!-- MainWindow -->
   <data name="AppGroupManagement.Text" xml:space="preserve">
     <value>App Group Management</value>
   </data>
@@ -279,8 +342,6 @@
   <data name="NavSettings.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
-  
-  <!-- MainWindow - EditStartMenuDialog -->
   <data name="EditFolderTitle.Text" xml:space="preserve">
     <value>Edit Folder</value>
   </data>
@@ -290,8 +351,6 @@
   <data name="FolderNameTextBox.PlaceholderText" xml:space="preserve">
     <value>Enter folder name</value>
   </data>
-  
-  <!-- MainWindow - Taskbar Content -->
   <data name="TaskbarDescription.Text" xml:space="preserve">
     <value>You can pin groups of apps to the taskbar.</value>
   </data>
@@ -331,24 +390,18 @@
   <data name="EmptyGroupsDesc.Text" xml:space="preserve">
     <value>Click the + button to create a group</value>
   </data>
-  
-  <!-- EditGroupViewModel -->
   <data name="ItemsLabel" xml:space="preserve">
     <value>Items</value>
   </data>
   <data name="ItemsSelectedFormat" xml:space="preserve">
     <value>{0} selected</value>
   </data>
-  
-  <!-- MainWindowViewModel -->
   <data name="GroupsLabel" xml:space="preserve">
     <value>Groups</value>
   </data>
   <data name="FoldersLabel" xml:space="preserve">
     <value>Folders</value>
   </data>
-  
-  <!-- SettingsDialogViewModel -->
   <data name="VersionFormat" xml:space="preserve">
     <value>Version {0}.{1}.{2}</value>
   </data>
@@ -367,8 +420,6 @@
   <data name="ErrorFormat" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
-  
-  <!-- EditGroupWindow.FolderWeb -->
   <data name="NotificationTitle" xml:space="preserve">
     <value>Notification</value>
   </data>
@@ -406,8 +457,6 @@
   <data name="OneItem" xml:space="preserve">
     <value>1 item</value>
   </data>
-  
-  <!-- EditGroupWindow -->
   <data name="WindowActivatedTitle" xml:space="preserve">
     <value>Window Activated</value>
   </data>
@@ -474,8 +523,6 @@
   <data name="NoButton" xml:space="preserve">
     <value>No</value>
   </data>
-  
-  <!-- FolderContentsPopupWindow -->
   <data name="FolderNotFound" xml:space="preserve">
     <value>Folder does not exist.</value>
   </data>
@@ -488,8 +535,6 @@
   <data name="ErrorOccurred" xml:space="preserve">
     <value>An error occurred.</value>
   </data>
-  
-  <!-- MainWindow.xaml.cs -->
   <data name="GroupsCountFormat" xml:space="preserve">
     <value>{0} groups</value>
   </data>
@@ -529,8 +574,6 @@
   <data name="FolderAlreadyExists" xml:space="preserve">
     <value>The folder "{0}" is already registered.</value>
   </data>
-
-  <!-- PopupWindow.xaml.cs -->
   <data name="FolderNotFoundFormat" xml:space="preserve">
     <value>Folder not found: {0}</value>
   </data>
@@ -570,8 +613,6 @@
   <data name="LaunchAllMenuItem" xml:space="preserve">
     <value>Launch All</value>
   </data>
-  
-  <!-- App Manifest -->
   <data name="AppDisplayName" xml:space="preserve">
     <value>App Group</value>
     <comment>Application display name shown in Start Menu and Taskbar</comment>
@@ -580,8 +621,6 @@
     <value>Taskbar group management app</value>
     <comment>Application description</comment>
   </data>
-  
-  <!-- MainWindow - Start Menu Content -->
   <data name="StartMenuDescription.Text" xml:space="preserve">
     <value>Click the tray icon to display registered folders.</value>
   </data>
@@ -608,5 +647,11 @@
   </data>
   <data name="TrayMenuExit" xml:space="preserve">
     <value>Exit</value>
+  </data>
+  <data name="SubfolderDepth.Text" xml:space="preserve">
+    <value>Subfolder Depth</value>
+  </data>
+  <data name="SubfolderDepthDescription.Text" xml:space="preserve">
+    <value>Displays subfolder locations up to the specified depth when selecting a folder in the tray start menu.</value>
   </data>
 </root>
