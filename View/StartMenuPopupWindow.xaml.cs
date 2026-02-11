@@ -251,6 +251,7 @@ namespace AppGroup.View
         private readonly WindowHelper _windowHelper;
         private IntPtr _hwnd;
         private int _columnCount = 1;
+        private int _subfolderDepth = 2;
         private bool _disposed = false;
         private UISettings _uiSettings;
 
@@ -355,9 +356,10 @@ namespace AppGroup.View
         {
             try
             {
-                // 설정에서 열 개수 로드
+                // 설정에서 열 개수 및 하위 폴더 탐색 개수 로드
                 var settings = await SettingsHelper.LoadSettingsAsync();
                 _columnCount = Math.Max(1, Math.Min(5, settings.FolderColumnCount));
+                _subfolderDepth = Math.Max(1, Math.Min(5, settings.SubfolderDepth));
 
                 // 폴더 목록 로드
                 var folders = await JsonConfigHelper.LoadStartMenuFoldersAsync();
@@ -749,7 +751,7 @@ namespace AppGroup.View
         {
             // one-shot 동작: 틱 발생 시 즉시 중지하여 반복 호출 방지
             _hoverTimer?.Stop();
-            if (_currentHoveredButton != null && _currentHoveredButton.Tag is string folderPath)
+            if (_subfolderDepth >= 2 && _currentHoveredButton != null && _currentHoveredButton.Tag is string folderPath)
             {
                 ShowFolderContentsPopup(_currentHoveredButton, folderPath);
             }
@@ -769,6 +771,9 @@ namespace AppGroup.View
                 string folderName = Path.GetFileName(folderPath);
                 if (string.IsNullOrEmpty(folderName))
                     folderName = folderPath;
+
+                // 하위 폴더 탐색 깊이 설정 (현재 depth=2, tray 폴더가 depth=1)
+                _folderContentsPopup.SetDepth(2, _subfolderDepth);
 
                 // 폴더 내용 로드
                 _folderContentsPopup.LoadFolderContents(folderPath, folderName);

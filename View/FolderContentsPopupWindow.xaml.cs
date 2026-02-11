@@ -178,6 +178,21 @@ namespace AppGroup.View
 
         #endregion
 
+        /// <summary>
+        /// 하위 폴더 팝업 겹침 정도 (픽셀)
+        /// </summary>
+        private const int POPUP_OVERLAP = 20;
+
+        /// <summary>
+        /// 호버 딜레이 (밀리초)
+        /// </summary>
+        private const int HOVER_DELAY_MS = 200;
+
+        /// <summary>
+        /// 상단 최소 여백 (픽셀)
+        /// </summary>
+        private const int TOP_MARGIN = 100;
+
         private readonly WindowHelper _windowHelper;
         private IntPtr _hwnd;
         private bool _disposed = false;
@@ -187,6 +202,13 @@ namespace AppGroup.View
         // 윈도우 크기 저장
         private int _currentWindowWidth = 250;
         private int _currentWindowHeight = 200;
+
+        // 하위 폴더 팝업 관련
+        private int _currentDepth = 1;
+        private int _maxDepth = 1;
+        private FolderContentsPopupWindow? _childPopup;
+        private Button? _currentHoveredFolderButton;
+        private DispatcherTimer? _folderHoverTimer;
 
         // 정적 SolidColorBrush (테마별 캐싱)
         private static readonly SolidColorBrush DarkModeBackground = new SolidColorBrush(Windows.UI.Color.FromArgb(DARK_MODE_BACKGROUND_A, DARK_MODE_BACKGROUND_R, DARK_MODE_BACKGROUND_G, DARK_MODE_BACKGROUND_B));
@@ -218,6 +240,22 @@ namespace AppGroup.View
             _uiSettings = new UISettings();
             _uiSettings.ColorValuesChanged += UiSettings_ColorValuesChanged;
             this.Activated += Window_Activated;
+
+            // 하위 폴더 호버 타이머 초기화
+            _folderHoverTimer = new DispatcherTimer();
+            _folderHoverTimer.Interval = TimeSpan.FromMilliseconds(HOVER_DELAY_MS);
+            _folderHoverTimer.Tick += FolderHoverTimer_Tick;
+        }
+
+        /// <summary>
+        /// 하위 폴더 탐색 깊이를 설정합니다.
+        /// </summary>
+        /// <param name="currentDepth">현재 깊이 (1-based)</param>
+        /// <param name="maxDepth">최대 깊이</param>
+        public void SetDepth(int currentDepth, int maxDepth)
+        {
+            _currentDepth = currentDepth;
+            _maxDepth = maxDepth;
         }
 
         private void UiSettings_ColorValuesChanged(UISettings sender, object args)
@@ -258,6 +296,9 @@ namespace AppGroup.View
 
             _currentFolderPath = folderPath;
             HeaderText.Text = folderName;
+
+            // 새 폴더 로드 시 하위 팝업 숨기기
+            HideChildPopup();
 
             FileItemsControl.Items.Clear();
             FolderItemsControl.Items.Clear();
@@ -387,6 +428,7 @@ namespace AppGroup.View
             button.Click += FileButton_Click;
             button.PointerEntered += Button_PointerEntered;
             button.PointerExited += Button_PointerExited;
+            button.PointerEntered += FileButton_PointerEntered;
 
             ToolTipService.SetToolTip(button, file.FullName);
 
@@ -436,6 +478,13 @@ namespace AppGroup.View
             button.Click += FolderButton_Click;
             button.PointerEntered += Button_PointerEntered;
             button.PointerExited += Button_PointerExited;
+
+            // 하위 폴더 탐색이 가능하면 호버 이벤트 추가
+            if (_currentDepth < _maxDepth)
+            {
+                button.PointerEntered += FolderButton_PointerEntered;
+                button.PointerExited += FolderButton_PointerExited;
+            }
 
             ToolTipService.SetToolTip(button, folder.FullName);
 
@@ -645,12 +694,142 @@ namespace AppGroup.View
             }
         }
 
+        private void FileButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            HideChildPopup();
+        }
+
         private void Button_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (sender is Button button)
             {
                 button.Background = TransparentBackground;
             }
+        }
+
+        private void FolderButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Button button)
+            {
+                _currentHoveredFolderButton = button;
+                _folderHoverTimer?.Start();
+            }
+        }
+
+        private void FolderButton_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Button button)
+            {
+                _folderHoverTimer?.Stop();
+                if (_currentHoveredFolderButton == button)
+                {
+                    _currentHoveredFolderButton = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 폴더 호버 타이머 틱 - 하위 폴더 팝업 표시
+        /// </summary>
+        private void FolderHoverTimer_Tick(object? sender, object e)
+        {
+            _folderHoverTimer?.Stop();
+            if (_currentHoveredFolderButton != null && _currentHoveredFolderButton.Tag is string folderPath)
+            {
+                ShowChildFolderPopup(_currentHoveredFolderButton, folderPath);
+            }
+        }
+
+        /// <summary>
+        /// 하위 폴더 팝업 표시
+        /// </summary>
+        private void ShowChildFolderPopup(Button button, string folderPath)
+        {
+            if (!Directory.Exists(folderPath) || _currentDepth >= _maxDepth)
+                return;
+
+            try
+            {
+                // 자식 팝업 생성 (지연 생성)
+                if (_childPopup == null)
+                {
+                    _childPopup = new FolderContentsPopupWindow();
+                    _childPopup.FileExecuted += ChildPopup_FileExecuted;
+                }
+
+                _childPopup.SetDepth(_currentDepth + 1, _maxDepth);
+
+                string folderName = Path.GetFileName(folderPath);
+                if (string.IsNullOrEmpty(folderName))
+                    folderName = folderPath;
+
+                _childPopup.LoadFolderContents(folderPath, folderName);
+
+                // 버튼의 화면 위치 계산
+                var transform = button.TransformToVisual(null);
+                var buttonPosition = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
+
+                var windowPos = this.AppWindow.Position;
+                var popupSize = _childPopup.AppWindow.Size;
+
+                int popupWidth = popupSize.Width;
+                int popupX = windowPos.X - popupWidth + POPUP_OVERLAP;
+                int popupY = windowPos.Y + (int)buttonPosition.Y;
+
+                // 화면 경계 조정
+                NativeMethods.POINT cursorPos = new NativeMethods.POINT { X = popupX, Y = popupY };
+                IntPtr monitor = NativeMethods.MonitorFromPoint(cursorPos, NativeMethods.MONITOR_DEFAULTTONEAREST);
+                NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+                monitorInfo.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+
+                if (NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
+                {
+                    if (popupX < monitorInfo.rcWork.left)
+                    {
+                        popupX = windowPos.X + _currentWindowWidth - POPUP_OVERLAP;
+                    }
+
+                    if (popupX + popupWidth > monitorInfo.rcWork.right)
+                    {
+                        popupX = monitorInfo.rcWork.right - popupWidth;
+                    }
+
+                    if (popupY + popupSize.Height > monitorInfo.rcWork.bottom)
+                    {
+                        popupY = monitorInfo.rcWork.bottom - popupSize.Height;
+                    }
+
+                    if (popupY < monitorInfo.rcWork.top + TOP_MARGIN)
+                    {
+                        popupY = monitorInfo.rcWork.top + TOP_MARGIN;
+                    }
+                }
+
+                _childPopup.ShowAt(popupX, popupY);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"하위 폴더 팝업 표시 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 자식 팝업에서 파일/폴더 실행 시 상위로 전파
+        /// </summary>
+        private void ChildPopup_FileExecuted(object? sender, EventArgs e)
+        {
+            HideChildPopup();
+            OnFileExecuted();
+        }
+
+        /// <summary>
+        /// 하위 폴더 팝업 숨기기
+        /// </summary>
+        private void HideChildPopup()
+        {
+            _folderHoverTimer?.Stop();
+            _currentHoveredFolderButton = null;
+            _childPopup?.HideAllPopups();
         }
 
         /// <summary>
@@ -825,6 +1004,23 @@ namespace AppGroup.View
         {
             try
             {
+                HideChildPopup();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"팝업 숨기기 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 이 팝업과 모든 하위 팝업을 숨깁니다.
+        /// </summary>
+        public void HideAllPopups()
+        {
+            try
+            {
+                _childPopup?.HideAllPopups();
                 this.Hide();
             }
             catch (Exception ex)
@@ -853,6 +1049,20 @@ namespace AppGroup.View
                     _uiSettings = null;
                 }
 
+                if (_folderHoverTimer != null)
+                {
+                    _folderHoverTimer.Stop();
+                    _folderHoverTimer.Tick -= FolderHoverTimer_Tick;
+                    _folderHoverTimer = null;
+                }
+
+                if (_childPopup != null)
+                {
+                    _childPopup.FileExecuted -= ChildPopup_FileExecuted;
+                    _childPopup.Dispose();
+                    _childPopup = null;
+                }
+
                 // 버튼 이벤트 핸들러 해제
                 UnregisterButtonEvents(FileItemsControl);
                 UnregisterButtonEvents(FolderItemsControl);
@@ -875,6 +1085,9 @@ namespace AppGroup.View
                     button.Click -= FolderButton_Click;
                     button.PointerEntered -= Button_PointerEntered;
                     button.PointerExited -= Button_PointerExited;
+                    button.PointerEntered -= FileButton_PointerEntered;
+                    button.PointerEntered -= FolderButton_PointerEntered;
+                    button.PointerExited -= FolderButton_PointerExited;
                 }
             }
         }

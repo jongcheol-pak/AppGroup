@@ -45,7 +45,7 @@ namespace AppGroup
             public bool ShowFolderIcon { get; set; } = true;
             public bool ShowStartMenuPopup { get; set; } = true;
             public int FolderColumnCount { get; set; } = 1;
-            public int SubfolderDepth { get; set; } = 1;
+            public int SubfolderDepth { get; set; } = 2;
         }
 
         private static AppSettings _currentSettings;

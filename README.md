@@ -1,4 +1,4 @@
-# AppGroup
+﻿# AppGroup
 
 ## 프로젝트 개요
 
@@ -56,24 +56,38 @@ dotnet format AppGroup/AppGroup.csproj
 ### View 구조 (MVVM)
 | View | 역할 | 라인 수 |
 |------|------|----------|
-| `MainWindow` | 메인 관리 화면, 그룹 목록 및 편집 | 1465 |
+| `MainWindow` | 메인 관리 화면, 그룹 목록 및 편집, 시작 메뉴 폴더 관리 | 1465 |
 | `PopupWindow` | 작업 표시줄 클릭 시 앱 목록 팝업 | 1756 |
 | `EditGroupWindow` | 그룹 편집 (앱 추가/제거, 아이콘 설정) | 1843 |
 | `SettingsDialog` | 전역 설정 다이얼로그 | - |
-| `FolderContentsPopupWindow` | 폴더 내용 팝업 | 628 |
-| `StartMenuPopupWindow` | 시작 메뉴 스타일 팝업 | 671 |
-| `StartMenuSettingsDialog` | 시작 메뉴 설정 다이얼로그 | - |
+| `FolderContentsPopupWindow` | 폴더 내용 팝업 (계층적 하위 폴더 탐색) | ~800 |
+| `StartMenuPopupWindow` | 시작 메뉴 스타일 팝업 (폴더 목록 표시) | ~750 |
+| `StartMenuSettingsDialog` | 시작 메뉴 설정 다이얼로그 (열 개수, 하위 폴더 탐색 깊이) | - |
 | `EditGroupWindow.AllApps` | 설치된 앱 목록 기능 (partial) | 500 |
 | `EditGroupWindow.FolderWeb` | 폴더/웹 편집 기능 (partial) | 481 |
+
+### 시작 메뉴 폴더 기능
+- **폴더 등록**: MainWindow의 시작 탭에서 드래그앤드롭 또는 다이얼로그로 폴더 추가
+- **폴더 목록 표시**: StartMenuPopupWindow가 트레이 아이콘 클릭 시 등록된 폴더 목록 표시
+- **하위 폴더 탐색**: FolderContentsPopupWindow가 폴더 호버 시 하위 폴더/파일 팝업 표시
+  - **탐색 깊이 설정**: StartMenuSettingsDialog에서 1~5 선택 (기본값 2)
+  - depth=1: 트레이 폴더 목록만 표시
+  - depth=2: 트레이 폴더 → 하위 폴더/파일
+  - depth=3~5: 더 깊은 계층까지 탐색
+- **자동 팝업 닫기**: 파일 항목에 마우스 올리면 열려있던 하위 폴더 팝업 자동 닫기
+- **순서 변경**: 시작 탭에서 폴더 항목을 드래그하여 순서 변경 (JSON 키 순서 유지)
+- **중복 방지**: 이미 등록된 폴더 추가 시 경고 메시지 표시
 
 ### 데이터 저장 경로
 ```
 %LocalAppData%/AppGroup/
-├── appgroups.json    # 그룹 설정 (JSON)
-├── Groups/           # 그룹별 바로가기 폴더
-├── Icons/            # 캐시된 아이콘
-├── lastEdit          # 마지막 편집 그룹 ID
-└── lastOpen          # 마지막 열린 그룹명
+├── appgroups.json       # 그룹 설정 (JSON)
+├── startmenu.json       # 시작 메뉴 폴더 설정 (JSON)
+├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 하위 폴더 깊이 등)
+├── Groups/              # 그룹별 바로가기 폴더
+├── Icons/               # 캐시된 아이콘
+├── lastEdit             # 마지막 편집 그룹 ID
+└── lastOpen             # 마지막 열린 그룹명
 ```
 
 ## 코드 파일 분리 작업 완료 (2026-02-05)
