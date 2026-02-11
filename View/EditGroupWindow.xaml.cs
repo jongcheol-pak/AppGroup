@@ -72,13 +72,7 @@ namespace AppGroup.View
 
             var iconPath = Path.Combine(AppContext.BaseDirectory, "EditGroup.ico");
             this.AppWindow.SetIcon(iconPath);
-            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-
-            if (!Directory.Exists(appDataPath))
-            {
-                Directory.CreateDirectory(appDataPath);
-            }
+            AppPaths.EnsureAppDataFolderExists();
 
             _viewModel = new EditGroupViewModel();
             if (Content is FrameworkElement rootElement)
@@ -148,18 +142,7 @@ namespace AppGroup.View
 
                 try
                 {
-                    string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    string appFolderPath = Path.Combine(appDataPath, "AppGroup");
-                    string filePath = Path.Combine(appFolderPath, "lastEdit");
-
-                    if (File.Exists(filePath))
-                    {
-                        string fileGroupIdText = File.ReadAllText(filePath).Trim();
-                        if (!string.IsNullOrEmpty(fileGroupIdText) && int.TryParse(fileGroupIdText, out int fileGroupId))
-                        {
-                            newGroupId = fileGroupId;
-                        }
-                    }
+                    newGroupId = AppPaths.ReadGroupIdFromFile();
                 }
                 catch (Exception ex)
                 {
@@ -1165,12 +1148,7 @@ namespace AppGroup.View
                 ArgsTextBox.Text = item.Args;
 
                 // 아이콘 저장을 위한 현재 그룹 경로 설정
-                string exeDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-                //string groupsFolder = Path.Combine(exeDirectory, "Groups");
-
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsFolder = Path.Combine(appDataPath, "Groups");
+                string groupsFolder = AppPaths.GroupsFolder;
                 Directory.CreateDirectory(groupsFolder);
 
                 string groupName = _viewModel.GroupName?.Trim() ?? string.Empty;
@@ -1450,16 +1428,8 @@ namespace AppGroup.View
 
 
 
-                string exeDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsFolder = Path.Combine(appDataPath, "Groups");
+                string groupsFolder = AppPaths.GroupsFolder;
                 Directory.CreateDirectory(groupsFolder);
-
-
-
-                //string groupsFolder = Path.Combine(exeDirectory, "Groups");
-                //Directory.CreateDirectory(groupsFolder);
 
                 string oldGroupName = GetOldGroupName();
                 string oldGroupFolder = Path.Combine(groupsFolder, oldGroupName);
@@ -1499,7 +1469,7 @@ namespace AppGroup.View
 
                 File.SetAttributes(uniqueFolderPath, File.GetAttributes(uniqueFolderPath) | System.IO.FileAttributes.Hidden);
                 string shortcutPath = Path.Combine(groupFolder, $"{newGroupName}.lnk");
-                string targetPath = Process.GetCurrentProcess().MainModule?.FileName ?? Path.Combine(exeDirectory, "AppGroup.exe");
+                string targetPath = Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath;
 
                 // Windows 아이콘 캐시를 우회하기 위해 아이콘 파일 이름에 타임스탬프 추가
                 string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");

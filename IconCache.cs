@@ -37,10 +37,8 @@ namespace AppGroup
 
         private static string GetCacheFilePath()
         {
-            string folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appGroupFolder = Path.Combine(folder, "AppGroup");
-            Directory.CreateDirectory(appGroupFolder);
-            return Path.Combine(appGroupFolder, "icon_cache.json");
+            Directory.CreateDirectory(AppPaths.AppDataFolder);
+            return Path.Combine(AppPaths.AppDataFolder, "icon_cache.json");
         }
 
         private static void LoadIconCache()
@@ -130,11 +128,7 @@ namespace AppGroup
 
             try
             {
-                string outputDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "AppGroup",
-                    "Icons"
-                );
+                string outputDirectory = AppPaths.IconsFolder;
                 Directory.CreateDirectory(outputDirectory);
 
                 // Program Files 등 보호된 폴더의 경우 더 긴 타임아웃 사용
