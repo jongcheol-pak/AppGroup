@@ -60,10 +60,8 @@ namespace AppGroup
                 var progressTask = progressDialog.ShowAsync();
 
                 // Paths
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string configPath = Path.Combine(localAppDataPath, "AppGroup", "appgroups.json");
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsPath = Path.Combine(appDataPath, "Groups");
+                string configPath = AppPaths.ConfigFile;
+                string groupsPath = AppPaths.GroupsFolder;
 
                 //string groupsPath = Path.Combine(AppContext.BaseDirectory, "Groups");
                 string tempZipPath = Path.Combine(Path.GetTempPath(), $"AppGroup_Backup_{Guid.NewGuid()}.zip");
@@ -141,14 +139,11 @@ namespace AppGroup
                 var progressTask = progressDialog.ShowAsync();
 
                 // Paths
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appGroupLocalPath = Path.Combine(localAppDataPath, "AppGroup");
-                string configPath = Path.Combine(appGroupLocalPath, "appgroups.json");
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsPath = Path.Combine(appDataPath, "Groups");
+                string appGroupLocalPath = AppPaths.AppDataFolder;
+                string configPath = AppPaths.ConfigFile;
+                string groupsPath = AppPaths.GroupsFolder;
 
-                //string groupsPath = Path.Combine(AppContext.BaseDirectory, "Groups");
-                string iconsPath = Path.Combine(appGroupLocalPath, "Icons");
+                string iconsPath = AppPaths.IconsFolder;
 
                 // Temporary variables to store configuration and path validation
                 Dictionary<string, GroupConfig> config = null;
@@ -376,7 +371,7 @@ namespace AppGroup
                             else if (entry.FullName.StartsWith("Groups/"))
                             {
                                 // Groups files go to executable directory
-                                destinationPath = Path.Combine(appDataPath, entry.FullName);
+                                destinationPath = Path.Combine(AppPaths.AppDataFolder, entry.FullName);
 
                                 // Ensure directory exists for this entry
                                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));

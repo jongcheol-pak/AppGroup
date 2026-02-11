@@ -11,8 +11,7 @@ namespace AppGroup
     {
         private const string STARTUP_TASK_ID = "AppGroupStartupTask";
         private static readonly string SettingsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AppGroup",
+            AppPaths.AppDataFolder,
             "settings.json"
         );
 

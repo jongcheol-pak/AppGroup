@@ -13,9 +13,11 @@ namespace AppGroup
     {
         /// <summary>
         /// AppGroup 데이터 폴더 경로 (LocalApplicationData/AppGroup)
+        /// MSIX 패키지 가상화를 우회하여 실제 경로를 사용합니다.
         /// </summary>
         public static string AppDataFolder => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetEnvironmentVariable("LOCALAPPDATA")
+                ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "AppGroup");
 
         /// <summary>
@@ -122,16 +124,15 @@ namespace AppGroup
         }
 
         /// <summary>
-        /// AppData 폴더가 존재하는지 확인하고 없으면 생성합니다.
+        /// AppData 폴더 및 하위 폴더(Icons, Groups)가 존재하는지 확인하고 없으면 생성합니다.
         /// </summary>
         public static void EnsureAppDataFolderExists()
         {
             try
             {
-                if (!Directory.Exists(AppDataFolder))
-                {
-                    Directory.CreateDirectory(AppDataFolder);
-                }
+                Directory.CreateDirectory(AppDataFolder);
+                Directory.CreateDirectory(IconsFolder);
+                Directory.CreateDirectory(GroupsFolder);
             }
             catch (Exception ex)
             {

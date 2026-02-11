@@ -780,9 +780,7 @@ namespace AppGroup.View
         {
             try
             {
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsFolder = Path.Combine(appDataPath, "Groups");
+                string groupsFolder = AppPaths.GroupsFolder;
 
                 string groupFolder = Path.Combine(groupsFolder, _groupFilter);
                 if (!Directory.Exists(groupFolder))
@@ -1222,9 +1220,8 @@ namespace AppGroup.View
             Debug.WriteLine("FILE MODE");
             if (_cachedAppFolderPath == null)
             {
-                string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                _cachedAppFolderPath = Path.Combine(appDataPath, "AppGroup");
-                _cachedLastOpenPath = Path.Combine(_cachedAppFolderPath, "lastOpen");
+                _cachedAppFolderPath = AppPaths.AppDataFolder;
+                _cachedLastOpenPath = AppPaths.LastOpenFile;
             }
             try
             {

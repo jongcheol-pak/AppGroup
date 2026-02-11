@@ -55,9 +55,7 @@ namespace AppGroup
                 }
 
                 // 생성된 아이콘을 그룹의 적절한 위치로 복사
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsFolder = Path.Combine(appDataPath, "Groups");
+                string groupsFolder = AppPaths.GroupsFolder;
                 string groupFolder = Path.Combine(groupsFolder, groupName);
                 string uniqueFolderName = groupName;
                 string uniqueFolderPath = Path.Combine(groupFolder, uniqueFolderName);

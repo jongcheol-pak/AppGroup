@@ -348,17 +348,15 @@ namespace AppGroup.View
                     return;
                 }
 
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
                 // 외부 드롭을 위한 바로가기 파일 준비
-                string shortcutPath = Path.Combine(appDataPath, "Groups", draggedItem.GroupName, $"{draggedItem.GroupName}.lnk");
+                string shortcutPath = Path.Combine(AppPaths.GroupsFolder, draggedItem.GroupName, $"{draggedItem.GroupName}.lnk");
                 string fullShortcutPath = Path.GetFullPath(shortcutPath);
                 if (File.Exists(fullShortcutPath))
                 {
                     try
                     {
                         // 임시 위치로 복사
-                        string tempDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AppGroup", "DragTemp");
+                        string tempDir = Path.Combine(AppPaths.AppDataFolder, "DragTemp");
                         Directory.CreateDirectory(tempDir);
                         string tempShortcutPath = Path.Combine(tempDir, $"{draggedItem.GroupName}.lnk");
 
@@ -760,11 +758,7 @@ namespace AppGroup.View
             var paths = groupNode?["path"]?.AsObject();
             if (paths?.Count > 0)
             {
-                string outputDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "AppGroup",
-                    "Icons"
-                );
+                string outputDirectory = AppPaths.IconsFolder;
                 Directory.CreateDirectory(outputDirectory);
 
                 var iconTasks = paths

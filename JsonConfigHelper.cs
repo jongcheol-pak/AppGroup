@@ -132,18 +132,8 @@ namespace AppGroup
         /// </summary>
         public static string GetDefaultConfigPath(string fileName = "appgroups.json")
         {
-
-
-            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-            string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-
-            if (!Directory.Exists(appDataPath))
-            {
-                Directory.CreateDirectory(appDataPath);
-            }
-
-            return Path.Combine(appDataPath, fileName);
+            Directory.CreateDirectory(AppPaths.AppDataFolder);
+            return Path.Combine(AppPaths.AppDataFolder, fileName);
         }
 
 
@@ -235,11 +225,7 @@ namespace AppGroup
 
                 System.IO.File.WriteAllText(filePath, JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true }));
 
-                string exeDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-
-                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                string groupsFolder = Path.Combine(appDataPath, "Groups");
+                string groupsFolder = AppPaths.GroupsFolder;
                 //string groupsFolder = Path.Combine(exeDirectory, "Groups");
                 string groupFolderPath = Path.Combine(groupsFolder, groupName);
 
@@ -284,10 +270,7 @@ namespace AppGroup
 
                     System.IO.File.WriteAllText(filePath, JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true }));
 
-                    string exeDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-                    string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                    string groupsFolder = Path.Combine(appDataPath, "Groups");
+                    string groupsFolder = AppPaths.GroupsFolder;
                     //string groupsFolder = Path.Combine(exeDirectory, "Groups");
                     string originalGroupFolderPath = Path.Combine(groupsFolder, originalGroupName);
                     string newGroupFolderPath = Path.Combine(groupsFolder, newGroupName);
@@ -568,13 +551,8 @@ namespace AppGroup
 
                     if (!string.IsNullOrEmpty(groupName))
                     {
-                        string exeDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-                        string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                        string appDataPath = Path.Combine(localAppDataPath, "AppGroup");
-                        string groupsFolder = Path.Combine(appDataPath, "Groups");
+                        string groupsFolder = AppPaths.GroupsFolder;
                         string groupFolderPath = Path.Combine(groupsFolder, groupName);
-                        //string groupsFolder = Path.Combine(exeDirectory, "Groups");
-                        //string groupFolderPath = Path.Combine(groupsFolder, groupName);
 
                         if (Directory.Exists(groupFolderPath))
                         {
