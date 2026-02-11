@@ -137,9 +137,6 @@
     <None Remove="View\StartMenuSettingsDialog.xaml" />
     <None Remove="View\StartMenuPopupWindow.xaml" />
   </ItemGroup>
-	<PropertyGroup>
-		<RunMakePri>false</RunMakePri>
-	</PropertyGroup>
   <ItemGroup>
     <Content Include="AppGroup.ico" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
