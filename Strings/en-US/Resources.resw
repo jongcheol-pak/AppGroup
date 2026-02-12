@@ -654,4 +654,16 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>Displays subfolder locations up to the specified depth when selecting a folder in the tray start menu.</value>
   </data>
+  <data name="LanguageSetting.Text" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LanguageSettingDescription.Text" xml:space="preserve">
+    <value>Select app display language. Restart required to apply.</value>
+  </data>
+  <data name="LanguageSystemDefault" xml:space="preserve">
+    <value>System Default</value>
+  </data>
+  <data name="LanguageRestartRequired" xml:space="preserve">
+    <value>Restart the app to apply the language change.</value>
+  </data>
 </root>

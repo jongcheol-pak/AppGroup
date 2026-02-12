@@ -136,24 +136,24 @@
         <!-- NavigationView 영역 -->
         <NavigationView x:Name="NavView" Margin="0,40,0,0"  PaneDisplayMode="Left" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" IsBackButtonVisible="Collapsed" IsPaneOpen="True" OpenPaneLength="90">
             <NavigationView.MenuItems>
-                <NavigationViewItem Tag="Taskbar" Height="60" Margin="0,32,0,0">
+                <NavigationViewItem Tag="Taskbar" Height="70" Margin="0,32,0,0" >
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xF168;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock x:Uid="NavTaskbar" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavTaskbar" HorizontalAlignment="Center" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                 </NavigationViewItem>
-                <NavigationViewItem Tag="StartMenu" Height="60">
+                <NavigationViewItem Tag="StartMenu" Height="70">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE74C;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock x:Uid="NavStartMenu" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavStartMenu" HorizontalAlignment="Center" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Tag="Settings" Height="60">
+                <NavigationViewItem Tag="Settings" Height="70">
                     <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE713;" HorizontalAlignment="Center" FontSize="18"/>
-                        <TextBlock x:Uid="NavSettings" HorizontalAlignment="Center" FontSize="12"/>
+                        <TextBlock x:Uid="NavSettings" HorizontalAlignment="Center" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
@@ -500,6 +500,31 @@
                                     <ToggleSwitch x:Name="SettingsSystemTrayToggle" Grid.Column="1" IsOn="{Binding ShowSystemTrayIcon, Mode=TwoWay}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
+
+
+                            <!-- Language Section -->
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="200"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                            <TextBlock x:Uid="LanguageSetting" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                            <TextBlock x:Uid="LanguageSettingDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ComboBox x:Name="SettingsLanguageComboBox" Grid.Column="1" MinWidth="150" VerticalAlignment="Center" SelectionChanged="SettingsLanguageComboBox_SelectionChanged"/>
+                                    </Grid>
+                                    <TextBlock x:Name="LanguageRestartMessage"
+                                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                               FontSize="12"
+                                               Margin="0,8,0,0"
+                                               TextWrapping="Wrap"
+                                               Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
+
 
                             <!-- About Section -->
                             <TextBlock x:Uid="InformationSection" Style="{StaticResource SectionHeaderStyle}"/>

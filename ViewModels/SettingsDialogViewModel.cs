@@ -20,6 +20,7 @@ namespace AppGroup.ViewModels
         private bool _useGrayscaleIcon;
         private string _startupStatusMessage = string.Empty;
         private bool _isStartupBlocked;
+        private string _selectedLanguage = "";
 
         public bool IsLoading
         {
@@ -81,6 +82,15 @@ namespace AppGroup.ViewModels
         public Visibility StartupStatusVisibility =>
             IsStartupBlocked ? Visibility.Visible : Visibility.Collapsed;
 
+        /// <summary>
+        /// 선택된 언어 코드 (빈 문자열이면 시스템 기본값)
+        /// </summary>
+        public string SelectedLanguage
+        {
+            get => _selectedLanguage;
+            set => SetProperty(ref _selectedLanguage, value);
+        }
+
         public void InitializeVersionText()
         {
             try
@@ -114,6 +124,7 @@ namespace AppGroup.ViewModels
 
                 ShowSystemTrayIcon = _settings.ShowSystemTrayIcon;
                 UseGrayscaleIcon = _settings.UseGrayscaleIcon;
+                SelectedLanguage = _settings.Language ?? "";
 
                 // 실제 시스템 시작 프로그램 상태 확인
                 var startupState = await SettingsHelper.GetStartupStateAsync();
@@ -175,6 +186,7 @@ namespace AppGroup.ViewModels
                 _settings.ShowSystemTrayIcon = ShowSystemTrayIcon;
                 _settings.RunAtStartup = RunAtStartup;
                 _settings.UseGrayscaleIcon = UseGrayscaleIcon;
+                _settings.Language = SelectedLanguage ?? "";
 
                 await SettingsHelper.SaveSettingsAsync(_settings);
 

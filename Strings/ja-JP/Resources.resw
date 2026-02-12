@@ -118,552 +118,552 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="SettingsTitle.Text" xml:space="preserve">
-    <value>설정</value>
+    <value>設定</value>
   </data>
   <data name="AppName.Text" xml:space="preserve">
-    <value>앱 그룹</value>
+    <value>AppGroup</value>
   </data>
   <data name="RunAtStartup.Text" xml:space="preserve">
-    <value>시작 시 실행</value>
+    <value>スタートアップ時に実行</value>
   </data>
   <data name="RunAtStartupDescription.Text" xml:space="preserve">
-    <value>Windows 시작 시 자동으로 앱 실행</value>
+    <value>Windows起動時にアプリを自動実行</value>
   </data>
   <data name="ShowSystemTrayIcon.Text" xml:space="preserve">
-    <value>시스템 트레이 아이콘 표시</value>
+    <value>システムトレイアイコンを表示</value>
   </data>
   <data name="ShowSystemTrayIconDescription.Text" xml:space="preserve">
-    <value>시스템 트레이에 앱 아이콘 표시</value>
+    <value>システムトレイにアプリアイコンを表示</value>
   </data>
   <data name="GrayscaleIcon.Text" xml:space="preserve">
-    <value>회색조 아이콘</value>
+    <value>グレースケールアイコン</value>
   </data>
   <data name="GrayscaleIconDescription.Text" xml:space="preserve">
-    <value>그룹 표시 중 아이콘을 회색조로 표시</value>
+    <value>グループ表示中にアイコンをグレースケールで表示</value>
   </data>
   <data name="InformationSection.Text" xml:space="preserve">
-    <value>정보</value>
+    <value>情報</value>
   </data>
   <data name="AppGroupDescription.Text" xml:space="preserve">
-    <value>이 앱은 오픈소스 프로젝트 AppGroup를 기반으로 하여 UI 개선 및 기능 추가 등 일부 커스터마이징을 적용한 버전입니다.</value>
+    <value>このアプリはオープンソースプロジェクトAppGroupをベースにUI改善と機能追加を行ったカスタマイズ版です。</value>
   </data>
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
-    <value>원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다.</value>
+    <value>オリジナルの制作者とは無関係であり、上記のリンクからオリジナルのソースを確認できます。</value>
   </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
   <data name="StartMenuSettingsTitle.Text" xml:space="preserve">
-    <value>시작 메뉴 설정</value>
+    <value>スタートメニュー設定</value>
   </data>
   <data name="TrayIconSection.Text" xml:space="preserve">
-    <value>트레이 아이콘</value>
+    <value>トレイアイコン</value>
   </data>
   <data name="ShowFolderListOnClick.Text" xml:space="preserve">
-    <value>클릭 시 폴더 목록 표시</value>
+    <value>クリック時にフォルダ一覧を表示</value>
   </data>
   <data name="ShowFolderListOnClickDescription.Text" xml:space="preserve">
-    <value>트레이 아이콘 클릭 시 등록된 폴더 목록을 표시합니다.</value>
+    <value>トレイアイコンクリック時に登録済みフォルダ一覧を表示します。</value>
   </data>
   <data name="FolderDisplaySection.Text" xml:space="preserve">
-    <value>폴더 표시</value>
+    <value>フォルダ表示</value>
   </data>
   <data name="ColumnCount.Text" xml:space="preserve">
-    <value>열 개수</value>
+    <value>列数</value>
   </data>
   <data name="ColumnCountDescription.Text" xml:space="preserve">
-    <value>메뉴 패널에 표시되는 폴더의 가로 개수를 설정합니다.</value>
+    <value>メニューパネルに表示されるフォルダの横方向の数を設定します。</value>
   </data>
   <data name="GroupEditButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>그룹 편집</value>
+    <value>グループを編集</value>
   </data>
   <data name="TitleLabel.Text" xml:space="preserve">
-    <value>제목</value>
+    <value>タイトル</value>
   </data>
   <data name="TitleTextBox.PlaceholderText" xml:space="preserve">
-    <value>제목 입력</value>
+    <value>タイトルを入力</value>
   </data>
   <data name="ArgumentsLabel.Text" xml:space="preserve">
-    <value>인수</value>
+    <value>引数</value>
   </data>
   <data name="ArgumentsTextBox.PlaceholderText" xml:space="preserve">
-    <value>인수 입력</value>
+    <value>引数を入力</value>
   </data>
   <data name="SaveButton.Content" xml:space="preserve">
-    <value>저장</value>
+    <value>保存</value>
   </data>
   <data name="ResetButton.Content" xml:space="preserve">
-    <value>초기화</value>
+    <value>リセット</value>
   </data>
   <data name="IconSelectionTitle.Text" xml:space="preserve">
-    <value>아이콘 선택</value>
+    <value>アイコン選択</value>
   </data>
   <data name="RegularIconTitle.Text" xml:space="preserve">
-    <value>일반 아이콘</value>
+    <value>通常アイコン</value>
   </data>
   <data name="RegularIconDesc.Text" xml:space="preserve">
-    <value>디렉터리에서 아이콘 선택</value>
+    <value>ディレクトリからアイコンを選択</value>
   </data>
   <data name="GridIconTitle.Text" xml:space="preserve">
-    <value>그리드 아이콘</value>
+    <value>グリッドアイコン</value>
   </data>
   <data name="GridIconDesc.Text" xml:space="preserve">
-    <value>선택한 앱으로 그리드 아이콘 생성</value>
+    <value>選択したアプリでグリッドアイコンを生成</value>
   </data>
   <data name="ResourceIconTitle.Text" xml:space="preserve">
-    <value>리소스 아이콘</value>
+    <value>リソースアイコン</value>
   </data>
   <data name="ResourceIconDesc.Text" xml:space="preserve">
-    <value>앱 리소스에서 아이콘 선택</value>
+    <value>アプリリソースからアイコンを選択</value>
   </data>
   <data name="CustomizeTitle.Text" xml:space="preserve">
-    <value>사용자 정의</value>
+    <value>カスタマイズ</value>
   </data>
   <data name="ColumnLabel.Text" xml:space="preserve">
-    <value>열</value>
+    <value>列</value>
   </data>
   <data name="HeaderLabel.Text" xml:space="preserve">
-    <value>헤더</value>
+    <value>ヘッダー</value>
   </data>
   <data name="HeaderDesc.Text" xml:space="preserve">
-    <value>팝업 창 헤더 표시/숨기기</value>
+    <value>ポップアップウィンドウのヘッダーを表示/非表示</value>
   </data>
   <data name="EditLabel.Text" xml:space="preserve">
-    <value>수정</value>
+    <value>編集</value>
   </data>
   <data name="EditDesc.Text" xml:space="preserve">
-    <value>수정 버튼 표시/숨기기</value>
+    <value>編集ボタンを表示/非表示</value>
   </data>
   <data name="LabelLabel.Text" xml:space="preserve">
-    <value>레이블</value>
+    <value>ラベル</value>
   </data>
   <data name="LabelDesc.Text" xml:space="preserve">
-    <value>프로그램 레이블 표시/숨기기</value>
+    <value>プログラムラベルを表示/非表示</value>
   </data>
   <data name="FontSizeLabel.Text" xml:space="preserve">
-    <value>글자 크기</value>
+    <value>フォントサイズ</value>
   </data>
   <data name="PositionLabel.Text" xml:space="preserve">
-    <value>위치</value>
+    <value>位置</value>
   </data>
   <data name="InstalledAppsTitle.Text" xml:space="preserve">
-    <value>설치된 앱</value>
+    <value>インストール済みアプリ</value>
   </data>
   <data name="SearchAppsTextBox.PlaceholderText" xml:space="preserve">
-    <value>앱 검색...</value>
+    <value>アプリを検索...</value>
   </data>
   <data name="AddSelectedButton.Content" xml:space="preserve">
-    <value>선택 항목 추가</value>
+    <value>選択項目を追加</value>
   </data>
   <data name="FolderWebTitle.Text" xml:space="preserve">
-    <value>폴더/웹 추가</value>
+    <value>フォルダ/Webを追加</value>
   </data>
   <data name="TypeLabel.Text" xml:space="preserve">
-    <value>유형</value>
+    <value>種類</value>
   </data>
   <data name="FolderType.Content" xml:space="preserve">
-    <value>폴더</value>
+    <value>フォルダ</value>
   </data>
   <data name="WebType.Content" xml:space="preserve">
-    <value>웹</value>
+    <value>Web</value>
   </data>
   <data name="NameLabel.Text" xml:space="preserve">
-    <value>이름</value>
+    <value>名前</value>
   </data>
   <data name="NameTextBox.PlaceholderText" xml:space="preserve">
-    <value>이름 입력</value>
+    <value>名前を入力</value>
   </data>
   <data name="FolderPathLabel.Text" xml:space="preserve">
-    <value>폴더 경로</value>
+    <value>フォルダパス</value>
   </data>
   <data name="FolderPathTextBox.PlaceholderText" xml:space="preserve">
-    <value>폴더 경로</value>
+    <value>フォルダパス</value>
   </data>
   <data name="WebUrlLabel.Text" xml:space="preserve">
-    <value>웹 URL</value>
+    <value>Web URL</value>
   </data>
   <data name="WebUrlTextBox.PlaceholderText" xml:space="preserve">
     <value>https://example.com</value>
   </data>
   <data name="AddButton.Content" xml:space="preserve">
-    <value>추가</value>
+    <value>追加</value>
   </data>
   <data name="GroupNameLabel.Text" xml:space="preserve">
-    <value>그룹 이름</value>
+    <value>グループ名</value>
   </data>
   <data name="GroupNameTextBox.PlaceholderText" xml:space="preserve">
-    <value>앱 그룹...</value>
+    <value>アプリグループ...</value>
   </data>
   <data name="RenameWarning.Message" xml:space="preserve">
-    <value>그룹 이름을 변경하면 '작업 표시줄 강제 업데이트'를 하거나 작업 표시줄에 다시 고정해야 합니다.</value>
+    <value>グループ名を変更した場合、タスクバーを強制更新するか、タスクバーに再固定する必要があります。</value>
   </data>
   <data name="CustomizeButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>사용자 정의</value>
+    <value>カスタマイズ</value>
   </data>
   <data name="AllAppsButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>모든 앱 목록</value>
+    <value>すべてのアプリ一覧</value>
   </data>
   <data name="FolderWebButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>폴더/웹 추가</value>
+    <value>フォルダ/Webを追加</value>
   </data>
   <data name="BrowseFilePathButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>파일 경로 찾아보기</value>
+    <value>ファイルパスを参照</value>
   </data>
   <data name="FolderSelectButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>폴더 선택</value>
+    <value>フォルダを選択</value>
   </data>
   <data name="FolderContentsHeader.Text" xml:space="preserve">
-    <value>폴더 내용</value>
+    <value>フォルダの内容</value>
   </data>
   <data name="FileSectionHeader.Text" xml:space="preserve">
-    <value>파일</value>
+    <value>ファイル</value>
   </data>
   <data name="FolderSectionHeader.Text" xml:space="preserve">
-    <value>폴더</value>
+    <value>フォルダ</value>
   </data>
   <data name="EmptyContents.Text" xml:space="preserve">
-    <value>내용이 없습니다.</value>
+    <value>内容がありません。</value>
   </data>
   <data name="FoldersHeader.Text" xml:space="preserve">
-    <value>폴더</value>
+    <value>フォルダ</value>
   </data>
   <data name="SettingsButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>설정</value>
+    <value>設定</value>
   </data>
   <data name="AppGroupManagement.Text" xml:space="preserve">
-    <value>앱 그룹 관리</value>
+    <value>アプリグループ管理</value>
   </data>
   <data name="NavTaskbar.Text" xml:space="preserve">
-    <value>앱 그룹</value>
+    <value>アプリグループ</value>
   </data>
   <data name="NavStartMenu.Text" xml:space="preserve">
-    <value>시작</value>
+    <value>スタート</value>
   </data>
   <data name="NavSettings.Text" xml:space="preserve">
-    <value>설정</value>
+    <value>設定</value>
   </data>
   <data name="EditFolderTitle.Text" xml:space="preserve">
-    <value>폴더 수정</value>
+    <value>フォルダを編集</value>
   </data>
   <data name="FolderNameLabel.Text" xml:space="preserve">
-    <value>폴더 이름</value>
+    <value>フォルダ名</value>
   </data>
   <data name="FolderNameTextBox.PlaceholderText" xml:space="preserve">
-    <value>폴더 이름 입력</value>
+    <value>フォルダ名を入力</value>
   </data>
   <data name="TaskbarDescription.Text" xml:space="preserve">
-    <value>앱을 그룹으로 지정해서 작업 표시줄에 고정할 수 있습니다.</value>
+    <value>アプリをグループ化してタスクバーにピン留めできます。</value>
   </data>
   <data name="SearchGroupsPlaceholder.PlaceholderText" xml:space="preserve">
-    <value>그룹 검색...</value>
+    <value>グループを検索...</value>
   </data>
   <data name="RefreshButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>새로 고침</value>
+    <value>更新</value>
   </data>
   <data name="AddGroupButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>그룹 추가</value>
+    <value>グループを追加</value>
   </data>
   <data name="ImportMenu.Text" xml:space="preserve">
-    <value>가져오기</value>
+    <value>インポート</value>
   </data>
   <data name="ExportMenu.Text" xml:space="preserve">
-    <value>내보내기</value>
+    <value>エクスポート</value>
   </data>
   <data name="ForceUpdateMenu.Text" xml:space="preserve">
-    <value>작업 표시줄 강제 업데이트</value>
+    <value>タスクバーを強制更新</value>
   </data>
   <data name="EditGroupButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>그룹 수정</value>
+    <value>グループを編集</value>
   </data>
   <data name="OpenLocationMenu.Text" xml:space="preserve">
-    <value>파일 위치 열기</value>
+    <value>ファイルの場所を開く</value>
   </data>
   <data name="DuplicateMenu.Text" xml:space="preserve">
-    <value>복제</value>
+    <value>複製</value>
   </data>
   <data name="DeleteMenu.Text" xml:space="preserve">
-    <value>삭제</value>
+    <value>削除</value>
   </data>
   <data name="EmptyGroupsTitle.Text" xml:space="preserve">
-    <value>그룹이 없습니다!</value>
+    <value>グループがありません！</value>
   </data>
   <data name="EmptyGroupsDesc.Text" xml:space="preserve">
-    <value>+ 버튼을 클릭하여 그룹을 만드세요</value>
+    <value>+ ボタンをクリックしてグループを作成してください</value>
   </data>
   <data name="ItemsLabel" xml:space="preserve">
-    <value>항목</value>
+    <value>項目</value>
   </data>
   <data name="ItemsSelectedFormat" xml:space="preserve">
-    <value>{0}개 선택됨</value>
+    <value>{0}件選択</value>
   </data>
   <data name="GroupsLabel" xml:space="preserve">
-    <value>그룹</value>
+    <value>グループ</value>
   </data>
   <data name="FoldersLabel" xml:space="preserve">
-    <value>폴더</value>
+    <value>フォルダ</value>
   </data>
   <data name="VersionFormat" xml:space="preserve">
-    <value>버전 {0}.{1}.{2}</value>
+    <value>バージョン {0}.{1}.{2}</value>
   </data>
   <data name="VersionUnknown" xml:space="preserve">
-    <value>버전 Unknown</value>
+    <value>バージョン不明</value>
   </data>
   <data name="StartupBlockedByUser" xml:space="preserve">
-    <value>Windows 설정에서 차단됨. 설정 &gt; 앱 &gt; 시작프로그램에서 허용하세요.</value>
+    <value>Windowsの設定でブロックされています。設定 &gt; アプリ &gt; スタートアップで許可してください。</value>
   </data>
   <data name="StartupBlockedByPolicy" xml:space="preserve">
-    <value>그룹 정책에 의해 차단됨</value>
+    <value>グループポリシーによりブロックされています</value>
   </data>
   <data name="StartupRegistrationFailed" xml:space="preserve">
-    <value>시작 프로그램 등록에 실패했습니다. 다시 시도해주세요.</value>
+    <value>スタートアッププログラムの登録に失敗しました。もう一度お試しください。</value>
   </data>
   <data name="ErrorFormat" xml:space="preserve">
-    <value>오류: {0}</value>
+    <value>エラー: {0}</value>
   </data>
   <data name="NotificationTitle" xml:space="preserve">
-    <value>알림</value>
+    <value>通知</value>
   </data>
   <data name="ErrorTitle" xml:space="preserve">
-    <value>오류</value>
+    <value>エラー</value>
   </data>
   <data name="NoResourceIconsAvailable" xml:space="preserve">
-    <value>사용 가능한 리소스 아이콘이 없습니다.</value>
+    <value>利用可能なリソースアイコンがありません。</value>
   </data>
   <data name="IconFolderNotFoundFormat" xml:space="preserve">
-    <value>아이콘 폴더를 찾을 수 없습니다:
+    <value>アイコンフォルダが見つかりません:
 {0}</value>
   </data>
   <data name="IconLoadErrorFormat" xml:space="preserve">
-    <value>아이콘 로드 중 오류 발생: {0}</value>
+    <value>アイコンの読み込みエラー: {0}</value>
   </data>
   <data name="IconSelectionErrorFormat" xml:space="preserve">
-    <value>아이콘 선택 중 오류 발생: {0}</value>
+    <value>アイコンの選択エラー: {0}</value>
   </data>
   <data name="EnterNameError" xml:space="preserve">
-    <value>이름을 입력하세요.</value>
+    <value>名前を入力してください。</value>
   </data>
   <data name="SelectValidFolderPathError" xml:space="preserve">
-    <value>유효한 폴더 경로를 선택하세요.</value>
+    <value>有効なフォルダパスを選択してください。</value>
   </data>
   <data name="EnterWebUrlError" xml:space="preserve">
-    <value>웹 URL을 입력하세요.</value>
+    <value>Web URLを入力してください。</value>
   </data>
   <data name="SaveErrorFormat" xml:space="preserve">
-    <value>저장 중 오류가 발생했습니다: {0}</value>
+    <value>保存中にエラーが発生しました: {0}</value>
   </data>
   <data name="ItemsCountFormat" xml:space="preserve">
-    <value>{0}개 항목</value>
+    <value>{0}件の項目</value>
   </data>
   <data name="OneItem" xml:space="preserve">
-    <value>1개 항목</value>
+    <value>1件の項目</value>
   </data>
   <data name="WindowActivatedTitle" xml:space="preserve">
-    <value>창 활성화됨</value>
+    <value>ウィンドウがアクティブ化されました</value>
   </data>
   <data name="GroupIdFormat" xml:space="preserve">
-    <value>그룹 ID: {0}</value>
+    <value>グループID: {0}</value>
   </data>
   <data name="ConfirmButton" xml:space="preserve">
-    <value>확인</value>
+    <value>OK</value>
   </data>
   <data name="EnterGroupName" xml:space="preserve">
-    <value>그룹 이름을 입력하세요.</value>
+    <value>グループ名を入力してください。</value>
   </data>
   <data name="SelectIcon" xml:space="preserve">
-    <value>아이콘을 선택하세요.</value>
+    <value>アイコンを選択してください。</value>
   </data>
   <data name="GroupRenameWarning" xml:space="preserve">
-    <value>그룹 이름을 변경하면 '작업 표시줄 강제 업데이트'를 하거나 작업 표시줄에 다시 고정해야 합니다.</value>
+    <value>グループ名を変更した場合、「タスクバーを強制更新」するか、タスクバーに再固定する必要があります。</value>
   </data>
   <data name="SelectValidGroupColumn" xml:space="preserve">
-    <value>유효한 그룹 열 값을 선택하세요.</value>
+    <value>有効なグループ列の値を選択してください。</value>
   </data>
   <data name="ErrorOccurredFormat" xml:space="preserve">
-    <value>오류가 발생했습니다: {0}</value>
+    <value>エラーが発生しました: {0}</value>
   </data>
   <data name="IconFileNotFound" xml:space="preserve">
-    <value>아이콘 파일을 찾을 수 없습니다.</value>
+    <value>アイコンファイルが見つかりません。</value>
   </data>
   <data name="PngToIcoConversionFailed" xml:space="preserve">
-    <value>PNG를 ICO 형식으로 변환하지 못했습니다.</value>
+    <value>PNGからICO形式への変換に失敗しました。</value>
   </data>
   <data name="ImageToIcoConversionFailed" xml:space="preserve">
-    <value>이미지를 ICO 형식으로 변환하지 못했습니다.</value>
+    <value>画像からICO形式への変換に失敗しました。</value>
   </data>
   <data name="ExeIconExtractionFailed" xml:space="preserve">
-    <value>EXE 파일에서 아이콘을 추출하지 못했습니다.</value>
+    <value>EXEファイルからのアイコン抽出に失敗しました。</value>
   </data>
   <data name="InvalidCharactersInGroupName" xml:space="preserve">
-    <value>그룹 이름에 잘못된 문자가 포함되어 있습니다.</value>
+    <value>グループ名に無効な文字が含まれています。</value>
   </data>
   <data name="GridIconCreationError" xml:space="preserve">
-    <value>그리드 아이콘 생성 오류</value>
+    <value>グリッドアイコン作成エラー</value>
   </data>
   <data name="InvalidGridSize" xml:space="preserve">
-    <value>잘못된 그리드 크기</value>
+    <value>無効なグリッドサイズ</value>
   </data>
   <data name="SelectValidGridSize" xml:space="preserve">
-    <value>콤보박스에서 유효한 그리드 크기를 선택하세요.</value>
+    <value>コンボボックスから有効なグリッドサイズを選択してください。</value>
   </data>
   <data name="IconProcessingFailedFormat" xml:space="preserve">
-    <value>아이콘 처리 실패: {0}</value>
+    <value>アイコン処理に失敗: {0}</value>
   </data>
   <data name="IconResetFailedFormat" xml:space="preserve">
-    <value>아이콘 초기화 실패: {0}</value>
+    <value>アイコンのリセットに失敗: {0}</value>
   </data>
   <data name="OverwriteTitle" xml:space="preserve">
-    <value>덮어쓰기</value>
+    <value>上書き</value>
   </data>
   <data name="OverwriteConfirmation" xml:space="preserve">
-    <value>이 이름의 바로가기가 이미 있습니다. 바꾸시겠습니까?</value>
+    <value>この名前のショートカットは既に存在します。置き換えますか？</value>
   </data>
   <data name="YesButton" xml:space="preserve">
-    <value>예</value>
+    <value>はい</value>
   </data>
   <data name="NoButton" xml:space="preserve">
-    <value>아니오</value>
+    <value>いいえ</value>
   </data>
   <data name="FolderNotFound" xml:space="preserve">
-    <value>폴더가 존재하지 않습니다.</value>
+    <value>フォルダが存在しません。</value>
   </data>
   <data name="EmptyFolder" xml:space="preserve">
-    <value>내용이 없습니다.</value>
+    <value>内容がありません。</value>
   </data>
   <data name="AccessDenied" xml:space="preserve">
-    <value>액세스가 거부되었습니다.</value>
+    <value>アクセスが拒否されました。</value>
   </data>
   <data name="ErrorOccurred" xml:space="preserve">
-    <value>오류가 발생했습니다.</value>
+    <value>エラーが発生しました。</value>
   </data>
   <data name="GroupsCountFormat" xml:space="preserve">
-    <value>{0}개 그룹</value>
+    <value>{0}件のグループ</value>
   </data>
   <data name="OneGroup" xml:space="preserve">
-    <value>1개 그룹</value>
+    <value>1件のグループ</value>
   </data>
   <data name="DeleteTitle" xml:space="preserve">
-    <value>삭제</value>
+    <value>削除</value>
   </data>
   <data name="DeleteGroupConfirmation" xml:space="preserve">
-    <value>"{0}" 그룹을 삭제하시겠습니까?</value>
+    <value>「{0}」グループを削除しますか？</value>
   </data>
   <data name="DeleteButton" xml:space="preserve">
-    <value>삭제</value>
+    <value>削除</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>취소</value>
+    <value>キャンセル</value>
   </data>
   <data name="SettingsOpenError" xml:space="preserve">
-    <value>설정 창을 열지 못했습니다.</value>
+    <value>設定ウィンドウを開けませんでした。</value>
   </data>
   <data name="FoldersCountFormat" xml:space="preserve">
-    <value>{0}개 폴더</value>
+    <value>{0}件のフォルダ</value>
   </data>
   <data name="OneFolderItem" xml:space="preserve">
-    <value>1개 폴더</value>
+    <value>1件のフォルダ</value>
   </data>
   <data name="DeleteFolderConfirmation" xml:space="preserve">
-    <value>"{0}" 폴더를 삭제하시겠습니까?</value>
+    <value>「{0}」フォルダを削除しますか？</value>
   </data>
   <data name="EditFolderDialogTitle" xml:space="preserve">
-    <value>폴더 수정</value>
+    <value>フォルダを編集</value>
   </data>
   <data name="AddFolderDialogTitle" xml:space="preserve">
-    <value>폴더 추가</value>
+    <value>フォルダを追加</value>
   </data>
   <data name="FolderAlreadyExists" xml:space="preserve">
-    <value>"{0}" 폴더는 이미 등록되어 있습니다.</value>
+    <value>「{0}」フォルダは既に登録されています。</value>
   </data>
   <data name="FolderNotFoundFormat" xml:space="preserve">
-    <value>폴더를 찾을 수 없습니다: {0}</value>
+    <value>フォルダが見つかりません: {0}</value>
   </data>
   <data name="OpenFolderFailed" xml:space="preserve">
-    <value>폴더 열기 실패: {0}</value>
+    <value>フォルダを開けませんでした: {0}</value>
   </data>
   <data name="EmptyUrl" xml:space="preserve">
-    <value>URL이 비어 있습니다.</value>
+    <value>URLが空です。</value>
   </data>
   <data name="OpenWebsiteFailed" xml:space="preserve">
-    <value>웹 사이트 열기 실패: {0}</value>
+    <value>Webサイトを開けませんでした: {0}</value>
   </data>
   <data name="WindowsStoreAppLocation" xml:space="preserve">
-    <value>Windows Store 앱의 파일 위치는 열 수 없습니다.\n(Windows Store apps do not have accessible file locations)</value>
+    <value>Windows Storeアプリのファイルの場所にはアクセスできません。</value>
   </data>
   <data name="CannotDetermineDirectory" xml:space="preserve">
-    <value>경로에서 디렉터리를 확인할 수 없습니다: {0}</value>
+    <value>パスからディレクトリを特定できません: {0}</value>
   </data>
   <data name="DirectoryDoesNotExist" xml:space="preserve">
-    <value>디렉터리가 존재하지 않습니다: {0}</value>
+    <value>ディレクトリが存在しません: {0}</value>
   </data>
   <data name="OpenFileLocationFailed" xml:space="preserve">
-    <value>파일 위치 열기 실패: {0}</value>
+    <value>ファイルの場所を開けませんでした: {0}</value>
   </data>
   <data name="OpenMenuItem" xml:space="preserve">
-    <value>열기</value>
+    <value>開く</value>
   </data>
   <data name="RunAsAdminMenuItem" xml:space="preserve">
-    <value>관리자 권한으로 실행</value>
+    <value>管理者として実行</value>
   </data>
   <data name="OpenFileLocationMenuItem" xml:space="preserve">
-    <value>파일 위치 열기</value>
+    <value>ファイルの場所を開く</value>
   </data>
   <data name="EditThisGroupMenuItem" xml:space="preserve">
-    <value>이 그룹 편집</value>
+    <value>このグループを編集</value>
   </data>
   <data name="LaunchAllMenuItem" xml:space="preserve">
-    <value>Launch All</value>
+    <value>すべて起動</value>
   </data>
   <data name="AppDisplayName" xml:space="preserve">
-    <value>앱 그룹</value>
+    <value>アプリグループ</value>
     <comment>Application display name shown in Start Menu and Taskbar</comment>
   </data>
   <data name="AppDescription" xml:space="preserve">
-    <value>작업 표시줄 그룹 관리 앱</value>
+    <value>タスクバーグループ管理アプリ</value>
     <comment>Application description</comment>
   </data>
   <data name="StartMenuDescription.Text" xml:space="preserve">
-    <value>트레이 아이콘을 클릭하면 등록된 폴더가 표시됩니다.</value>
+    <value>トレイアイコンをクリックすると登録済みフォルダが表示されます。</value>
   </data>
   <data name="SearchFoldersPlaceholder.PlaceholderText" xml:space="preserve">
-    <value>폴더 검색...</value>
+    <value>フォルダを検索...</value>
   </data>
   <data name="AddFolderButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>폴더 추가</value>
+    <value>フォルダを追加</value>
   </data>
   <data name="EditFolderButton.ToolTipService.ToolTip" xml:space="preserve">
-    <value>수정</value>
+    <value>編集</value>
   </data>
   <data name="EmptyFoldersTitle.Text" xml:space="preserve">
-    <value>폴더가 없습니다!</value>
+    <value>フォルダがありません！</value>
   </data>
   <data name="EmptyFoldersDesc.Text" xml:space="preserve">
-    <value>폴더를 드래그하여 추가하세요</value>
+    <value>フォルダをドラッグして追加してください</value>
   </data>
   <data name="SelectedAppsCountFormat" xml:space="preserve">
-    <value>{0}개 선택됨</value>
+    <value>{0}件選択</value>
   </data>
   <data name="TrayMenuSettings" xml:space="preserve">
-    <value>설정</value>
+    <value>設定</value>
   </data>
   <data name="TrayMenuExit" xml:space="preserve">
-    <value>종료</value>
+    <value>終了</value>
   </data>
   <data name="SubfolderDepth.Text" xml:space="preserve">
-    <value>하위 폴더 탐색 개수</value>
+    <value>サブフォルダの深さ</value>
   </data>
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
-    <value>트레이 시작 메뉴에서 폴더 선택 시 설정된 개수의 하위 폴더 위치까지 표시합니다.</value>
+    <value>トレイスタートメニューでフォルダ選択時、指定された深さまでサブフォルダの場所を表示します。</value>
   </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
-    <value>언어</value>
+    <value>言語</value>
   </data>
   <data name="LanguageSettingDescription.Text" xml:space="preserve">
-    <value>앱 표시 언어를 선택합니다. 적용하려면 앱을 다시 시작해야 합니다.</value>
+    <value>アプリの表示言語を選択します。適用するにはアプリの再起動が必要です。</value>
   </data>
   <data name="LanguageSystemDefault" xml:space="preserve">
-    <value>시스템 기본값</value>
+    <value>システムの既定値</value>
   </data>
   <data name="LanguageRestartRequired" xml:space="preserve">
-    <value>언어 변경을 적용하려면 앱을 다시 시작하세요.</value>
+    <value>言語の変更を適用するにはアプリを再起動してください。</value>
   </data>
 </root>

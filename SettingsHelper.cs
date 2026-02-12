@@ -38,6 +38,9 @@ namespace AppGroup
             public bool RunAtStartup { get; set; } = true;
             public bool UseGrayscaleIcon { get; set; } = false;
 
+            // 언어 설정 (빈 문자열이면 OS 기본 언어 사용)
+            public string Language { get; set; } = "";
+
             // 시작 메뉴 설정
             public string TrayClickAction { get; set; } = "FolderList";
             public bool ShowFolderPath { get; set; } = true;
@@ -299,6 +302,30 @@ namespace AppGroup
         public static AppSettings GetCurrentSettings()
         {
             return _currentSettings ?? new AppSettings();
+        }
+
+        /// <summary>
+        /// 저장된 언어 설정을 앱 시작 시 적용합니다.
+        /// Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride를 설정합니다.
+        /// </summary>
+        public static void ApplyLanguageOverride()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    string jsonContent = File.ReadAllText(SettingsPath);
+                    var settings = JsonSerializer.Deserialize<AppSettings>(jsonContent);
+                    if (settings != null && !string.IsNullOrWhiteSpace(settings.Language))
+                    {
+                        Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = settings.Language;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"언어 설정 적용 오류: {ex.Message}");
+            }
         }
     }
 }

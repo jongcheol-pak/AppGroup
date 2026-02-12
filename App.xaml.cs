@@ -58,6 +58,9 @@ namespace AppGroup
         {
             try
             {
+                // 저장된 언어 설정 적용 (InitializeComponent 이전에 호출 필수)
+                SettingsHelper.ApplyLanguageOverride();
+
                 // 명령줄 인수 가져오기
                 string[] cmdArgs = Environment.GetCommandLineArgs();
                 bool isSilent = HasSilentFlag(cmdArgs);

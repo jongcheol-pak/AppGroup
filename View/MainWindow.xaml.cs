@@ -84,7 +84,7 @@ namespace AppGroup.View
             // 윈도우 초기 설정
             this.CenterOnScreen();
             this.MinHeight = 600;
-            this.MinWidth = 530;
+            this.MinWidth = 620;
 
             this.ExtendsContentIntoTitleBar = true;
             var iconPath = Path.Combine(AppContext.BaseDirectory, "AppGroup.ico");
@@ -1735,6 +1735,9 @@ namespace AppGroup.View
 
                 // 설정 로드
                 await _settingsViewModel.LoadCurrentSettingsAsync();
+
+                // 언어 ComboBox 초기화
+                InitializeLanguageComboBox();
             }
             catch (Exception ex)
             {
@@ -1783,6 +1786,88 @@ namespace AppGroup.View
                 _isSettingsLoading = true;
                 SettingsSystemTrayToggle.IsOn = !SettingsSystemTrayToggle.IsOn;
                 _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// 언어 ComboBox를 초기화합니다.
+        /// </summary>
+        private void InitializeLanguageComboBox()
+        {
+            _isSettingsLoading = true;
+            try
+            {
+                SettingsLanguageComboBox.Items.Clear();
+
+                // 시스템 기본값 항목
+                var systemDefaultItem = new ComboBoxItem
+                {
+                    Content = _resourceLoader.GetString("LanguageSystemDefault"),
+                    Tag = ""
+                };
+                SettingsLanguageComboBox.Items.Add(systemDefaultItem);
+
+                // 지원 언어 목록
+                var languages = new[]
+                {
+                    ("en-US", "English"),
+                    ("ko-KR", "한국어"),
+                    ("ja-JP", "日本語"),
+                    ("zh-CN", "简体中文"),
+                    ("zh-TW", "繁體中文"),
+                };
+                foreach (var (code, displayName) in languages)
+                {
+                    var item = new ComboBoxItem { Content = displayName, Tag = code };
+                    SettingsLanguageComboBox.Items.Add(item);
+                }
+
+                // 현재 설정에 맞는 항목 선택
+                string currentLanguage = _settingsViewModel?.SelectedLanguage ?? "";
+                bool found = false;
+                foreach (ComboBoxItem item in SettingsLanguageComboBox.Items)
+                {
+                    if ((string)item.Tag == currentLanguage)
+                    {
+                        SettingsLanguageComboBox.SelectedItem = item;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    SettingsLanguageComboBox.SelectedIndex = 0;
+                }
+            }
+            finally
+            {
+                _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// 언어 변경 ComboBox 선택 변경 이벤트 핸들러
+        /// </summary>
+        private async void SettingsLanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isSettingsLoading || _settingsViewModel == null) return;
+
+            try
+            {
+                if (SettingsLanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
+                {
+                    string languageCode = (string)selectedItem.Tag;
+                    _settingsViewModel.SelectedLanguage = languageCode;
+                    await _settingsViewModel.SaveSettingsAsync();
+
+                    // 재시작 안내 메시지 표시
+                    LanguageRestartMessage.Text = _resourceLoader.GetString("LanguageRestartRequired");
+                    LanguageRestartMessage.Visibility = Visibility.Visible;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"언어 설정 저장 오류: {ex.Message}");
             }
         }
 

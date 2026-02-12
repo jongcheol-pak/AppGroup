@@ -49,7 +49,7 @@ dotnet format AppGroup/AppGroup.csproj
   - `IconHelper.Bitmap.cs`: 비트맵 변환/크롭 (분리됨)
 - `IconCache`: 하이브리드 메모리/디스크 아이콘 캐시
 - `BackupHelper`: .agz 파일 가져오기/내보내기
-- `SettingsHelper`: 사용자 설정 관리
+- `SettingsHelper`: 사용자 설정 관리 (시작 프로그램, 시스템 트레이, 언어 등)
 - `TaskbarManager`: 작업 표시줄 위치 감지 및 윈도우 배치
 - `SystemTrayManager`: 시스템 트레이 아이콘 관리
 
@@ -83,7 +83,7 @@ dotnet format AppGroup/AppGroup.csproj
 %LocalAppData%/AppGroup/
 ├── appgroups.json       # 그룹 설정 (JSON)
 ├── startmenu.json       # 시작 메뉴 폴더 설정 (JSON)
-├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 하위 폴더 깊이 등)
+├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 하위 폴더 깊이 등)
 ├── Groups/              # 그룹별 바로가기 폴더
 ├── Icons/               # 캐시된 아이콘
 ├── lastEdit             # 마지막 편집 그룹 ID

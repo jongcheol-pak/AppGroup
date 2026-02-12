@@ -76,7 +76,7 @@
                         <ColumnDefinition Width="Auto" MinWidth="250"/>
 
                     </Grid.ColumnDefinitions>
-                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">아이콘 선택</TextBlock>
+                    <TextBlock x:Uid="IconSelectionTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <Button Click="CloseDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
@@ -397,7 +397,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto" MinWidth="250"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold">아이콘 선택</TextBlock>
+                    <TextBlock x:Uid="IconSelectionTitle" FontSize="20" Margin="10" VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <Button Click="CloseFolderWebIconDialog" Grid.Column="1" Height="35" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xe711;" FontSize="15"/>
                     </Button>
@@ -408,8 +408,8 @@
                             <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xe91b;" FontSize="25"/>
                                 <StackPanel>
-                                    <TextBlock FontSize="16" FontWeight="SemiBold">일반 아이콘</TextBlock>
-                                    <TextBlock FontSize="13">디렉터리에서 아이콘 선택</TextBlock>
+                                    <TextBlock x:Uid="RegularIconTitle" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock x:Uid="RegularIconDesc" FontSize="13"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
@@ -417,8 +417,8 @@
                             <StackPanel Spacing="20" Padding="10" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xE8B9;" FontSize="25"/>
                                 <StackPanel>
-                                    <TextBlock FontSize="16" FontWeight="SemiBold">리소스 아이콘</TextBlock>
-                                    <TextBlock FontSize="13">앱 리소스에서 아이콘 선택</TextBlock>
+                                    <TextBlock x:Uid="ResourceIconTitle" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock x:Uid="ResourceIconDesc" FontSize="13"/>
                                 </StackPanel>
                             </StackPanel>
                         </Button>
