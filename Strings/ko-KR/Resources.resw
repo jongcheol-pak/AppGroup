@@ -666,4 +666,22 @@
   <data name="LanguageRestartRequired" xml:space="preserve">
     <value>언어 변경을 적용하려면 앱을 다시 시작하세요.</value>
   </data>
+  <data name="NavAbout.Text" xml:space="preserve">
+    <value>정보</value>
+  </data>
+  <data name="ThemeSetting.Text" xml:space="preserve">
+    <value>테마</value>
+  </data>
+  <data name="ThemeSettingDescription.Text" xml:space="preserve">
+    <value>앱 표시 테마를 선택합니다.</value>
+  </data>
+  <data name="ThemeSystemDefault" xml:space="preserve">
+    <value>시스템 기본값</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>다크</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>라이트</value>
+  </data>
 </root>

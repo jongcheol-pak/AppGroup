@@ -127,7 +127,6 @@
         <ContentDialog x:Name="CustomizeDialog" >
             <ContentDialog.Resources>
                 <Thickness x:Key="ContentDialogPadding">0,0,0,0</Thickness>
-
             </ContentDialog.Resources>
             <StackPanel Spacing="10" VerticalAlignment="Center" Background="{ThemeResource LayerOnMicaBaseAltFillColorSecondaryBrush}" CornerRadius="5" HorizontalAlignment="Stretch">
                 <Grid Padding="10,0,5,0">

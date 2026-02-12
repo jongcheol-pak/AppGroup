@@ -122,6 +122,18 @@ namespace AppGroup.View
             if (Content is FrameworkElement rootElement)
             {
                 rootElement.DataContext = _viewModel;
+
+                // 저장된 테마 설정 적용
+                string savedTheme = SettingsHelper.GetSavedTheme();
+                if (!string.IsNullOrWhiteSpace(savedTheme))
+                {
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
             }
 
 
@@ -248,21 +260,33 @@ namespace AppGroup.View
         }
         private void UpdateMainGridBackground(UISettings uiSettings)
         {
+            // 저장된 앱 테마 설정 적용
+            string savedTheme = SettingsHelper.GetSavedTheme();
+
             // Check if the accent color is being shown on Start and taskbar
             if (IsAccentColorOnStartTaskbarEnabled())
             {
-
                 if (Content is FrameworkElement rootElement)
                 {
-                    rootElement.RequestedTheme = ElementTheme.Dark;
+                    // 앱 테마 설정이 없는 경우에만 Dark 강제, 있으면 앱 테마 우선
+                    if (string.IsNullOrWhiteSpace(savedTheme))
+                    {
+                        rootElement.RequestedTheme = ElementTheme.Dark;
+                    }
+                    else
+                    {
+                        rootElement.RequestedTheme = savedTheme switch
+                        {
+                            "Dark" => ElementTheme.Dark,
+                            "Light" => ElementTheme.Light,
+                            _ => ElementTheme.Default
+                        };
+                    }
                 }
-                // Get current app theme
-                var appTheme = Application.Current.RequestedTheme;
-
-                // Use SystemAccentColorDark2 for Light mode, Dark3 for Dark mode
-                string accentResourceKey = appTheme == ApplicationTheme.Light
+                // 저장된 테마 설정 기준으로 Accent Color 음영 선택
+                string accentResourceKey = savedTheme == "Light"
                     ? "SystemAccentColorDark2"
-                    : "SystemAccentColorDark2";
+                    : "SystemAccentColorDark3";
 
                 if (Application.Current.Resources.TryGetValue(accentResourceKey, out object accentColor))
                 {
@@ -277,6 +301,16 @@ namespace AppGroup.View
             }
             else
             {
+                // 앱 테마 설정 적용
+                if (Content is FrameworkElement rootElement)
+                {
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
                 MainGrid.Background = null;
             }
         }

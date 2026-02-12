@@ -15,6 +15,19 @@ namespace AppGroup.View
         public StartMenuSettingsDialog()
         {
             InitializeComponent();
+
+            // 저장된 테마 설정 적용 (ContentDialog는 부모 테마를 자동 상속하지 않음)
+            string savedTheme = SettingsHelper.GetSavedTheme();
+            if (!string.IsNullOrWhiteSpace(savedTheme))
+            {
+                RequestedTheme = savedTheme switch
+                {
+                    "Dark" => ElementTheme.Dark,
+                    "Light" => ElementTheme.Light,
+                    _ => ElementTheme.Default
+                };
+            }
+
             Loaded += StartMenuSettingsDialog_Loaded;
             Unloaded += StartMenuSettingsDialog_Unloaded;
         }

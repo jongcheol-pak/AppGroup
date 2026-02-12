@@ -78,8 +78,23 @@ namespace AppGroup.View
             if (Content is FrameworkElement rootElement)
             {
                 rootElement.DataContext = _viewModel;
+
+                // 저장된 테마 설정 적용
+                string savedTheme = SettingsHelper.GetSavedTheme();
+                if (!string.IsNullOrWhiteSpace(savedTheme))
+                {
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
             }
             ExeListView.ItemsSource = _viewModel.ExeFiles;
+
+            // 모든 ContentDialog에 테마 미리 적용 (ShowAsync 시 깜빡임 방지)
+            ApplyThemeToAllDialogs();
 
             MinHeight = 600;
             MinWidth = 530;
@@ -134,6 +149,13 @@ namespace AppGroup.View
                 // Hide() 후 다시 표시될 때 타이틀 바 바인딩이 유실되므로 재설정
                 SetTitleBar(AppTitleBar);
 
+                // 저장된 테마 설정 재적용 (설정 변경 후 기존 윈도우 재활성화 시 반영)
+                if (Content is FrameworkElement rootElement)
+                {
+                    rootElement.RequestedTheme = GetCurrentTheme();
+                }
+                ApplyThemeToAllDialogs();
+
                 // 비교할 현재 그룹 ID 저장
                 int previousGroupId = GroupId;
                 int newGroupId = -1; // 기본값
@@ -173,7 +195,8 @@ namespace AppGroup.View
                     Title = _resourceLoader.GetString("WindowActivatedTitle"),
                     Content = string.Format(_resourceLoader.GetString("GroupIdFormat"), id),
                     CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
+                    RequestedTheme = GetCurrentTheme()
                 };
 
                 await dialog.ShowAsync();
@@ -864,6 +887,7 @@ namespace AppGroup.View
                 ResourceIconGridView.Visibility = Visibility.Collapsed;
             }
 
+            CustomDialog.RequestedTheme = GetCurrentTheme();
             ContentDialogResult result = await CustomDialog.ShowAsync();
 
         }
@@ -1126,6 +1150,7 @@ namespace AppGroup.View
 
         private async void CustomizeDialog_Click(object sender, RoutedEventArgs e)
         {
+            CustomizeDialog.RequestedTheme = GetCurrentTheme();
             ContentDialogResult result = await CustomizeDialog.ShowAsync();
 
         }
@@ -1188,6 +1213,7 @@ namespace AppGroup.View
                     ItemIconPreview.Source = null;
                 }
 
+                EditItemDialog.RequestedTheme = GetCurrentTheme();
                 ContentDialogResult result = await EditItemDialog.ShowAsync();
             }
         }
@@ -1232,6 +1258,7 @@ namespace AppGroup.View
                 }
 
                 FolderWebDialog.XamlRoot = this.Content.XamlRoot;
+                FolderWebDialog.RequestedTheme = GetCurrentTheme();
                 await FolderWebDialog.ShowAsync();
             }
             catch (Exception ex)
@@ -1318,7 +1345,8 @@ namespace AppGroup.View
                 {
                     Title = _resourceLoader.GetString("ErrorTitle"),
                     Content = string.Format(_resourceLoader.GetString("IconResetFailedFormat"), ex.Message),
-                    CloseButtonText = _resourceLoader.GetString("ConfirmButton")
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                    RequestedTheme = GetCurrentTheme()
                 };
                 dialog.XamlRoot = this.Content.XamlRoot;
                 await dialog.ShowAsync();
@@ -1729,7 +1757,8 @@ namespace AppGroup.View
                 {
                     Title = _resourceLoader.GetString("ErrorTitle"),
                     Content = string.Format(_resourceLoader.GetString("IconProcessingFailedFormat"), ex.Message),
-                    CloseButtonText = _resourceLoader.GetString("ConfirmButton")
+                    CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                    RequestedTheme = GetCurrentTheme()
                 };
                 dialog.XamlRoot = this.Content.XamlRoot;
                 await dialog.ShowAsync();
@@ -1743,7 +1772,8 @@ namespace AppGroup.View
                 Content = _resourceLoader.GetString("OverwriteConfirmation"),
                 PrimaryButtonText = _resourceLoader.GetString("YesButton"),
                 CloseButtonText = _resourceLoader.GetString("NoButton"),
-                XamlRoot = Content.XamlRoot
+                XamlRoot = Content.XamlRoot,
+                RequestedTheme = GetCurrentTheme()
             };
 
             var result = await dialog.ShowAsync();
@@ -1756,7 +1786,8 @@ namespace AppGroup.View
                 Title = title,
                 Content = message,
                 CloseButtonText = "확인",
-                XamlRoot = Content.XamlRoot
+                XamlRoot = Content.XamlRoot,
+                RequestedTheme = GetCurrentTheme()
             };
 
             await dialog.ShowAsync();
@@ -1831,6 +1862,35 @@ namespace AppGroup.View
         ~EditGroupWindow()
         {
             Dispose(disposing: false);
+        }
+
+        /// <summary>
+        /// ContentDialog에 적용할 현재 테마를 반환합니다.
+        /// </summary>
+        private static ElementTheme GetCurrentTheme()
+        {
+            string savedTheme = SettingsHelper.GetSavedTheme();
+            return savedTheme switch
+            {
+                "Dark" => ElementTheme.Dark,
+                "Light" => ElementTheme.Light,
+                _ => ElementTheme.Default
+            };
+        }
+
+        /// <summary>
+        /// 모든 XAML 정의 ContentDialog에 현재 테마를 미리 적용합니다.
+        /// ShowAsync 호출 시 기본 테마로 잠깐 표시되는 깜빡임을 방지합니다.
+        /// </summary>
+        private void ApplyThemeToAllDialogs()
+        {
+            var theme = GetCurrentTheme();
+            EditItemDialog.RequestedTheme = theme;
+            CustomDialog.RequestedTheme = theme;
+            CustomizeDialog.RequestedTheme = theme;
+            AllAppsDialog.RequestedTheme = theme;
+            FolderWebDialog.RequestedTheme = theme;
+            FolderWebIconDialog.RequestedTheme = theme;
         }
     }
 }

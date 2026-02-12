@@ -666,4 +666,22 @@
   <data name="LanguageRestartRequired" xml:space="preserve">
     <value>言語の変更を適用するにはアプリを再起動してください。</value>
   </data>
+  <data name="NavAbout.Text" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="ThemeSetting.Text" xml:space="preserve">
+    <value>テーマ</value>
+  </data>
+  <data name="ThemeSettingDescription.Text" xml:space="preserve">
+    <value>アプリの表示テーマを選択します。</value>
+  </data>
+  <data name="ThemeSystemDefault" xml:space="preserve">
+    <value>システム既定値</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>ライト</value>
+  </data>
 </root>

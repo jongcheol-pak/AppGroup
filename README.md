@@ -56,7 +56,7 @@ dotnet format AppGroup/AppGroup.csproj
 ### View 구조 (MVVM)
 | View | 역할 | 라인 수 |
 |------|------|----------|
-| `MainWindow` | 메인 관리 화면, 그룹 목록 및 편집, 시작 메뉴 폴더 관리 | 1465 |
+| `MainWindow` | 메인 관리 화면, 그룹 목록 및 편집, 시작 메뉴 폴더 관리, 설정, 정보 | 1465 |
 | `PopupWindow` | 작업 표시줄 클릭 시 앱 목록 팝업 | 1756 |
 | `EditGroupWindow` | 그룹 편집 (앱 추가/제거, 아이콘 설정) | 1843 |
 | `SettingsDialog` | 전역 설정 다이얼로그 | - |
@@ -65,6 +65,14 @@ dotnet format AppGroup/AppGroup.csproj
 | `StartMenuSettingsDialog` | 시작 메뉴 설정 다이얼로그 (열 개수, 하위 폴더 탐색 깊이) | - |
 | `EditGroupWindow.AllApps` | 설치된 앱 목록 기능 (partial) | 500 |
 | `EditGroupWindow.FolderWeb` | 폴더/웹 편집 기능 (partial) | 481 |
+
+### MainWindow 네비게이션 구조
+| 탭 | 위치 | 설명 |
+|----|------|------|
+| 작업 표시줄 (Taskbar) | MenuItems | 그룹 목록 관리, 검색, 가져오기/내보내기 |
+| 시작 메뉴 (StartMenu) | MenuItems | 시작 메뉴 폴더 등록/관리, 드래그앤드롭 |
+| 설정 (Settings) | FooterMenuItems | 시작 프로그램, 시스템 트레이, 언어, 테마 설정 |
+| 정보 (About) | FooterMenuItems | 앱 정보, 버전, 오픈소스 라이선스 |
 
 ### 시작 메뉴 폴더 기능
 - **폴더 등록**: MainWindow의 시작 탭에서 드래그앤드롭 또는 다이얼로그로 폴더 추가
@@ -83,7 +91,7 @@ dotnet format AppGroup/AppGroup.csproj
 %LocalAppData%/AppGroup/
 ├── appgroups.json       # 그룹 설정 (JSON)
 ├── startmenu.json       # 시작 메뉴 폴더 설정 (JSON)
-├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 하위 폴더 깊이 등)
+├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 테마, 하위 폴더 깊이 등)
 ├── Groups/              # 그룹별 바로가기 폴더
 ├── Icons/               # 캐시된 아이콘
 ├── lastEdit             # 마지막 편집 그룹 ID

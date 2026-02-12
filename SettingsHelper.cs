@@ -41,6 +41,9 @@ namespace AppGroup
             // 언어 설정 (빈 문자열이면 OS 기본 언어 사용)
             public string Language { get; set; } = "";
 
+            // 테마 설정 (빈 문자열이면 시스템 기본값, "Dark", "Light")
+            public string Theme { get; set; } = "";
+
             // 시작 메뉴 설정
             public string TrayClickAction { get; set; } = "FolderList";
             public bool ShowFolderPath { get; set; } = true;
@@ -326,6 +329,61 @@ namespace AppGroup
             {
                 System.Diagnostics.Debug.WriteLine($"언어 설정 적용 오류: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 저장된 테마 설정을 앱에 적용합니다.
+        /// Application.Current.RequestedTheme을 설정합니다.
+        /// </summary>
+        public static void ApplyThemeOverride()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    string jsonContent = File.ReadAllText(SettingsPath);
+                    var settings = JsonSerializer.Deserialize<AppSettings>(jsonContent);
+                    if (settings != null && !string.IsNullOrWhiteSpace(settings.Theme))
+                    {
+                        if (Enum.TryParse<Microsoft.UI.Xaml.ApplicationTheme>(settings.Theme, out var theme))
+                        {
+                            Microsoft.UI.Xaml.Application.Current.RequestedTheme = theme;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"테마 설정 적용 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 저장된 테마 설정 문자열을 반환합니다.
+        /// 캐시된 설정이 있으면 파일 I/O 없이 반환합니다.
+        /// </summary>
+        public static string GetSavedTheme()
+        {
+            // 캐시된 설정이 있으면 파일 I/O 없이 반환
+            if (_currentSettings != null)
+            {
+                return _currentSettings.Theme ?? "";
+            }
+
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    string jsonContent = File.ReadAllText(SettingsPath);
+                    var settings = JsonSerializer.Deserialize<AppSettings>(jsonContent);
+                    return settings?.Theme ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"테마 설정 읽기 오류: {ex.Message}");
+            }
+            return "";
         }
     }
 }

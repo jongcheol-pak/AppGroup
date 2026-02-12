@@ -6,6 +6,13 @@
 1. **언어 변경 기능 추가** - 설정 화면에서 앱 표시 언어 선택 가능 (시스템 기본값/English/한국어), 설정 영속 저장, 앱 재시작 시 적용
 2. **일본어/중국어 리소스 추가** - ja-JP, zh-CN, zh-TW 리소스 파일 생성 및 언어 선택 목록에 추가
 3. **DefaultLanguage 설정 추가** - .csproj에 DefaultLanguage=en-US 추가, 리소스 미지원 언어에서 영문 fallback 보장
+4. **정보(About) 메뉴 분리** - 설정 화면의 About/Open Source Licenses 섹션을 별도 정보 탭으로 이동
+5. **테마 변경 기능 추가** - 설정 화면에서 시스템 기본값/다크/라이트 테마 선택, 즉시 적용 및 영속 저장, 모든 윈도우에 적용
+6. **팝업 윈도우 테마 배경 미반영 수정** - StartMenuPopupWindow, FolderContentsPopupWindow, PopupWindow에서 앱 테마를 우선 참조하도록 배경 로직 수정
+7. **ContentDialog 테마 미반영 수정** - 코드로 생성한 ContentDialog에 RequestedTheme 명시 적용 (StartMenuSettingsDialog, MainWindow 인라인 다이얼로그, EditGroupWindow 다이얼로그), XAML 정의 ContentDialog도 ShowAsync 전 테마 적용, PopupWindow 테마 적용 조건 수정
+8. **EditGroupWindow 재활성화 시 테마 미반영 수정** - EditGroupHelper가 기존 윈도우를 재사용하므로 Activated 이벤트에서 테마 재적용
+9. **ContentDialog 테마 깜빡임 수정** - 모든 XAML 정의 ContentDialog에 ContentDialogBackground/TopOverlay를 Transparent로 오버라이드하여 팝업 표시 시 밝은색 깜빡임 제거
+10. **테마 기능 코드 리뷰 버그 수정** - PopupWindow Accent Color 로직에서 잘못된 테마 참조(Application.Current.RequestedTheme) 및 동일 값 반환 버그 수정, MainWindow의 EditStartMenuDialog/FolderIconDialog ShowAsync 전 테마 미적용 6곳 수정, GetSavedTheme() 캐시 우선 사용으로 불필요한 파일 I/O 제거
 
 ### 2026-02-10
 1. **하위 폴더 팝업 계층 탐색 기능 추가** - SubfolderDepth 설정 추가 (기본값 2), 계층적 하위 폴더 탐색, 파일 호버 시 팝업 닫기

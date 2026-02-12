@@ -276,6 +276,21 @@ namespace AppGroup.View
         {
             InitializeComponent();
 
+            // 저장된 테마 설정 적용
+            if (Content is FrameworkElement rootElement)
+            {
+                string savedTheme = SettingsHelper.GetSavedTheme();
+                if (!string.IsNullOrWhiteSpace(savedTheme))
+                {
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
+            }
+
             _windowHelper = new WindowHelper(this);
             _windowHelper.SetSystemBackdrop(WindowHelper.BackdropType.AcrylicBase);
             _windowHelper.IsMaximizable = false;
@@ -318,8 +333,18 @@ namespace AppGroup.View
         {
             try
             {
-                var foreground = settings.GetColorValue(UIColorType.Foreground);
-                bool isDarkMode = foreground.R > THEME_DETECTION_THRESHOLD;
+                bool isDarkMode;
+
+                // 앱 자체 테마 설정이 있으면 우선 사용
+                if (Content is FrameworkElement rootElement && rootElement.RequestedTheme != ElementTheme.Default)
+                {
+                    isDarkMode = rootElement.RequestedTheme == ElementTheme.Dark;
+                }
+                else
+                {
+                    var foreground = settings.GetColorValue(UIColorType.Foreground);
+                    isDarkMode = foreground.R > THEME_DETECTION_THRESHOLD;
+                }
 
                 MainGrid.Background = isDarkMode ? DarkModeBackground : LightModeBackground;
             }
@@ -961,6 +986,18 @@ namespace AppGroup.View
             {
                 // 이중 로딩 방지 플래그 설정
                 _isShowingPopup = true;
+
+                // 저장된 테마 설정 재적용 (설정 변경 반영)
+                if (Content is FrameworkElement rootElement)
+                {
+                    string savedTheme = SettingsHelper.GetSavedTheme();
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
 
                 // 테마에 맞는 배경색 설정
                 UpdateMainGridBackground(_uiSettings);

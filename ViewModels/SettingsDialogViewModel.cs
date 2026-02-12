@@ -21,6 +21,7 @@ namespace AppGroup.ViewModels
         private string _startupStatusMessage = string.Empty;
         private bool _isStartupBlocked;
         private string _selectedLanguage = "";
+        private string _selectedTheme = "";
 
         public bool IsLoading
         {
@@ -91,6 +92,15 @@ namespace AppGroup.ViewModels
             set => SetProperty(ref _selectedLanguage, value);
         }
 
+        /// <summary>
+        /// 선택된 테마 (빈 문자열이면 시스템 기본값, "Dark", "Light")
+        /// </summary>
+        public string SelectedTheme
+        {
+            get => _selectedTheme;
+            set => SetProperty(ref _selectedTheme, value);
+        }
+
         public void InitializeVersionText()
         {
             try
@@ -125,6 +135,7 @@ namespace AppGroup.ViewModels
                 ShowSystemTrayIcon = _settings.ShowSystemTrayIcon;
                 UseGrayscaleIcon = _settings.UseGrayscaleIcon;
                 SelectedLanguage = _settings.Language ?? "";
+                SelectedTheme = _settings.Theme ?? "";
 
                 // 실제 시스템 시작 프로그램 상태 확인
                 var startupState = await SettingsHelper.GetStartupStateAsync();
@@ -187,6 +198,7 @@ namespace AppGroup.ViewModels
                 _settings.RunAtStartup = RunAtStartup;
                 _settings.UseGrayscaleIcon = UseGrayscaleIcon;
                 _settings.Language = SelectedLanguage ?? "";
+                _settings.Theme = SelectedTheme ?? "";
 
                 await SettingsHelper.SaveSettingsAsync(_settings);
 

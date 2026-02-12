@@ -666,4 +666,22 @@
   <data name="LanguageRestartRequired" xml:space="preserve">
     <value>請重新啟動應用程式以套用語言變更。</value>
   </data>
+  <data name="NavAbout.Text" xml:space="preserve">
+    <value>關於</value>
+  </data>
+  <data name="ThemeSetting.Text" xml:space="preserve">
+    <value>主題</value>
+  </data>
+  <data name="ThemeSettingDescription.Text" xml:space="preserve">
+    <value>選擇應用程式顯示主題。</value>
+  </data>
+  <data name="ThemeSystemDefault" xml:space="preserve">
+    <value>系統預設</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>淺色</value>
+  </data>
 </root>

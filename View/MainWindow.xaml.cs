@@ -78,6 +78,18 @@ namespace AppGroup.View
             if (Content is FrameworkElement rootElement)
             {
                 rootElement.DataContext = _viewModel;
+
+                // 저장된 테마 설정 적용
+                string savedTheme = SettingsHelper.GetSavedTheme();
+                if (!string.IsNullOrWhiteSpace(savedTheme))
+                {
+                    rootElement.RequestedTheme = savedTheme switch
+                    {
+                        "Dark" => ElementTheme.Dark,
+                        "Light" => ElementTheme.Light,
+                        _ => ElementTheme.Default
+                    };
+                }
             }
             _iconHelper = new IconHelper();
 
@@ -885,7 +897,8 @@ namespace AppGroup.View
                     PrimaryButtonText = _resourceLoader.GetString("DeleteButton"),
                     CloseButtonText = _resourceLoader.GetString("CancelButton"),
                     DefaultButton = ContentDialogButton.Close,
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
+                    RequestedTheme = GetCurrentTheme()
                 };
 
                 var result = await deleteDialog.ShowAsync();
@@ -1026,18 +1039,29 @@ namespace AppGroup.View
                     if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Visible;
                     if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Collapsed;
                     if (SettingsContent != null) SettingsContent.Visibility = Visibility.Collapsed;
+                    if (AboutContent != null) AboutContent.Visibility = Visibility.Collapsed;
                 }
                 else if (tag == "StartMenu")
                 {
                     if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Collapsed;
                     if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Visible;
                     if (SettingsContent != null) SettingsContent.Visibility = Visibility.Collapsed;
+                    if (AboutContent != null) AboutContent.Visibility = Visibility.Collapsed;
                 }
                 else if (tag == "Settings")
                 {
                     if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Collapsed;
                     if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Collapsed;
                     if (SettingsContent != null) SettingsContent.Visibility = Visibility.Visible;
+                    if (AboutContent != null) AboutContent.Visibility = Visibility.Collapsed;
+                    _ = LoadSettingsAsync();
+                }
+                else if (tag == "About")
+                {
+                    if (TaskbarContent != null) TaskbarContent.Visibility = Visibility.Collapsed;
+                    if (StartMenuContent != null) StartMenuContent.Visibility = Visibility.Collapsed;
+                    if (SettingsContent != null) SettingsContent.Visibility = Visibility.Collapsed;
+                    if (AboutContent != null) AboutContent.Visibility = Visibility.Visible;
                     _ = LoadSettingsAsync();
                 }
             }
@@ -1269,7 +1293,8 @@ namespace AppGroup.View
                                 Title = _resourceLoader.GetString("AddFolderDialogTitle"),
                                 Content = message,
                                 CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
-                                XamlRoot = this.Content.XamlRoot
+                                XamlRoot = this.Content.XamlRoot,
+                                RequestedTheme = GetCurrentTheme()
                             };
                             await dialog.ShowAsync();
                         }
@@ -1319,7 +1344,8 @@ namespace AppGroup.View
                     PrimaryButtonText = _resourceLoader.GetString("DeleteButton"),
                     CloseButtonText = _resourceLoader.GetString("CancelButton"),
                     DefaultButton = ContentDialogButton.Close,
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
+                    RequestedTheme = GetCurrentTheme()
                 };
 
                 var result = await deleteDialog.ShowAsync();
@@ -1373,6 +1399,7 @@ namespace AppGroup.View
                         Debug.WriteLine("다이얼로그 표시 중...");
                         FolderDuplicateMessage.Visibility = Visibility.Collapsed;
                         EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+                        EditStartMenuDialog.RequestedTheme = GetCurrentTheme();
                         var result = await EditStartMenuDialog.ShowAsync();
                         Debug.WriteLine($"다이얼로그 결과: {result}");
                     }
@@ -1439,6 +1466,7 @@ namespace AppGroup.View
                 FolderResourceIconGridView.Visibility = Visibility.Collapsed;
 
                 FolderIconDialog.XamlRoot = this.Content.XamlRoot;
+                FolderIconDialog.RequestedTheme = GetCurrentTheme();
                 await FolderIconDialog.ShowAsync();
 
                 // 참고: FolderIconDialog가 닫힌 후의 처리는 각 핸들러에서 수행
@@ -1462,6 +1490,7 @@ namespace AppGroup.View
             // EditStartMenuDialog 다시 표시
             await Task.Delay(100);
             EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+            EditStartMenuDialog.RequestedTheme = GetCurrentTheme();
             await EditStartMenuDialog.ShowAsync();
         }
 
@@ -1495,6 +1524,7 @@ namespace AppGroup.View
                 // EditStartMenuDialog 다시 표시
                 await Task.Delay(100);
                 EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+                EditStartMenuDialog.RequestedTheme = GetCurrentTheme();
                 await EditStartMenuDialog.ShowAsync();
             }
             catch (Exception ex)
@@ -1554,6 +1584,7 @@ namespace AppGroup.View
                     // EditStartMenuDialog 다시 표시
                     await Task.Delay(100);
                     EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+                    EditStartMenuDialog.RequestedTheme = GetCurrentTheme();
                     await EditStartMenuDialog.ShowAsync();
                 }
                 catch (Exception ex)
@@ -1644,6 +1675,7 @@ namespace AppGroup.View
 
                 // 다이얼로그 표시
                 EditStartMenuDialog.XamlRoot = this.Content.XamlRoot;
+                EditStartMenuDialog.RequestedTheme = GetCurrentTheme();
                 await EditStartMenuDialog.ShowAsync();
             }
             catch (Exception ex)
@@ -1733,11 +1765,20 @@ namespace AppGroup.View
                     SettingsContent.DataContext = _settingsViewModel;
                 }
 
+                // 정보 콘텐츠의 DataContext 설정
+                if (AboutContent != null)
+                {
+                    AboutContent.DataContext = _settingsViewModel;
+                }
+
                 // 설정 로드
                 await _settingsViewModel.LoadCurrentSettingsAsync();
 
                 // 언어 ComboBox 초기화
                 InitializeLanguageComboBox();
+
+                // 테마 ComboBox 초기화
+                InitializeThemeComboBox();
             }
             catch (Exception ex)
             {
@@ -1869,6 +1910,116 @@ namespace AppGroup.View
             {
                 Debug.WriteLine($"언어 설정 저장 오류: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 테마 ComboBox를 초기화합니다.
+        /// </summary>
+        private void InitializeThemeComboBox()
+        {
+            _isSettingsLoading = true;
+            try
+            {
+                SettingsThemeComboBox.Items.Clear();
+
+                var systemDefaultItem = new ComboBoxItem
+                {
+                    Content = _resourceLoader.GetString("ThemeSystemDefault"),
+                    Tag = ""
+                };
+                SettingsThemeComboBox.Items.Add(systemDefaultItem);
+
+                var darkItem = new ComboBoxItem
+                {
+                    Content = _resourceLoader.GetString("ThemeDark"),
+                    Tag = "Dark"
+                };
+                SettingsThemeComboBox.Items.Add(darkItem);
+
+                var lightItem = new ComboBoxItem
+                {
+                    Content = _resourceLoader.GetString("ThemeLight"),
+                    Tag = "Light"
+                };
+                SettingsThemeComboBox.Items.Add(lightItem);
+
+                // 현재 설정에 맞는 항목 선택
+                string currentTheme = _settingsViewModel?.SelectedTheme ?? "";
+                bool found = false;
+                foreach (ComboBoxItem item in SettingsThemeComboBox.Items)
+                {
+                    if ((string)item.Tag == currentTheme)
+                    {
+                        SettingsThemeComboBox.SelectedItem = item;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    SettingsThemeComboBox.SelectedIndex = 0;
+                }
+            }
+            finally
+            {
+                _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// 테마 변경 ComboBox 선택 변경 이벤트 핸들러
+        /// </summary>
+        private async void SettingsThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isSettingsLoading || _settingsViewModel == null) return;
+
+            try
+            {
+                if (SettingsThemeComboBox.SelectedItem is ComboBoxItem selectedItem)
+                {
+                    string themeValue = (string)selectedItem.Tag;
+                    _settingsViewModel.SelectedTheme = themeValue;
+                    await _settingsViewModel.SaveSettingsAsync();
+
+                    // 테마 즉시 적용 (FrameworkElement.RequestedTheme 사용)
+                    ApplyThemeToWindow(themeValue);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"테마 설정 저장 오류: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 윈도우에 테마를 적용합니다.
+        /// </summary>
+        private void ApplyThemeToWindow(string themeValue)
+        {
+            if (Content is FrameworkElement rootElement)
+            {
+                rootElement.RequestedTheme = themeValue switch
+                {
+                    "Dark" => ElementTheme.Dark,
+                    "Light" => ElementTheme.Light,
+                    _ => ElementTheme.Default
+                };
+            }
+        }
+
+        /// <summary>
+        /// ContentDialog에 현재 테마를 적용합니다.
+        /// WinUI 3에서 코드로 생성한 ContentDialog는 부모 테마를 자동 상속하지 않습니다.
+        /// </summary>
+        private static ElementTheme GetCurrentTheme()
+        {
+            string savedTheme = SettingsHelper.GetSavedTheme();
+            return savedTheme switch
+            {
+                "Dark" => ElementTheme.Dark,
+                "Light" => ElementTheme.Light,
+                _ => ElementTheme.Default
+            };
         }
 
         #endregion

@@ -59,6 +59,7 @@ namespace AppGroup.View
                 AppSearchTextBox.Text = "";
                 _viewModel.SelectedAppsCountText = string.Format(_resourceLoader.GetString("SelectedAppsCountFormat"), 0);
 
+                AllAppsDialog.RequestedTheme = GetCurrentTheme();
                 _ = AllAppsDialog.ShowAsync();
 
                 // UI가 렌더링될 시간을 확보한 후 백그라운드에서 앱 목록 가져오기
