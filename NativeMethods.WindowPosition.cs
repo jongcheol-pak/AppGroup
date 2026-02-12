@@ -151,8 +151,11 @@ namespace AppGroup
 
         /// <summary>
         /// 윈도우를 작업 표시줄 위에 배치합니다.
+        /// 커서 위치를 직접 전달하여 클릭 시점의 아이콘 위치 기준으로 배치할 수 있습니다.
         /// </summary>
-        public static void PositionWindowAboveTaskbar(IntPtr hWnd)
+        /// <param name="hWnd">윈도우 핸들</param>
+        /// <param name="capturedCursorPos">클릭 시점에 캡처된 커서 위치 (null이면 현재 커서 위치 사용)</param>
+        public static void PositionWindowAboveTaskbar(IntPtr hWnd, POINT? capturedCursorPos = null)
         {
             try
             {
@@ -165,9 +168,13 @@ namespace AppGroup
                 int windowWidth = windowRect.right - windowRect.left;
                 int windowHeight = windowRect.bottom - windowRect.top;
 
-                // 현재 커서 위치 가져오기
+                // 캡처된 커서 위치가 있으면 사용, 없으면 현재 커서 위치 가져오기
                 POINT cursorPos;
-                if (!GetCursorPos(out cursorPos))
+                if (capturedCursorPos.HasValue)
+                {
+                    cursorPos = capturedCursorPos.Value;
+                }
+                else if (!GetCursorPos(out cursorPos))
                 {
                     return;
                 }

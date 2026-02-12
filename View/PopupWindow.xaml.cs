@@ -232,7 +232,7 @@ namespace AppGroup.View
                         string groupName = Marshal.PtrToStringUni(cds.lpData);
                         Debug.WriteLine($"Received WM_COPYDATA message with groupName: {groupName}");
 
-                        // Update on UI thread
+                        // UI 스레드에서 설정 로드 후 윈도우 표시
                         this.DispatcherQueue.TryEnqueue(() =>
                         {
                             try
@@ -240,6 +240,10 @@ namespace AppGroup.View
                                 _groupFilter = groupName;
                                 Debug.WriteLine($"Updated group filter to: {_groupFilter}");
                                 LoadConfiguration();
+
+                                // LoadConfiguration → InitializeWindow에서 크기/위치 설정 완료 후 표시
+                                NativeMethods.ShowWindow(_hwnd, NativeMethods.SW_SHOW);
+                                NativeMethods.ForceForegroundWindow(_hwnd);
                             }
                             catch (Exception ex)
                             {
@@ -608,7 +612,13 @@ namespace AppGroup.View
 
 
             _windowHelper.SetSize(finalWidth, finalHeight);
-            NativeMethods.PositionWindowAboveTaskbar(this.GetWindowHandle());
+
+            // 파일에서 캡처된 커서 위치 읽기 (아이콘 클릭 위치 기준)
+            var cursorPos = AppPaths.ReadCursorPosition();
+            NativeMethods.POINT? capturedPos = cursorPos.HasValue
+                ? new NativeMethods.POINT { X = cursorPos.Value.X, Y = cursorPos.Value.Y }
+                : null;
+            NativeMethods.PositionWindowAboveTaskbar(this.GetWindowHandle(), capturedPos);
 
 
 

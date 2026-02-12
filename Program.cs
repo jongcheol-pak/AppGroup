@@ -10,6 +10,11 @@ namespace AppGroup
 {
     public class Program
     {
+        /// <summary>
+        /// 프로세스 시작 시 캡처된 커서 위치 (작업 표시줄 아이콘 클릭 위치)
+        /// </summary>
+        internal static NativeMethods.POINT LaunchCursorPosition { get; private set; }
+
         [STAThread]
         //static int Main(string[] args) {
         //    WinRT.ComWrappersSupport.InitializeComWrappers();
@@ -29,18 +34,17 @@ namespace AppGroup
 
         static void Main(string[] args)
         {
-            // Register the same message as your receiver
-            int msgId = NativeMethods.WM_UPDATE_GROUP;
+            // 프로세스 시작 즉시 커서 위치 캡처 (작업 표시줄 아이콘 클릭 위치)
+            NativeMethods.GetCursorPos(out NativeMethods.POINT launchCursorPos);
 
-            // Find the target window by title (adjust this to match your window)
+            // 캡처된 커서 위치를 파일에 저장 (팝업 프로세스에서 읽기 위해)
+            AppPaths.SaveCursorPosition(launchCursorPos.X, launchCursorPos.Y);
+
             IntPtr targetWindow = NativeMethods.FindWindow(null, "Popup Window");
             string[] cmdArgs = Environment.GetCommandLineArgs();
 
             if (targetWindow != IntPtr.Zero)
             {
-                // FIRST: Position and show the window immediately
-
-                // THEN: Send the message to update content (async, non-blocking)
                 if (cmdArgs.Length > 1)
                 {
                     string command = cmdArgs[1];
@@ -48,18 +52,18 @@ namespace AppGroup
                     // EditGroupWindow/LaunchAll은 팝업이 아닌 별도 명령이므로 팝업에 전달하지 않음
                     if (command != "EditGroupWindow" && command != "LaunchAll")
                     {
-                        NativeMethods.ShowWindow(targetWindow, NativeMethods.SW_SHOW);
+                        // 팝업 프로세스에 포그라운드 권한 부여
+                        NativeMethods.GetWindowThreadProcessId(targetWindow, out uint popupPid);
+                        NativeMethods.AllowSetForegroundWindow(popupPid);
 
+                        // 명령 전송 (팝업이 자체적으로 크기 조정 → 위치 설정 → 표시)
                         NativeMethods.SendString(targetWindow, command);
-                        NativeMethods.ForceForegroundWindow(targetWindow);
-
-                        NativeMethods.PositionWindowAboveTaskbar(targetWindow);
                     }
                 }
-
-
-
             }
+
+            // 캡처된 커서 위치를 App에서 사용할 수 있도록 저장
+            LaunchCursorPosition = launchCursorPos;
 
             WinRT.ComWrappersSupport.InitializeComWrappers();
 

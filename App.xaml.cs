@@ -515,7 +515,7 @@ namespace AppGroup
                         System.Threading.Thread.Sleep(5);
 
 
-                        NativeMethods.PositionWindowAboveTaskbar(hWnd);
+                        NativeMethods.PositionWindowAboveTaskbar(hWnd, Program.LaunchCursorPosition);
 
                     }
                 }
@@ -530,22 +530,14 @@ namespace AppGroup
                 {
                     if (hWnd != IntPtr.Zero)
                     {
-                        // 먼저 윈도우를 화면 밖으로 위치시키고 표시
-                        NativeMethods.PositionWindowOffScreen(hWnd);
-
-                        // 내용을 업데이트하기 위해 메시지 전송 (비동기, 논블로킹)
+                        // 내용을 업데이트하기 위해 메시지 전송
+                        // 팝업이 자체적으로 크기 조정 → 위치 설정 → 표시 처리
                         string[] cmdArgs = Environment.GetCommandLineArgs();
                         if (cmdArgs.Length > 1)
                         {
                             string command = cmdArgs[1];
                             NativeMethods.SendString(hWnd, command);
                         }
-                        NativeMethods.ShowWindow(hWnd, NativeMethods.SW_SHOW);
-
-                        NativeMethods.ForceForegroundWindow(hWnd);
-
-                        // 작업 표시줄 위로 이동
-                        NativeMethods.PositionWindowAboveTaskbar(hWnd);
                     }
                 }
                 catch (Exception ex)
@@ -637,9 +629,7 @@ namespace AppGroup
             {
                 if (popupWindow != null)
                 {
-                    IntPtr popupHWnd = NativeMethods.FindWindow(null, "Popup Window");
-
-                    System.Threading.Thread.Sleep(200);
+                    // 팝업이 자체적으로 크기/위치 설정 후 표시하므로 대기 불필요
                     BringWindowToFront(popupWindow.GetWindowHandle());
                 }
             }

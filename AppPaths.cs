@@ -124,6 +124,54 @@ namespace AppGroup
         }
 
         /// <summary>
+        /// 실행 시 캡처한 커서 위치 파일 경로
+        /// </summary>
+        private static string CursorPosFile => Path.Combine(AppDataFolder, "launch_cursor");
+
+        /// <summary>
+        /// 프로세스 시작 시 캡처한 커서 위치를 파일에 저장합니다.
+        /// </summary>
+        public static void SaveCursorPosition(int x, int y)
+        {
+            try
+            {
+                Directory.CreateDirectory(AppDataFolder);
+                File.WriteAllText(CursorPosFile, $"{x},{y}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to save cursor position: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 저장된 커서 위치를 파일에서 읽어옵니다.
+        /// </summary>
+        /// <returns>커서 위치 (x, y), 파일이 없거나 오류 시 null 반환</returns>
+        public static (int X, int Y)? ReadCursorPosition()
+        {
+            try
+            {
+                if (File.Exists(CursorPosFile))
+                {
+                    string content = File.ReadAllText(CursorPosFile).Trim();
+                    string[] parts = content.Split(',');
+                    if (parts.Length == 2 &&
+                        int.TryParse(parts[0], out int x) &&
+                        int.TryParse(parts[1], out int y))
+                    {
+                        return (x, y);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to read cursor position: {ex.Message}");
+            }
+            return null;
+        }
+
+        /// <summary>
         /// AppData 폴더 및 하위 폴더(Icons, Groups)가 존재하는지 확인하고 없으면 생성합니다.
         /// </summary>
         public static void EnsureAppDataFolderExists()
