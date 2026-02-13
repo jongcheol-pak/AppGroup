@@ -150,6 +150,15 @@
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
     <value>與原始作者無關，您可以透過上方連結查看原始原始碼。</value>
   </data>
+  <data name="VisitWebsitePrefix.Text" xml:space="preserve">
+    <value>如需詳細資訊，請造訪</value>
+  </data>
+  <data name="AppGroupWebsite.Text" xml:space="preserve">
+    <value>應用程式群組網站</value>
+  </data>
+  <data name="VisitWebsiteSuffix.Text" xml:space="preserve">
+    <value>。</value>
+  </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
@@ -654,6 +663,12 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>在系統匣開始功能表中選擇資料夾時，顯示指定深度內的子資料夾位置。</value>
   </data>
+  <data name="ShowHiddenFilesAndFolders.Text" xml:space="preserve">
+    <value>顯示隱藏的檔案和資料夾</value>
+  </data>
+  <data name="ShowHiddenFilesAndFoldersDescription.Text" xml:space="preserve">
+    <value>在資料夾內容快顯視窗中顯示隱藏的檔案和資料夾。</value>
+  </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
     <value>語言</value>
   </data>
@@ -683,5 +698,23 @@
   </data>
   <data name="ThemeLight" xml:space="preserve">
     <value>淺色</value>
+  </data>
+  <data name="CheckForUpdates.Text" xml:space="preserve">
+    <value>檢查更新</value>
+  </data>
+  <data name="CheckForUpdatesDescription.Text" xml:space="preserve">
+    <value>在 Microsoft Store 中檢查最新版本。</value>
+  </data>
+  <data name="CheckForUpdatesButton.Text" xml:space="preserve">
+    <value>檢查</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>有可用的更新。</value>
+  </data>
+  <data name="NoUpdatesAvailable" xml:space="preserve">
+    <value>您正在使用最新版本。</value>
+  </data>
+  <data name="UpdateCheckError" xml:space="preserve">
+    <value>無法檢查更新。請稍後重試。</value>
   </data>
 </root>

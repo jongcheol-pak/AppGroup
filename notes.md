@@ -3,8 +3,12 @@
 ## 최근 변경 요약 (최근 10건)
 
 ### 2026-02-13
-1. **MSIX 파일시스템 가상화 비활성화 및 데이터 마이그레이션** - Package.appxmanifest에 desktop6:FileSystemWriteVirtualization/RegistryWriteVirtualization 비활성화 선언, AppPaths에 패키지 가상화 폴더→실제 경로 일회성 마이그레이션 로직 추가, Program.Main()에서 앱 시작 시 마이그레이션 호출
-2. **AllApps 아이콘 추출 품질 개선** - 3단계 개선: (1) ExtractIconFromPidl PIDL 구성 버그 수정 (상대 PIDL → 절대 PIDL), (2) TryGetExePathFromAumid에 IShellItem.GetDisplayName(FILESYSPATH) 및 App Paths 레지스트리 방법 추가, (3) GetAppIconFromShellAsync에서 아이콘 크기 확인 (40x40 미만 시 폴백), UWP 추출기 아이콘 요청 사이즈 256→48로 변경
+1. **업데이트 확인 시 Store 앱 페이지 열기로 변경** - DownloadAndInstallStoreUpdatesAsync 제거, 업데이트 발견 시 ms-windows-store URI로 Store 앱 실행, "다운로드 중..." 문구 제거
+2. **업데이트 확인 기능을 정보(About) 화면으로 이동** - Settings 탭에서 About 탭으로 Update Section UI 이동
+3. **설정 화면에 업데이트 확인 기능 추가** - StoreContext API로 업데이트 확인, 5개 언어 리소스 추가
+2. **숨김 파일 및 폴더 표시 설정 기능 추가** - StartMenuSettingsDialog에 토글 추가, FolderContentsPopupWindow에서 FileAttributes.Hidden 기준 필터링, 기본값 Off
+2. **MSIX 파일시스템 가상화 비활성화 및 데이터 마이그레이션** - Package.appxmanifest에 desktop6:FileSystemWriteVirtualization/RegistryWriteVirtualization 비활성화 선언, AppPaths에 패키지 가상화 폴더→실제 경로 일회성 마이그레이션 로직 추가, Program.Main()에서 앱 시작 시 마이그레이션 호출
+3. **AllApps 아이콘 추출 품질 개선** - 3단계 개선: (1) ExtractIconFromPidl PIDL 구성 버그 수정 (상대 PIDL → 절대 PIDL), (2) TryGetExePathFromAumid에 IShellItem.GetDisplayName(FILESYSPATH) 및 App Paths 레지스트리 방법 추가, (3) GetAppIconFromShellAsync에서 아이콘 크기 확인 (40x40 미만 시 폴백), UWP 추출기 아이콘 요청 사이즈 256→48로 변경
 
 ### 2026-02-12
 1. **팝업 윈도우 화면 깜빡임/잘못된 위치 이동 수정** - 거대한 윈도우가 화면 가운데에 잠깐 표시된 후 작업 표시줄 아래로 이동하는 문제 해결. 팝업이 자체적으로 크기/위치 설정 후 표시하도록 변경

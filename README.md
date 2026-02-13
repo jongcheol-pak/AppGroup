@@ -49,7 +49,7 @@ dotnet format AppGroup/AppGroup.csproj
   - `IconHelper.Bitmap.cs`: 비트맵 변환/크롭 (분리됨)
 - `IconCache`: 하이브리드 메모리/디스크 아이콘 캐시
 - `BackupHelper`: .agz 파일 가져오기/내보내기
-- `SettingsHelper`: 사용자 설정 관리 (시작 프로그램, 시스템 트레이, 언어 등)
+- `SettingsHelper`: 사용자 설정 관리 (시작 프로그램, 시스템 트레이, 언어, Store 업데이트 확인 등)
 - `TaskbarManager`: 작업 표시줄 위치 감지 및 윈도우 배치
 - `SystemTrayManager`: 시스템 트레이 아이콘 관리
 
@@ -71,7 +71,7 @@ dotnet format AppGroup/AppGroup.csproj
 |----|------|------|
 | 작업 표시줄 (Taskbar) | MenuItems | 그룹 목록 관리, 검색, 가져오기/내보내기 |
 | 시작 메뉴 (StartMenu) | MenuItems | 시작 메뉴 폴더 등록/관리, 드래그앤드롭 |
-| 설정 (Settings) | FooterMenuItems | 시작 프로그램, 시스템 트레이, 언어, 테마 설정 |
+| 설정 (Settings) | FooterMenuItems | 시작 프로그램, 시스템 트레이, 언어, 테마, 업데이트 확인 설정 |
 | 정보 (About) | FooterMenuItems | 앱 정보, 버전, 오픈소스 라이선스 |
 
 ### 시작 메뉴 폴더 기능
@@ -82,6 +82,7 @@ dotnet format AppGroup/AppGroup.csproj
   - depth=1: 트레이 폴더 목록만 표시
   - depth=2: 트레이 폴더 → 하위 폴더/파일
   - depth=3~5: 더 깊은 계층까지 탐색
+  - **숨김 파일/폴더 표시**: StartMenuSettingsDialog에서 On/Off 설정 (기본값 Off), On 시 FileAttributes.Hidden 속성의 파일/폴더도 표시
 - **자동 팝업 닫기**: 파일 항목에 마우스 올리면 열려있던 하위 폴더 팝업 자동 닫기
 - **순서 변경**: 시작 탭에서 폴더 항목을 드래그하여 순서 변경 (JSON 키 순서 유지)
 - **중복 방지**: 이미 등록된 폴더 추가 시 경고 메시지 표시
@@ -96,7 +97,7 @@ dotnet format AppGroup/AppGroup.csproj
 %LocalAppData%/AppGroup/
 ├── appgroups.json       # 그룹 설정 (JSON)
 ├── startmenu.json       # 시작 메뉴 폴더 설정 (JSON)
-├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 테마, 하위 폴더 깊이 등)
+├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 테마, 하위 폴더 깊이, 숨김 파일/폴더 표시 등)
 ├── Groups/              # 그룹별 바로가기 폴더
 ├── Icons/               # 캐시된 아이콘
 ├── lastEdit             # 마지막 편집 그룹 ID

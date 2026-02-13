@@ -150,6 +150,15 @@
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
     <value>원본 제작자와 무관하며 위 링크를 통해 원본 소스를 확인할 수 있습니다.</value>
   </data>
+  <data name="VisitWebsitePrefix.Text" xml:space="preserve">
+    <value>자세한 내용은 </value>
+  </data>
+  <data name="AppGroupWebsite.Text" xml:space="preserve">
+    <value>앱 그룹 웹 사이트</value>
+  </data>
+  <data name="VisitWebsiteSuffix.Text" xml:space="preserve">
+    <value>로 이동하세요.</value>
+  </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
@@ -654,6 +663,12 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>트레이 시작 메뉴에서 폴더 선택 시 설정된 개수의 하위 폴더 위치까지 표시합니다.</value>
   </data>
+  <data name="ShowHiddenFilesAndFolders.Text" xml:space="preserve">
+    <value>숨김 파일 및 폴더 표시</value>
+  </data>
+  <data name="ShowHiddenFilesAndFoldersDescription.Text" xml:space="preserve">
+    <value>폴더 내용 팝업에서 숨김 파일 및 폴더를 표시합니다.</value>
+  </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
     <value>언어</value>
   </data>
@@ -683,5 +698,23 @@
   </data>
   <data name="ThemeLight" xml:space="preserve">
     <value>라이트</value>
+  </data>
+  <data name="CheckForUpdates.Text" xml:space="preserve">
+    <value>업데이트 확인</value>
+  </data>
+  <data name="CheckForUpdatesDescription.Text" xml:space="preserve">
+    <value>Microsoft Store에서 최신 버전을 확인합니다.</value>
+  </data>
+  <data name="CheckForUpdatesButton.Text" xml:space="preserve">
+    <value>확인</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>업데이트가 있습니다.</value>
+  </data>
+  <data name="NoUpdatesAvailable" xml:space="preserve">
+    <value>최신 버전을 사용 중입니다.</value>
+  </data>
+  <data name="UpdateCheckError" xml:space="preserve">
+    <value>업데이트를 확인할 수 없습니다. 나중에 다시 시도해 주세요.</value>
   </data>
 </root>

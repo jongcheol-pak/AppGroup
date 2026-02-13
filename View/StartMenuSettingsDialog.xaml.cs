@@ -85,6 +85,9 @@ namespace AppGroup.View
                 // 하위 폴더 탐색 개수 설정 (1~5, 인덱스는 0~4)
                 int depthIndex = Math.Max(0, Math.Min(4, settings.SubfolderDepth - 1));
                 SubfolderDepthComboBox.SelectedIndex = depthIndex;
+
+                // 숨김 파일 및 폴더 표시 설정
+                ShowHiddenFilesAndFoldersToggle.IsOn = settings.ShowHiddenFilesAndFolders;
             }
             catch (Exception ex)
             {
@@ -109,6 +112,9 @@ namespace AppGroup.View
 
                 // 하위 폴더 탐색 개수 설정
                 settings.SubfolderDepth = SubfolderDepthComboBox.SelectedIndex + 1;
+
+                // 숨김 파일 및 폴더 표시 설정
+                settings.ShowHiddenFilesAndFolders = ShowHiddenFilesAndFoldersToggle.IsOn;
 
                 await SettingsHelper.SaveSettingsAsync(settings);
             }
@@ -167,6 +173,15 @@ namespace AppGroup.View
         /// 하위 폴더 탐색 개수 변경 이벤트 핸들러
         /// </summary>
         private async void SubfolderDepthComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isLoading) return;
+            await SaveSettingsAsync();
+        }
+
+        /// <summary>
+        /// 숨김 파일 및 폴더 표시 토글 변경 이벤트 핸들러
+        /// </summary>
+        private async void ShowHiddenFilesAndFoldersToggle_Toggled(object sender, RoutedEventArgs e)
         {
             if (_isLoading) return;
             await SaveSettingsAsync();

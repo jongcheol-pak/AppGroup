@@ -584,6 +584,40 @@
                                     </HyperlinkButton>
                                     <TextBlock x:Uid="AppGroupDescription" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                                     <TextBlock x:Uid="AppGroupOriginalNote" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,12,0,0">
+                                        <Run x:Uid="VisitWebsitePrefix"/>
+                                        <Hyperlink NavigateUri="https://jongcheol-pak.github.io/projects/appgroup/">
+                                            <Run x:Uid="AppGroupWebsite"/>
+                                        </Hyperlink>
+                                        <Run x:Uid="VisitWebsiteSuffix"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Update Section -->
+                            <Border Style="{StaticResource AboutCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="200"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                            <TextBlock x:Uid="CheckForUpdates" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                            <TextBlock x:Uid="CheckForUpdatesDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Button x:Name="CheckForUpdatesButton" Grid.Column="1" Click="CheckForUpdatesButton_Click" Style="{StaticResource AccentButtonStyle}" Padding="12,8">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <ProgressRing x:Name="UpdateCheckProgressRing" IsActive="False" Width="16" Height="16" Visibility="Collapsed"/>
+                                                <TextBlock x:Name="CheckForUpdatesButtonText" x:Uid="CheckForUpdatesButton"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock x:Name="UpdateStatusMessage"
+                                               FontSize="12"
+                                               Margin="0,8,0,0"
+                                               TextWrapping="Wrap"
+                                               Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
 

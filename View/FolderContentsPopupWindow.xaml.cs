@@ -336,13 +336,19 @@ namespace AppGroup.View
                     return;
                 }
 
+                // 설정에서 숨김 파일/폴더 표시 여부 확인
+                var settings = SettingsHelper.GetCurrentSettings();
+                bool showHidden = settings?.ShowHiddenFilesAndFolders ?? false;
+
                 var files = Directory.GetFiles(folderPath)
                     .Select(f => new FileInfo(f))
+                    .Where(f => showHidden || (f.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
                     .OrderBy(f => f.Name)
                     .ToList();
 
                 var folders = Directory.GetDirectories(folderPath)
                     .Select(d => new DirectoryInfo(d))
+                    .Where(d => showHidden || (d.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
                     .OrderBy(d => d.Name)
                     .ToList();
 

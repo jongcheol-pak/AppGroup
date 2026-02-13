@@ -150,6 +150,15 @@
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
     <value>オリジナルの制作者とは無関係であり、上記のリンクからオリジナルのソースを確認できます。</value>
   </data>
+  <data name="VisitWebsitePrefix.Text" xml:space="preserve">
+    <value>詳細については、</value>
+  </data>
+  <data name="AppGroupWebsite.Text" xml:space="preserve">
+    <value>アプリグループウェブサイト</value>
+  </data>
+  <data name="VisitWebsiteSuffix.Text" xml:space="preserve">
+    <value>をご覧ください。</value>
+  </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
@@ -654,6 +663,12 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>トレイスタートメニューでフォルダ選択時、指定された深さまでサブフォルダの場所を表示します。</value>
   </data>
+  <data name="ShowHiddenFilesAndFolders.Text" xml:space="preserve">
+    <value>隠しファイルとフォルダを表示</value>
+  </data>
+  <data name="ShowHiddenFilesAndFoldersDescription.Text" xml:space="preserve">
+    <value>フォルダの内容ポップアップで隠しファイルとフォルダを表示します。</value>
+  </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
     <value>言語</value>
   </data>
@@ -683,5 +698,23 @@
   </data>
   <data name="ThemeLight" xml:space="preserve">
     <value>ライト</value>
+  </data>
+  <data name="CheckForUpdates.Text" xml:space="preserve">
+    <value>更新の確認</value>
+  </data>
+  <data name="CheckForUpdatesDescription.Text" xml:space="preserve">
+    <value>Microsoft Storeで最新バージョンを確認します。</value>
+  </data>
+  <data name="CheckForUpdatesButton.Text" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>更新があります。</value>
+  </data>
+  <data name="NoUpdatesAvailable" xml:space="preserve">
+    <value>最新バージョンを使用しています。</value>
+  </data>
+  <data name="UpdateCheckError" xml:space="preserve">
+    <value>更新を確認できません。後でもう一度お試しください。</value>
   </data>
 </root>

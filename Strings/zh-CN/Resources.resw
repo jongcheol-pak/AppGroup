@@ -150,6 +150,15 @@
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
     <value>与原始作者无关，您可以通过上方链接查看原始源代码。</value>
   </data>
+  <data name="VisitWebsitePrefix.Text" xml:space="preserve">
+    <value>有关详细信息，请访问</value>
+  </data>
+  <data name="AppGroupWebsite.Text" xml:space="preserve">
+    <value>应用程序组网站</value>
+  </data>
+  <data name="VisitWebsiteSuffix.Text" xml:space="preserve">
+    <value>。</value>
+  </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
@@ -654,6 +663,12 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>在托盘开始菜单中选择文件夹时，显示指定深度内的子文件夹位置。</value>
   </data>
+  <data name="ShowHiddenFilesAndFolders.Text" xml:space="preserve">
+    <value>显示隐藏文件和文件夹</value>
+  </data>
+  <data name="ShowHiddenFilesAndFoldersDescription.Text" xml:space="preserve">
+    <value>在文件夹内容弹出窗口中显示隐藏文件和文件夹。</value>
+  </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
     <value>语言</value>
   </data>
@@ -683,5 +698,23 @@
   </data>
   <data name="ThemeLight" xml:space="preserve">
     <value>浅色</value>
+  </data>
+  <data name="CheckForUpdates.Text" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="CheckForUpdatesDescription.Text" xml:space="preserve">
+    <value>在 Microsoft Store 中检查最新版本。</value>
+  </data>
+  <data name="CheckForUpdatesButton.Text" xml:space="preserve">
+    <value>检查</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>有可用更新。</value>
+  </data>
+  <data name="NoUpdatesAvailable" xml:space="preserve">
+    <value>您正在使用最新版本。</value>
+  </data>
+  <data name="UpdateCheckError" xml:space="preserve">
+    <value>无法检查更新。请稍后重试。</value>
   </data>
 </root>

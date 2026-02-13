@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.Services.Store;
 
 namespace AppGroup
 {
@@ -51,6 +53,7 @@ namespace AppGroup
             public bool ShowStartMenuPopup { get; set; } = true;
             public int FolderColumnCount { get; set; } = 1;
             public int SubfolderDepth { get; set; } = 2;
+            public bool ShowHiddenFilesAndFolders { get; set; } = false;
         }
 
         private static AppSettings _currentSettings;
@@ -384,6 +387,38 @@ namespace AppGroup
                 System.Diagnostics.Debug.WriteLine($"테마 설정 읽기 오류: {ex.Message}");
             }
             return "";
+        }
+
+        /// <summary>
+        /// Microsoft Store에서 사용 가능한 업데이트를 확인합니다.
+        /// </summary>
+        /// <returns>업데이트가 있으면 true, 없으면 false</returns>
+        public static async Task<bool> CheckForStoreUpdatesAsync()
+        {
+            try
+            {
+                if (!IsPackagedApp())
+                {
+                    System.Diagnostics.Debug.WriteLine("[SettingsHelper] 패키지 앱이 아니므로 Store 업데이트 확인을 건너뜁니다.");
+                    return false;
+                }
+
+                StoreContext context = StoreContext.GetDefault();
+                IReadOnlyList<StorePackageUpdate> updates =
+                    await context.GetAppAndOptionalStorePackageUpdatesAsync();
+
+                return updates.Count > 0;
+            }
+            catch (COMException comEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"Store 업데이트 확인 COMException: 0x{comEx.HResult:X8} - {comEx.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Store 업데이트 확인 오류: {ex.Message}");
+                return false;
+            }
         }
     }
 }

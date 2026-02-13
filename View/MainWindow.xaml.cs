@@ -2022,6 +2022,77 @@ namespace AppGroup.View
             };
         }
 
+        /// <summary>
+        /// 업데이트 확인 버튼 클릭 이벤트 핸들러
+        /// </summary>
+        private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var button = (Button)sender;
+            var root = Content as FrameworkElement;
+            var progressRing = root?.FindName("UpdateCheckProgressRing") as ProgressRing;
+            var statusMessage = root?.FindName("UpdateStatusMessage") as TextBlock;
+
+            try
+            {
+                // UI 상태: 확인 중
+                button.IsEnabled = false;
+                if (progressRing != null)
+                {
+                    progressRing.IsActive = true;
+                    progressRing.Visibility = Visibility.Visible;
+                }
+                if (statusMessage != null)
+                {
+                    statusMessage.Visibility = Visibility.Collapsed;
+                }
+
+                bool hasUpdates = await SettingsHelper.CheckForStoreUpdatesAsync();
+
+                if (hasUpdates)
+                {
+                    // 업데이트 있음 - 메시지 표시 후 Store 앱 페이지 열기
+                    if (statusMessage != null)
+                    {
+                        statusMessage.Text = _resourceLoader.GetString("UpdateAvailable");
+                        statusMessage.Foreground = new SolidColorBrush(Microsoft.UI.Colors.DodgerBlue);
+                        statusMessage.Visibility = Visibility.Visible;
+                    }
+
+                    await Windows.System.Launcher.LaunchUriAsync(
+                        new Uri("ms-windows-store://pdp/?PFN=" + Windows.ApplicationModel.Package.Current.Id.FamilyName));
+                }
+                else
+                {
+                    // 업데이트 없음
+                    if (statusMessage != null)
+                    {
+                        statusMessage.Text = _resourceLoader.GetString("NoUpdatesAvailable");
+                        statusMessage.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Green);
+                        statusMessage.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"업데이트 확인 오류: {ex.Message}");
+                if (statusMessage != null)
+                {
+                    statusMessage.Text = _resourceLoader.GetString("UpdateCheckError");
+                    statusMessage.Foreground = (SolidColorBrush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+                    statusMessage.Visibility = Visibility.Visible;
+                }
+            }
+            finally
+            {
+                button.IsEnabled = true;
+                if (progressRing != null)
+                {
+                    progressRing.IsActive = false;
+                    progressRing.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
         #endregion
     }
 }

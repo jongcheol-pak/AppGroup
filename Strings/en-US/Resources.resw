@@ -150,6 +150,15 @@
   <data name="AppGroupOriginalNote.Text" xml:space="preserve">
     <value>This is independent of the original creator, and you can check the original source through the link above.</value>
   </data>
+  <data name="VisitWebsitePrefix.Text" xml:space="preserve">
+    <value>For more information, visit the </value>
+  </data>
+  <data name="AppGroupWebsite.Text" xml:space="preserve">
+    <value>App Group Website</value>
+  </data>
+  <data name="VisitWebsiteSuffix.Text" xml:space="preserve">
+    <value>.</value>
+  </data>
   <data name="OpenSourceLicensesSection.Text" xml:space="preserve">
     <value>Open Source Licenses</value>
   </data>
@@ -654,6 +663,12 @@
   <data name="SubfolderDepthDescription.Text" xml:space="preserve">
     <value>Displays subfolder locations up to the specified depth when selecting a folder in the tray start menu.</value>
   </data>
+  <data name="ShowHiddenFilesAndFolders.Text" xml:space="preserve">
+    <value>Show Hidden Files and Folders</value>
+  </data>
+  <data name="ShowHiddenFilesAndFoldersDescription.Text" xml:space="preserve">
+    <value>Shows hidden files and folders in the folder contents popup.</value>
+  </data>
   <data name="LanguageSetting.Text" xml:space="preserve">
     <value>Language</value>
   </data>
@@ -683,5 +698,23 @@
   </data>
   <data name="ThemeLight" xml:space="preserve">
     <value>Light</value>
+  </data>
+  <data name="CheckForUpdates.Text" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+  <data name="CheckForUpdatesDescription.Text" xml:space="preserve">
+    <value>Check for the latest version on the Microsoft Store.</value>
+  </data>
+  <data name="CheckForUpdatesButton.Text" xml:space="preserve">
+    <value>Check</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>An update is available.</value>
+  </data>
+  <data name="NoUpdatesAvailable" xml:space="preserve">
+    <value>You are using the latest version.</value>
+  </data>
+  <data name="UpdateCheckError" xml:space="preserve">
+    <value>Unable to check for updates. Please try again later.</value>
   </data>
 </root>
