@@ -270,7 +270,7 @@ namespace AppGroup
                     try
                     {
                         // 아이콘 추출
-                        return ExtractIconFromPidl(shellFolder, itemPidl);
+                        return ExtractIconFromPidl(shellFolder, itemPidl, appsFolderPidl);
                     }
                     finally
                     {
@@ -292,7 +292,7 @@ namespace AppGroup
         /// <summary>
         /// PIDL에서 아이콘 추출
         /// </summary>
-        private static Bitmap ExtractIconFromPidl(NativeMethods.IShellFolder folder, IntPtr pidl)
+        private static Bitmap ExtractIconFromPidl(NativeMethods.IShellFolder folder, IntPtr pidl, IntPtr parentAbsolutePidl)
         {
             try
             {
@@ -314,7 +314,7 @@ namespace AppGroup
                     {
                         IntPtr largeIcon = IntPtr.Zero;
                         IntPtr smallIcon = IntPtr.Zero;
-                        hr = extractIcon.Extract(iconFile.ToString(), (uint)iconIndex, out largeIcon, out smallIcon, (256 << 16) | 16);
+                        hr = extractIcon.Extract(iconFile.ToString(), (uint)iconIndex, out largeIcon, out smallIcon, (48 << 16) | 16);
 
                         if (hr == 0 && largeIcon != IntPtr.Zero)
                         {
@@ -335,7 +335,8 @@ namespace AppGroup
                 }
 
                 // 폴백: IShellItemImageFactory 시도
-                IntPtr absolutePidl = NativeMethods.ILCombine(IntPtr.Zero, pidl);
+                // 상대 PIDL을 절대 PIDL로 변환 (부모 폴더 PIDL + 아이템 상대 PIDL)
+                IntPtr absolutePidl = NativeMethods.ILCombine(parentAbsolutePidl, pidl);
                 if (absolutePidl != IntPtr.Zero)
                 {
                     try
@@ -347,7 +348,7 @@ namespace AppGroup
                         if (hr == 0 && imageFactory != null)
                         {
                             IntPtr hBitmap;
-                            NativeMethods.SIZE size = new NativeMethods.SIZE(256, 256);
+                            NativeMethods.SIZE size = new NativeMethods.SIZE(48, 48);
                             hr = imageFactory.GetImage(size, NativeMethods.SIIGBF.SIIGBF_BIGGERSIZEOK, out hBitmap);
 
                             if (hr == 0 && hBitmap != IntPtr.Zero)
@@ -394,9 +395,9 @@ namespace AppGroup
                     return null;
                 }
 
-                // 256x256 크기의 아이콘 요청 (가능한 큰 아이콘 추출)
+                // 48x48 크기의 아이콘 요청
                 IntPtr hBitmap;
-                NativeMethods.SIZE size = new NativeMethods.SIZE(256, 256);
+                NativeMethods.SIZE size = new NativeMethods.SIZE(48, 48);
                 hr = imageFactory.GetImage(size, NativeMethods.SIIGBF.SIIGBF_BIGGERSIZEOK | NativeMethods.SIIGBF.SIIGBF_ICONONLY, out hBitmap);
 
                 if (hr != 0 || hBitmap == IntPtr.Zero)

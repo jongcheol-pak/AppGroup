@@ -315,10 +315,38 @@ namespace AppGroup.View
         {
             if (string.IsNullOrEmpty(aumid)) return null;
 
+            // 방법 1: IShellItem.GetDisplayName(FILESYSPATH)로 파일 시스템 경로 추출
             try
             {
-                // AUMID 형식: {PFN}!{AppId} 또는 경로 형식
-                // 레지스트리에서 AUMID로 exe 경로 찾기
+                Guid shellItemGuid = NativeMethods.IShellItemGuid;
+                int hr = NativeMethods.SHCreateItemFromParsingName(
+                    $"shell:AppsFolder\\{aumid}", IntPtr.Zero, ref shellItemGuid, out NativeMethods.IShellItem shellItem);
+
+                if (hr == 0 && shellItem != null)
+                {
+                    try
+                    {
+                        shellItem.GetDisplayName(NativeMethods.SIGDN.FILESYSPATH, out string fsPath);
+                        if (!string.IsNullOrEmpty(fsPath) &&
+                            fsPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
+                            File.Exists(fsPath))
+                        {
+                            Debug.WriteLine($"TryGetExePathFromAumid: Found exe via IShellItem for {aumid}: {fsPath}");
+                            return fsPath;
+                        }
+                    }
+                    catch { } // UWP/가상 아이템은 FILESYSPATH 미지원 - 예외 무시
+                    finally
+                    {
+                        Marshal.ReleaseComObject(shellItem);
+                    }
+                }
+            }
+            catch { }
+
+            // 방법 2: ActivatableClasses 레지스트리에서 exe 경로 찾기
+            try
+            {
                 using var key = Registry.CurrentUser.OpenSubKey(
                     $@"Software\Classes\ActivatableClasses\Package\{aumid.Split('!')[0]}\Server");
                 if (key != null)
@@ -329,7 +357,43 @@ namespace AppGroup.View
                         var exePath = subKey?.GetValue("ExePath") as string;
                         if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
                         {
+                            Debug.WriteLine($"TryGetExePathFromAumid: Found exe via ActivatableClasses for {aumid}: {exePath}");
                             return exePath;
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // 방법 3: App Paths 레지스트리에서 exe 경로 검색
+            try
+            {
+                using var appPathsKey = Registry.LocalMachine.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths");
+                if (appPathsKey != null)
+                {
+                    // AUMID에서 앱 이름 추출: "PackageName_hash!AppId" -> AppId, 패키지 짧은 이름
+                    string appId = aumid.Contains('!') ? aumid.Split('!').Last() : null;
+                    string packagePart = aumid.Contains('_') ? aumid.Split('_')[0] : aumid.Split('!')[0];
+                    string shortName = packagePart.Contains('.') ? packagePart.Split('.').Last() : packagePart;
+
+                    foreach (var subKeyName in appPathsKey.GetSubKeyNames())
+                    {
+                        string keyName = Path.GetFileNameWithoutExtension(subKeyName);
+                        if ((!string.IsNullOrEmpty(appId) && keyName.Equals(appId, StringComparison.OrdinalIgnoreCase)) ||
+                            keyName.Equals(shortName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            using var subKey = appPathsKey.OpenSubKey(subKeyName);
+                            var exePath = subKey?.GetValue("") as string;
+                            if (!string.IsNullOrEmpty(exePath))
+                            {
+                                exePath = exePath.Trim('"');
+                                if (File.Exists(exePath))
+                                {
+                                    Debug.WriteLine($"TryGetExePathFromAumid: Found exe via App Paths for {aumid}: {exePath}");
+                                    return exePath;
+                                }
+                            }
                         }
                     }
                 }
@@ -355,8 +419,24 @@ namespace AppGroup.View
 
                 if (!string.IsNullOrEmpty(icon))
                 {
-                    Debug.WriteLine($"GetAppIconFromShellAsync: Got icon from IconCache for {displayName}");
-                    return icon;
+                    // 아이콘 크기 확인 - 40x40 미만이면 폴백 계속 시도
+                    try
+                    {
+                        using (var bitmap = new System.Drawing.Bitmap(icon))
+                        {
+                            if (bitmap.Width >= 40 && bitmap.Height >= 40)
+                            {
+                                Debug.WriteLine($"GetAppIconFromShellAsync: Got icon from IconCache for {displayName} ({bitmap.Width}x{bitmap.Height})");
+                                return icon;
+                            }
+                            Debug.WriteLine($"GetAppIconFromShellAsync: Icon too small for {displayName} ({bitmap.Width}x{bitmap.Height}), trying fallback");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"GetAppIconFromShellAsync: Failed to check icon size for {displayName}: {ex.Message}");
+                        return icon; // 크기 확인 실패 시 기존 아이콘 사용
+                    }
                 }
 
                 // 폴백: 임시 바로가기 생성하여 실제 아이콘 추출 (화살표 없이)

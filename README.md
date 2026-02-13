@@ -28,7 +28,7 @@ dotnet format AppGroup/AppGroup.csproj
 - WinUI 3 (Microsoft.WindowsAppSDK 1.8)
 - CommunityToolkit.Mvvm 8.4 (MVVM 패턴)
 - WinUIEx 2.9 (윈도우 확장 기능)
-- MSIX 패키징 (Self-Contained)
+- MSIX 패키징 (Self-Contained, VFS 비활성화)
 
 ## 아키텍처
 
@@ -38,7 +38,7 @@ dotnet format AppGroup/AppGroup.csproj
 
 ### 핵심 Helper 클래스
 - `JsonConfigHelper`: 그룹 설정 JSON 파일 (`%LocalAppData%/AppGroup/appgroups.json`) 읽기/쓰기
-- `AppPaths`: 공통 경로 상수 (AppDataFolder, ConfigFile, GroupsFolder, IconsFolder)
+- `AppPaths`: 공통 경로 상수 (AppDataFolder, ConfigFile, GroupsFolder, IconsFolder), MSIX VFS 마이그레이션
 - `NativeMethods`: Win32 API 호출 (윈도우 핸들, 메시지, 작업 표시줄 위치)
   - `NativeMethods.WindowPosition.cs`: 창 위치 관련 (분리됨)
   - `NativeMethods.ShellIcon.cs`: 쉘/아이콘 API (분리됨)
@@ -86,6 +86,11 @@ dotnet format AppGroup/AppGroup.csproj
 - **순서 변경**: 시작 탭에서 폴더 항목을 드래그하여 순서 변경 (JSON 키 순서 유지)
 - **중복 방지**: 이미 등록된 폴더 추가 시 경고 메시지 표시
 
+### MSIX 패키징 설정
+- `Package.appxmanifest`에서 `desktop6:FileSystemWriteVirtualization` / `desktop6:RegistryWriteVirtualization` 비활성화
+- `unvirtualizedResources` 제한된 케이퍼빌리티 사용
+- 앱 최초 실행 시 패키지 가상화 폴더(`%LocalAppData%\Packages\{PFN}\LocalCache\Local\AppGroup\`)에서 실제 경로로 일회성 데이터 마이그레이션 수행
+
 ### 데이터 저장 경로
 ```
 %LocalAppData%/AppGroup/
@@ -95,7 +100,8 @@ dotnet format AppGroup/AppGroup.csproj
 ├── Groups/              # 그룹별 바로가기 폴더
 ├── Icons/               # 캐시된 아이콘
 ├── lastEdit             # 마지막 편집 그룹 ID
-└── lastOpen             # 마지막 열린 그룹명
+├── lastOpen             # 마지막 열린 그룹명
+└── .migrated            # VFS 마이그레이션 완료 표시
 ```
 
 ## 코드 파일 분리 작업 완료 (2026-02-05)

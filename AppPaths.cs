@@ -187,5 +187,129 @@ namespace AppGroup
                 Debug.WriteLine($"Failed to create AppData folder: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 마이그레이션 완료 표시 파일 경로
+        /// </summary>
+        private static string MigratedMarkerFile => Path.Combine(AppDataFolder, ".migrated");
+
+        /// <summary>
+        /// MSIX 패키지 가상화 폴더에서 실제 경로로 데이터를 마이그레이션합니다.
+        /// VFS 비활성화 후 기존 패키지 폴더에 남아있는 데이터를 일회성으로 이동합니다.
+        /// </summary>
+        public static void MigrateFromPackageFolderIfNeeded()
+        {
+            try
+            {
+                // 이미 마이그레이션 완료된 경우 스킵
+                if (File.Exists(MigratedMarkerFile))
+                    return;
+
+                // 패키지 가상화 경로 구성
+                string packageFamilyName = GetPackageFamilyName();
+                if (string.IsNullOrEmpty(packageFamilyName))
+                    return;
+
+                string localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA")
+                    ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string packageAppDataFolder = Path.Combine(
+                    localAppData, "Packages", packageFamilyName, "LocalCache", "Local", "AppGroup");
+
+                // 패키지 폴더가 없거나 appgroups.json이 없으면 마이그레이션 불필요
+                if (!Directory.Exists(packageAppDataFolder) ||
+                    !File.Exists(Path.Combine(packageAppDataFolder, "appgroups.json")))
+                {
+                    // 마이그레이션 대상 없음 - 완료 표시 후 종료
+                    EnsureAppDataFolderExists();
+                    File.WriteAllText(MigratedMarkerFile, DateTime.Now.ToString("o"));
+                    return;
+                }
+
+                // 실제 경로에 이미 appgroups.json이 있으면 충돌 방지를 위해 스킵
+                if (File.Exists(Path.Combine(AppDataFolder, "appgroups.json")))
+                {
+                    Debug.WriteLine("마이그레이션 스킵: 실제 경로에 이미 appgroups.json이 존재합니다.");
+                    File.WriteAllText(MigratedMarkerFile, DateTime.Now.ToString("o"));
+                    return;
+                }
+
+                // 실제 경로 폴더 생성
+                EnsureAppDataFolderExists();
+
+                // 파일 마이그레이션
+                string[] filesToMigrate = ["appgroups.json", "settings.json", "startmenu.json", "lastEdit", "lastOpen"];
+                foreach (string fileName in filesToMigrate)
+                {
+                    string srcFile = Path.Combine(packageAppDataFolder, fileName);
+                    if (File.Exists(srcFile))
+                    {
+                        string destFile = Path.Combine(AppDataFolder, fileName);
+                        File.Copy(srcFile, destFile, overwrite: false);
+                        Debug.WriteLine($"마이그레이션 완료: {fileName}");
+                    }
+                }
+
+                // 폴더 마이그레이션
+                string[] foldersToMigrate = ["Groups", "Icons"];
+                foreach (string folderName in foldersToMigrate)
+                {
+                    string srcDir = Path.Combine(packageAppDataFolder, folderName);
+                    if (Directory.Exists(srcDir))
+                    {
+                        string destDir = Path.Combine(AppDataFolder, folderName);
+                        CopyDirectoryRecursive(srcDir, destDir);
+                        Debug.WriteLine($"마이그레이션 완료: {folderName}/");
+                    }
+                }
+
+                // 마이그레이션 완료 표시
+                File.WriteAllText(MigratedMarkerFile, DateTime.Now.ToString("o"));
+                Debug.WriteLine("MSIX 패키지 폴더 마이그레이션이 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"마이그레이션 실패 (앱은 정상 시작됩니다): {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 현재 MSIX 패키지의 FamilyName을 반환합니다.
+        /// 패키지되지 않은 환경에서는 빈 문자열을 반환합니다.
+        /// </summary>
+        private static string GetPackageFamilyName()
+        {
+            try
+            {
+                return Windows.ApplicationModel.Package.Current.Id.FamilyName;
+            }
+            catch
+            {
+                // 패키지되지 않은 환경 (디버그 등)
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 디렉터리를 재귀적으로 복사합니다. 이미 존재하는 파일은 건너뜁니다.
+        /// </summary>
+        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+
+            foreach (string file in Directory.GetFiles(sourceDir))
+            {
+                string destFile = Path.Combine(destDir, Path.GetFileName(file));
+                if (!File.Exists(destFile))
+                {
+                    File.Copy(file, destFile);
+                }
+            }
+
+            foreach (string subDir in Directory.GetDirectories(sourceDir))
+            {
+                string destSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
+                CopyDirectoryRecursive(subDir, destSubDir);
+            }
+        }
     }
 }
