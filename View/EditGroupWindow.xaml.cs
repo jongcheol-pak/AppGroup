@@ -1499,9 +1499,8 @@ namespace AppGroup.View
                 string shortcutPath = Path.Combine(groupFolder, $"{newGroupName}.lnk");
                 string targetPath = Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath;
 
-                // Windows 아이콘 캐시를 우회하기 위해 아이콘 파일 이름에 타임스탬프 추가
-                string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                string iconBaseName = $"{newGroupName}_{(regularIcon ? "regular" : (IconGridComboBox.SelectedItem?.ToString() == "3" ? "grid3" : "grid"))}_{timestamp}";
+                // 안정적인 파일명 사용 (VFS 환경에서 .lnk의 IconLocation 수정 불필요)
+                string iconBaseName = $"{newGroupName}_{(regularIcon ? "regular" : (IconGridComboBox.SelectedItem?.ToString() == "3" ? "grid3" : "grid"))}";
                 string icoFilePath = Path.Combine(uniqueFolderPath, $"{iconBaseName}.ico");
                 string copiedImagePath; // 변수 정의
 
@@ -1581,8 +1580,9 @@ namespace AppGroup.View
                 shortcut.WorkingDirectory = Path.GetDirectoryName(targetPath);
                 shortcut.Save();
 
-
-
+                // Shell 아이콘 캐시 갱신 알림 (안정적 파일명으로 덮어쓰기 시 필요)
+                TaskbarManager.NotifyShellIconChange(icoFilePath);
+                TaskbarManager.NotifyShellIconChange(shortcutPath);
 
                 bool isPinned = await TaskbarManager.IsShortcutPinnedToTaskbar(oldGroupName ?? newGroupName);
 

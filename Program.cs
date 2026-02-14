@@ -34,8 +34,16 @@ namespace AppGroup
 
         static void Main(string[] args)
         {
-            // MSIX 패키지 가상화 폴더에서 실제 경로로 데이터 마이그레이션 (일회성)
-            try { AppPaths.MigrateFromPackageFolderIfNeeded(); }
+            // 1. settings.json에서 GroupsDataPath 읽기
+            try
+            {
+                string groupsDataPath = SettingsHelper.LoadGroupsDataPathSync();
+                AppPaths.InitializeGroupsPath(groupsDataPath);
+            }
+            catch (Exception ex) { Debug.WriteLine($"Groups 경로 초기화 실패: {ex.Message}"); }
+
+            // 2. Groups 데이터 마이그레이션 (기존 경로 → 새 경로)
+            try { AppPaths.MigrateGroupsDataIfNeeded(); }
             catch (Exception ex) { Debug.WriteLine($"마이그레이션 호출 실패: {ex.Message}"); }
 
             // 프로세스 시작 즉시 커서 위치 캡처 (작업 표시줄 아이콘 클릭 위치)

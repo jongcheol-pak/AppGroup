@@ -370,10 +370,11 @@ namespace AppGroup
                             }
                             else if (entry.FullName.StartsWith("Groups/"))
                             {
-                                // Groups files go to executable directory
-                                destinationPath = Path.Combine(AppPaths.AppDataFolder, entry.FullName);
+                                // Groups 파일은 비가상화 GroupsFolder 경로에 추출
+                                string relativePath = entry.FullName.Substring("Groups/".Length);
+                                destinationPath = Path.Combine(AppPaths.GroupsFolder, relativePath);
 
-                                // Ensure directory exists for this entry
+                                // 대상 디렉터리 존재 보장
                                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
                             }
                             else if (entry.FullName.StartsWith("Icons/"))
@@ -451,19 +452,27 @@ namespace AppGroup
                                 string groupDirPath = Path.Combine(groupsPath, groupName);
                                 Directory.CreateDirectory(groupDirPath);
 
-                                // Update icon path to use the current base directory
+                                // 현재 GroupsFolder 기준으로 아이콘 경로 갱신
                                 if (!string.IsNullOrEmpty(group.groupIcon))
                                 {
-                                    // Extract filename from the old path
                                     string iconFileName = Path.GetFileName(group.groupIcon);
 
-                                    // Check if the icon file exists in the new location
+                                    // 아이콘 파일 위치 탐색 (Groups/{groupName}/{groupName}/ 또는 Groups/{groupName}/)
                                     string newIconDir = Path.Combine(groupsPath, groupName, groupName);
                                     string newIconPath = Path.Combine(newIconDir, iconFileName);
 
+                                    // 기본 경로에 없으면 그룹 폴더 루트에서 탐색
+                                    if (!File.Exists(newIconPath))
+                                    {
+                                        string altIconPath = Path.Combine(groupsPath, groupName, iconFileName);
+                                        if (File.Exists(altIconPath))
+                                        {
+                                            newIconPath = altIconPath;
+                                        }
+                                    }
+
                                     if (File.Exists(newIconPath))
                                     {
-                                        // Update the group icon path in the config
                                         group.groupIcon = newIconPath;
 
                                         // Create the shortcut with the new paths

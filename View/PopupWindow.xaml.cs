@@ -845,6 +845,11 @@ namespace AppGroup.View
                         shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
                         shortcut.IconLocation = newIconPath;
                         shortcut.Save();
+
+                        // Shell 아이콘 캐시 갱신 알림
+                        TaskbarManager.NotifyShellIconChange(newIconPath);
+                        TaskbarManager.NotifyShellIconChange(shortcutPath);
+
                         Debug.WriteLine($"Updated shortcut icon: {shortcutPath}");
                     }
                     finally

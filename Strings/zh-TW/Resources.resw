@@ -717,4 +717,22 @@
   <data name="UpdateCheckError" xml:space="preserve">
     <value>無法檢查更新。請稍後重試。</value>
   </data>
+  <data name="GroupsDataPath.Text" xml:space="preserve">
+    <value>資料資料夾</value>
+  </data>
+  <data name="GroupsDataPathDescription.Text" xml:space="preserve">
+    <value>儲存捷徑和圖示檔案的資料夾</value>
+  </data>
+  <data name="ChangeFolder.Content" xml:space="preserve">
+    <value>變更</value>
+  </data>
+  <data name="FolderChangeSuccess" xml:space="preserve">
+    <value>資料夾已變更。請重新啟動應用程式以套用變更。</value>
+  </data>
+  <data name="FolderChangeVirtualizedWarning" xml:space="preserve">
+    <value>此資料夾位於虛擬化路徑中，可能無法正常運作。請選擇其他位置。</value>
+  </data>
+  <data name="FolderMigrationFailed" xml:space="preserve">
+    <value>資料移動失敗。將繼續使用先前的資料夾。</value>
+  </data>
 </root>

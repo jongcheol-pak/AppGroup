@@ -28,7 +28,7 @@ dotnet format AppGroup/AppGroup.csproj
 - WinUI 3 (Microsoft.WindowsAppSDK 1.8)
 - CommunityToolkit.Mvvm 8.4 (MVVM 패턴)
 - WinUIEx 2.9 (윈도우 확장 기능)
-- MSIX 패키징 (Self-Contained, VFS 비활성화)
+- MSIX 패키징 (Self-Contained, 하이브리드 VFS)
 
 ## 아키텍처
 
@@ -71,7 +71,7 @@ dotnet format AppGroup/AppGroup.csproj
 |----|------|------|
 | 작업 표시줄 (Taskbar) | MenuItems | 그룹 목록 관리, 검색, 가져오기/내보내기 |
 | 시작 메뉴 (StartMenu) | MenuItems | 시작 메뉴 폴더 등록/관리, 드래그앤드롭 |
-| 설정 (Settings) | FooterMenuItems | 시작 프로그램, 시스템 트레이, 언어, 테마, 업데이트 확인 설정 |
+| 설정 (Settings) | FooterMenuItems | 시작 프로그램, 시스템 트레이, 언어, 테마, 데이터 폴더 경로 설정 |
 | 정보 (About) | FooterMenuItems | 앱 정보, 버전, 오픈소스 라이선스 |
 
 ### 시작 메뉴 폴더 기능
@@ -88,21 +88,28 @@ dotnet format AppGroup/AppGroup.csproj
 - **중복 방지**: 이미 등록된 폴더 추가 시 경고 메시지 표시
 
 ### MSIX 패키징 설정
-- `Package.appxmanifest`에서 `desktop6:FileSystemWriteVirtualization` / `desktop6:RegistryWriteVirtualization` 비활성화
-- `unvirtualizedResources` 제한된 케이퍼빌리티 사용
-- 앱 최초 실행 시 패키지 가상화 폴더(`%LocalAppData%\Packages\{PFN}\LocalCache\Local\AppGroup\`)에서 실제 경로로 일회성 데이터 마이그레이션 수행
+- MSIX VFS(Virtual File System)를 활용한 하이브리드 저장소 구조
+- 설정/캐시 파일은 VFS 투명 경로(`%LocalAppData%\AppGroup\`)에 저장
+- Shell 접근 필요 파일(.lnk, .ico)은 비가상화 경로(`%USERPROFILE%\AppGroup\Groups\`)에 저장
+- 사용자가 설정에서 Groups 데이터 폴더 경로 변경 가능
+- 앱 최초 실행 시 기존 패키지 가상화 폴더 및 AppData Groups 경로에서 자동 마이그레이션
 
 ### 데이터 저장 경로
 ```
-%LocalAppData%/AppGroup/
-├── appgroups.json       # 그룹 설정 (JSON)
-├── startmenu.json       # 시작 메뉴 폴더 설정 (JSON)
-├── settings.json        # 사용자 설정 (트레이, 시작 프로그램, 언어, 테마, 하위 폴더 깊이, 숨김 파일/폴더 표시 등)
-├── Groups/              # 그룹별 바로가기 폴더
-├── Icons/               # 캐시된 아이콘
-├── lastEdit             # 마지막 편집 그룹 ID
-├── lastOpen             # 마지막 열린 그룹명
-└── .migrated            # VFS 마이그레이션 완료 표시
+%LocalAppData%/AppGroup/          # VFS 투명 경로 (앱만 접근)
+├── appgroups.json                # 그룹 설정 (JSON)
+├── startmenu.json                # 시작 메뉴 폴더 설정 (JSON)
+├── settings.json                 # 사용자 설정 (트레이, 시작 프로그램, 언어, 테마, GroupsDataPath 등)
+├── Icons/                        # 캐시된 아이콘
+├── lastEdit                      # 마지막 편집 그룹 ID
+├── lastOpen                      # 마지막 열린 그룹명
+├── .migrated                     # 패키지 VFS 마이그레이션 완료 표시
+└── .groups_migrated              # Groups 경로 마이그레이션 완료 표시
+
+%USERPROFILE%/AppGroup/Groups/    # 비가상화 경로 (Shell 접근 가능)
+└── {GroupName}/                  # 그룹별 바로가기 및 아이콘 폴더
+    ├── {GroupName}.lnk           # 바로가기 파일
+    └── {GroupName}/{icon}.ico    # 그룹 아이콘 파일
 ```
 
 ## 코드 파일 분리 작업 완료 (2026-02-05)

@@ -30,6 +30,7 @@ using Windows.Graphics;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using WinRT.Interop;
 using WinUIEx;
@@ -1707,7 +1708,7 @@ namespace AppGroup.View
                     // 폴더 이름이 비어있으면 폴더명으로 자동 설정
                     if (string.IsNullOrEmpty(FolderNameTextBox.Text))
                     {
-                        FolderNameTextBox.Text = folder.Name;                       
+                        FolderNameTextBox.Text = folder.Name;
                     }
 
                     FolderDuplicateMessage.Visibility = Visibility.Collapsed;
@@ -1779,6 +1780,9 @@ namespace AppGroup.View
 
                 // 테마 ComboBox 초기화
                 InitializeThemeComboBox();
+
+                // Groups 데이터 경로 표시 초기화
+                UpdateGroupsDataPathDisplay();
             }
             catch (Exception ex)
             {
@@ -1787,6 +1791,17 @@ namespace AppGroup.View
             finally
             {
                 _isSettingsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Groups 데이터 경로 표시를 갱신합니다.
+        /// </summary>
+        private void UpdateGroupsDataPathDisplay()
+        {
+            if (GroupsDataPathText != null)
+            {
+                GroupsDataPathText.Text = AppPaths.GetGroupsBasePathDisplay();
             }
         }
 
@@ -2090,6 +2105,109 @@ namespace AppGroup.View
                     progressRing.IsActive = false;
                     progressRing.Visibility = Visibility.Collapsed;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Groups 데이터 폴더 변경 버튼 클릭 이벤트 핸들러
+        /// </summary>
+        private async void ChangeGroupsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var folderPicker = new FolderPicker();
+                folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+                folderPicker.FileTypeFilter.Add("*");
+
+                var hwnd = WindowNative.GetWindowHandle(this);
+                InitializeWithWindow.Initialize(folderPicker, hwnd);
+
+                var folder = await folderPicker.PickSingleFolderAsync();
+                if (folder == null)
+                    return;
+
+                string newBasePath = folder.Path;
+
+                // 현재 경로와 동일한 경우 무시
+                string currentBasePath = AppPaths.GetGroupsBasePathDisplay();
+                if (string.Equals(newBasePath, currentBasePath, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                // 기본 경로와 동일한 경우 설정을 빈 문자열로 리셋
+                bool isDefaultPath = string.Equals(newBasePath, AppPaths.DefaultGroupsBasePath, StringComparison.OrdinalIgnoreCase);
+
+                // 가상화 대상 경로 검증
+                if (AppPaths.IsPathVirtualized(newBasePath))
+                {
+                    var warningDialog = new ContentDialog
+                    {
+                        Title = _resourceLoader.GetString("NotificationTitle"),
+                        Content = _resourceLoader.GetString("FolderChangeVirtualizedWarning"),
+                        CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                        XamlRoot = this.Content.XamlRoot,
+                        RequestedTheme = GetCurrentTheme()
+                    };
+                    await warningDialog.ShowAsync();
+                    return;
+                }
+
+                string oldGroupsFolder = AppPaths.GroupsFolder;
+                string newGroupsFolder = Path.Combine(newBasePath, "Groups");
+
+                // 기존 데이터 이동 시도
+                try
+                {
+                    Directory.CreateDirectory(newGroupsFolder);
+
+                    // 기존 Groups 폴더 내용 복사
+                    if (Directory.Exists(oldGroupsFolder))
+                    {
+                        AppPaths.CopyDirectoryRecursive(oldGroupsFolder, newGroupsFolder);
+                    }
+
+                    // appgroups.json 아이콘 경로 갱신
+                    AppPaths.UpdateGroupIconPaths(oldGroupsFolder, newGroupsFolder);
+
+                    // 설정 저장 (기본 경로면 빈 문자열로 리셋)
+                    var settings = await SettingsHelper.LoadSettingsAsync();
+                    settings.GroupsDataPath = isDefaultPath ? "" : newBasePath;
+                    await SettingsHelper.SaveSettingsAsync(settings);
+
+                    // Groups 경로 적용 (기본 경로면 빈 문자열로 리셋하여 기본값 사용)
+                    AppPaths.InitializeGroupsPath(isDefaultPath ? "" : newBasePath);
+
+                    // 경로 표시 갱신
+                    UpdateGroupsDataPathDisplay();
+
+                    // 성공 메시지
+                    var successDialog = new ContentDialog
+                    {
+                        Title = _resourceLoader.GetString("NotificationTitle"),
+                        Content = _resourceLoader.GetString("FolderChangeSuccess"),
+                        CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                        XamlRoot = this.Content.XamlRoot,
+                        RequestedTheme = GetCurrentTheme()
+                    };
+                    await successDialog.ShowAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"폴더 이동 실패: {ex.Message}");
+
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = _resourceLoader.GetString("ErrorTitle"),
+                        Content = _resourceLoader.GetString("FolderMigrationFailed"),
+                        CloseButtonText = _resourceLoader.GetString("ConfirmButton"),
+                        XamlRoot = this.Content.XamlRoot,
+                        RequestedTheme = GetCurrentTheme()
+                    };
+                    await errorDialog.ShowAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"폴더 변경 오류: {ex.Message}");
             }
         }
 

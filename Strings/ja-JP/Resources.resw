@@ -717,4 +717,22 @@
   <data name="UpdateCheckError" xml:space="preserve">
     <value>更新を確認できません。後でもう一度お試しください。</value>
   </data>
+  <data name="GroupsDataPath.Text" xml:space="preserve">
+    <value>データフォルダ</value>
+  </data>
+  <data name="GroupsDataPathDescription.Text" xml:space="preserve">
+    <value>ショートカットとアイコンファイルが保存されるフォルダ</value>
+  </data>
+  <data name="ChangeFolder.Content" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="FolderChangeSuccess" xml:space="preserve">
+    <value>フォルダが変更されました。変更を適用するにはアプリを再起動してください。</value>
+  </data>
+  <data name="FolderChangeVirtualizedWarning" xml:space="preserve">
+    <value>このフォルダは仮想化されたパスにあるため、正常に動作しない可能性があります。別の場所を選択してください。</value>
+  </data>
+  <data name="FolderMigrationFailed" xml:space="preserve">
+    <value>データの移動に失敗しました。以前のフォルダを引き続き使用します。</value>
+  </data>
 </root>

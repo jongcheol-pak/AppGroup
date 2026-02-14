@@ -354,6 +354,15 @@ namespace AppGroup
         }
 
         /// <summary>
+        /// Shell 아이콘 캐시 갱신을 외부에서 요청할 수 있는 공개 메서드입니다.
+        /// 아이콘 파일을 같은 경로로 덮어쓸 때 Shell에 변경 사항을 알립니다.
+        /// </summary>
+        public static void NotifyShellIconChange(string filePath)
+        {
+            NotifyShellAboutFileChange(filePath);
+        }
+
+        /// <summary>
         /// Notifies the Windows Shell about a file change to invalidate icon cache
         /// </summary>
         private static void NotifyShellAboutFileChange(string filePath)

@@ -46,6 +46,9 @@ namespace AppGroup
             // 테마 설정 (빈 문자열이면 시스템 기본값, "Dark", "Light")
             public string Theme { get; set; } = "";
 
+            // Groups 데이터 경로 (빈 문자열이면 기본값 사용)
+            public string GroupsDataPath { get; set; } = "";
+
             // 시작 메뉴 설정
             public string TrayClickAction { get; set; } = "FolderList";
             public bool ShowFolderPath { get; set; } = true;
@@ -308,6 +311,28 @@ namespace AppGroup
         public static AppSettings GetCurrentSettings()
         {
             return _currentSettings ?? new AppSettings();
+        }
+
+        /// <summary>
+        /// settings.json에서 GroupsDataPath만 동기적으로 읽어 반환합니다.
+        /// Program.Main()에서 AppPaths.InitializeGroupsPath() 호출 전에 사용합니다.
+        /// </summary>
+        public static string LoadGroupsDataPathSync()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    string jsonContent = File.ReadAllText(SettingsPath);
+                    var settings = JsonSerializer.Deserialize<AppSettings>(jsonContent);
+                    return settings?.GroupsDataPath ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GroupsDataPath 읽기 오류: {ex.Message}");
+            }
+            return "";
         }
 
         /// <summary>

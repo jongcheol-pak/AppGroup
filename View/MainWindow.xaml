@@ -545,6 +545,22 @@
                                     <ComboBox x:Name="SettingsThemeComboBox" Grid.Column="1" MinWidth="150" VerticalAlignment="Center" SelectionChanged="SettingsThemeComboBox_SelectionChanged"/>
                                 </Grid>
                             </Border>
+
+                            <!-- Data Folder Section -->
+                            <Border Style="{StaticResource SettingsCardStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" MinWidth="200"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <TextBlock x:Uid="GroupsDataPath" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap"/>
+                                        <TextBlock x:Uid="GroupsDataPathDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="GroupsDataPathText" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2"/>
+                                    </StackPanel>
+                                    <Button x:Uid="ChangeFolder" Grid.Column="1" Click="ChangeGroupsFolder_Click" VerticalAlignment="Center" Padding="12,8"/>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

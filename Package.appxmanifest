@@ -5,13 +5,12 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
-  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap5 rescap desktop6">
+  IgnorableNamespaces="uap uap5 rescap">
 
   <Identity
     Publisher="CN=C4E87E75-D777-4282-B3A5-57BFD2309B52"
-    Version="1.4.1.0"  Name="JongCheol.3110498EE6730"/>
+    Version="1.5.1.0"  Name="JongCheol.3110498EE6730"/>
 
   <mp:PhoneIdentity PhoneProductId="7b5fbc4d-4b46-429e-ae24-17c5fbb43016" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -19,8 +18,6 @@
     <DisplayName>ms-resource:AppDisplayName</DisplayName>
     <PublisherDisplayName>JongCheol</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
-    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
-    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
   </Properties>
 
   <Dependencies>
@@ -58,6 +55,5 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <rescap:Capability Name="unvirtualizedResources" />
   </Capabilities>
 </Package>

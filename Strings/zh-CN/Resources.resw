@@ -717,4 +717,22 @@
   <data name="UpdateCheckError" xml:space="preserve">
     <value>无法检查更新。请稍后重试。</value>
   </data>
+  <data name="GroupsDataPath.Text" xml:space="preserve">
+    <value>数据文件夹</value>
+  </data>
+  <data name="GroupsDataPathDescription.Text" xml:space="preserve">
+    <value>存储快捷方式和图标文件的文件夹</value>
+  </data>
+  <data name="ChangeFolder.Content" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="FolderChangeSuccess" xml:space="preserve">
+    <value>文件夹已更改。请重新启动应用以使更改生效。</value>
+  </data>
+  <data name="FolderChangeVirtualizedWarning" xml:space="preserve">
+    <value>此文件夹位于虚拟化路径中，可能无法正常工作。请选择其他位置。</value>
+  </data>
+  <data name="FolderMigrationFailed" xml:space="preserve">
+    <value>数据移动失败。将继续使用以前的文件夹。</value>
+  </data>
 </root>

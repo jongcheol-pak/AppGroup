@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace AppGroup
 {
@@ -13,11 +15,10 @@ namespace AppGroup
     {
         /// <summary>
         /// AppGroup 데이터 폴더 경로 (LocalApplicationData/AppGroup)
-        /// MSIX 패키지 가상화를 우회하여 실제 경로를 사용합니다.
+        /// MSIX VFS 환경에서는 가상화된 경로로 자동 리디렉션됩니다.
         /// </summary>
         public static string AppDataFolder => Path.Combine(
-            Environment.GetEnvironmentVariable("LOCALAPPDATA")
-                ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "AppGroup");
 
         /// <summary>
@@ -36,14 +37,63 @@ namespace AppGroup
         public static string ConfigFile => Path.Combine(AppDataFolder, "appgroups.json");
 
         /// <summary>
-        /// 그룹 폴더 경로 (Groups 폴더)
+        /// 사용자 지정 Groups 기본 경로 (설정에서 읽은 경로)
         /// </summary>
-        public static string GroupsFolder => Path.Combine(AppDataFolder, "Groups");
+        private static string _customGroupsBasePath;
+
+        /// <summary>
+        /// 기본 Groups 기본 경로 (%USERPROFILE%\AppGroup)
+        /// Shell이 접근해야 하는 파일(.lnk, .ico)을 비가상화 경로에 저장합니다.
+        /// </summary>
+        public static string DefaultGroupsBasePath => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "AppGroup");
+
+        /// <summary>
+        /// 그룹 폴더 경로 (Groups 폴더) - 비가상화 경로
+        /// Shell이 접근하는 바로가기(.lnk)와 아이콘(.ico)이 저장됩니다.
+        /// </summary>
+        public static string GroupsFolder => Path.Combine(
+            _customGroupsBasePath ?? DefaultGroupsBasePath,
+            "Groups");
 
         /// <summary>
         /// 아이콘 폴더 경로 (Icons 폴더)
         /// </summary>
         public static string IconsFolder => Path.Combine(AppDataFolder, "Icons");
+
+        /// <summary>
+        /// Groups 기본 경로를 초기화합니다. 설정에서 읽은 경로를 적용합니다.
+        /// </summary>
+        /// <param name="basePath">사용자 지정 기본 경로 (빈 문자열이면 기본값 사용)</param>
+        public static void InitializeGroupsPath(string basePath)
+        {
+            if (!string.IsNullOrEmpty(basePath) && !IsVirtualizedPath(basePath))
+            {
+                _customGroupsBasePath = basePath;
+            }
+        }
+
+        /// <summary>
+        /// 경로가 MSIX VFS 가상화 대상인지 확인합니다.
+        /// %LocalAppData%, %AppData% 하위 경로는 MSIX에서 가상화됩니다.
+        /// </summary>
+        private static bool IsVirtualizedPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+            return path.StartsWith(localAppData, StringComparison.OrdinalIgnoreCase) ||
+                   path.StartsWith(appData, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// 주어진 경로가 MSIX VFS 가상화 대상인지 외부에서 확인할 수 있습니다.
+        /// </summary>
+        public static bool IsPathVirtualized(string path) => IsVirtualizedPath(path);
 
         /// <summary>
         /// 마지막으로 편집한 그룹 ID를 파일에 저장합니다.
@@ -189,15 +239,51 @@ namespace AppGroup
         }
 
         /// <summary>
-        /// 마이그레이션 완료 표시 파일 경로
+        /// 현재 Groups 기본 경로 표시용 문자열을 반환합니다.
+        /// </summary>
+        public static string GetGroupsBasePathDisplay()
+        {
+            return _customGroupsBasePath ?? DefaultGroupsBasePath;
+        }
+
+        /// <summary>
+        /// Groups 데이터 마이그레이션 완료 표시 파일 경로
+        /// </summary>
+        private static string GroupsMigratedMarkerFile => Path.Combine(AppDataFolder, ".groups_migrated");
+
+        /// <summary>
+        /// 기존 패키지 가상화 폴더 마이그레이션 완료 표시 파일 경로
         /// </summary>
         private static string MigratedMarkerFile => Path.Combine(AppDataFolder, ".migrated");
 
         /// <summary>
-        /// MSIX 패키지 가상화 폴더에서 실제 경로로 데이터를 마이그레이션합니다.
-        /// VFS 비활성화 후 기존 패키지 폴더에 남아있는 데이터를 일회성으로 이동합니다.
+        /// Groups 데이터를 비가상화 경로로 마이그레이션합니다.
+        /// 기존 %LocalAppData%\AppGroup\Groups\ 또는 패키지 가상화 폴더에서 새 경로로 이동합니다.
         /// </summary>
-        public static void MigrateFromPackageFolderIfNeeded()
+        public static void MigrateGroupsDataIfNeeded()
+        {
+            try
+            {
+                // AppData 폴더 존재 보장
+                Directory.CreateDirectory(AppDataFolder);
+                Directory.CreateDirectory(IconsFolder);
+
+                // 1단계: 기존 패키지 가상화 폴더에서 AppData로 설정 파일 마이그레이션
+                MigrateFromPackageFolderIfNeeded();
+
+                // 2단계: %LocalAppData%\AppGroup\Groups\ → 새 GroupsFolder 경로로 이동
+                MigrateGroupsToNewPath();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Groups 마이그레이션 실패 (앱은 정상 시작됩니다): {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// MSIX 패키지 가상화 폴더에서 AppData 경로로 설정 파일을 마이그레이션합니다.
+        /// </summary>
+        private static void MigrateFromPackageFolderIfNeeded()
         {
             try
             {
@@ -210,8 +296,7 @@ namespace AppGroup
                 if (string.IsNullOrEmpty(packageFamilyName))
                     return;
 
-                string localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA")
-                    ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 string packageAppDataFolder = Path.Combine(
                     localAppData, "Packages", packageFamilyName, "LocalCache", "Local", "AppGroup");
 
@@ -219,8 +304,6 @@ namespace AppGroup
                 if (!Directory.Exists(packageAppDataFolder) ||
                     !File.Exists(Path.Combine(packageAppDataFolder, "appgroups.json")))
                 {
-                    // 마이그레이션 대상 없음 - 완료 표시 후 종료
-                    EnsureAppDataFolderExists();
                     File.WriteAllText(MigratedMarkerFile, DateTime.Now.ToString("o"));
                     return;
                 }
@@ -233,10 +316,7 @@ namespace AppGroup
                     return;
                 }
 
-                // 실제 경로 폴더 생성
-                EnsureAppDataFolderExists();
-
-                // 파일 마이그레이션
+                // 설정 파일 마이그레이션
                 string[] filesToMigrate = ["appgroups.json", "settings.json", "startmenu.json", "lastEdit", "lastOpen"];
                 foreach (string fileName in filesToMigrate)
                 {
@@ -245,30 +325,137 @@ namespace AppGroup
                     {
                         string destFile = Path.Combine(AppDataFolder, fileName);
                         File.Copy(srcFile, destFile, overwrite: false);
-                        Debug.WriteLine($"마이그레이션 완료: {fileName}");
+                        Debug.WriteLine($"패키지 마이그레이션 완료: {fileName}");
                     }
                 }
 
-                // 폴더 마이그레이션
-                string[] foldersToMigrate = ["Groups", "Icons"];
-                foreach (string folderName in foldersToMigrate)
+                // Icons 폴더 마이그레이션
+                string srcIconsDir = Path.Combine(packageAppDataFolder, "Icons");
+                if (Directory.Exists(srcIconsDir))
                 {
-                    string srcDir = Path.Combine(packageAppDataFolder, folderName);
-                    if (Directory.Exists(srcDir))
-                    {
-                        string destDir = Path.Combine(AppDataFolder, folderName);
-                        CopyDirectoryRecursive(srcDir, destDir);
-                        Debug.WriteLine($"마이그레이션 완료: {folderName}/");
-                    }
+                    CopyDirectoryRecursive(srcIconsDir, IconsFolder);
+                    Debug.WriteLine("패키지 마이그레이션 완료: Icons/");
                 }
 
-                // 마이그레이션 완료 표시
+                // Groups 폴더는 새 GroupsFolder 경로로 마이그레이션 (MigrateGroupsToNewPath에서 처리)
+                string srcGroupsDir = Path.Combine(packageAppDataFolder, "Groups");
+                if (Directory.Exists(srcGroupsDir))
+                {
+                    // 임시로 AppData/Groups에 복사 (MigrateGroupsToNewPath에서 최종 이동)
+                    string tempGroupsDir = Path.Combine(AppDataFolder, "Groups");
+                    CopyDirectoryRecursive(srcGroupsDir, tempGroupsDir);
+                    Debug.WriteLine("패키지 마이그레이션 완료: Groups/ (임시)");
+                }
+
                 File.WriteAllText(MigratedMarkerFile, DateTime.Now.ToString("o"));
                 Debug.WriteLine("MSIX 패키지 폴더 마이그레이션이 완료되었습니다.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"마이그레이션 실패 (앱은 정상 시작됩니다): {ex.Message}");
+                Debug.WriteLine($"패키지 마이그레이션 실패: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 기존 %LocalAppData%\AppGroup\Groups\를 새 GroupsFolder 경로로 마이그레이션합니다.
+        /// appgroups.json의 groupIcon 절대 경로도 함께 갱신합니다.
+        /// </summary>
+        private static void MigrateGroupsToNewPath()
+        {
+            try
+            {
+                // 이미 마이그레이션 완료된 경우 스킵
+                if (File.Exists(GroupsMigratedMarkerFile))
+                    return;
+
+                string oldGroupsFolder = Path.Combine(AppDataFolder, "Groups");
+
+                // 기존 Groups 폴더가 없거나 새 경로와 동일하면 스킵
+                if (!Directory.Exists(oldGroupsFolder) ||
+                    string.Equals(oldGroupsFolder, GroupsFolder, StringComparison.OrdinalIgnoreCase))
+                {
+                    Directory.CreateDirectory(GroupsFolder);
+                    File.WriteAllText(GroupsMigratedMarkerFile, DateTime.Now.ToString("o"));
+                    return;
+                }
+
+                // 새 GroupsFolder 생성
+                Directory.CreateDirectory(GroupsFolder);
+
+                // 기존 Groups 폴더 내용을 새 경로로 복사
+                CopyDirectoryRecursive(oldGroupsFolder, GroupsFolder);
+                Debug.WriteLine($"Groups 마이그레이션: {oldGroupsFolder} → {GroupsFolder}");
+
+                // appgroups.json의 groupIcon 경로 갱신
+                UpdateGroupIconPaths(oldGroupsFolder, GroupsFolder);
+
+                // 기존 Groups 폴더 삭제
+                try
+                {
+                    Directory.Delete(oldGroupsFolder, true);
+                    Debug.WriteLine("기존 Groups 폴더 삭제 완료");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"기존 Groups 폴더 삭제 실패 (무시): {ex.Message}");
+                }
+
+                File.WriteAllText(GroupsMigratedMarkerFile, DateTime.Now.ToString("o"));
+                Debug.WriteLine("Groups 경로 마이그레이션이 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Groups 경로 마이그레이션 실패: {ex.Message}");
+                // 실패해도 새 GroupsFolder는 보장
+                try { Directory.CreateDirectory(GroupsFolder); }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// appgroups.json의 groupIcon 절대 경로를 새 GroupsFolder 기준으로 갱신합니다.
+        /// </summary>
+        public static void UpdateGroupIconPaths(string oldGroupsFolder, string newGroupsFolder)
+        {
+            try
+            {
+                string configPath = ConfigFile;
+                if (!File.Exists(configPath))
+                    return;
+
+                string jsonContent = File.ReadAllText(configPath);
+                var jsonNode = JsonNode.Parse(jsonContent);
+                if (jsonNode == null)
+                    return;
+
+                bool changed = false;
+                foreach (var property in jsonNode.AsObject())
+                {
+                    var groupNode = property.Value;
+                    if (groupNode == null) continue;
+
+                    string groupIcon = groupNode["groupIcon"]?.GetValue<string>();
+                    if (!string.IsNullOrEmpty(groupIcon) &&
+                        groupIcon.StartsWith(oldGroupsFolder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        string relativePath = groupIcon.Substring(oldGroupsFolder.Length).TrimStart('\\', '/');
+                        string newIconPath = Path.Combine(newGroupsFolder, relativePath);
+                        groupNode["groupIcon"] = newIconPath;
+                        changed = true;
+                        Debug.WriteLine($"아이콘 경로 갱신: {groupIcon} → {newIconPath}");
+                    }
+                }
+
+                if (changed)
+                {
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(configPath, jsonNode.ToJsonString(options));
+                    Debug.WriteLine("appgroups.json 아이콘 경로 갱신 완료");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"아이콘 경로 갱신 실패: {ex.Message}");
             }
         }
 
@@ -292,7 +479,7 @@ namespace AppGroup
         /// <summary>
         /// 디렉터리를 재귀적으로 복사합니다. 이미 존재하는 파일은 건너뜁니다.
         /// </summary>
-        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
+        internal static void CopyDirectoryRecursive(string sourceDir, string destDir)
         {
             Directory.CreateDirectory(destDir);
 
