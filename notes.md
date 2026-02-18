@@ -2,6 +2,9 @@
 
 ## 최근 변경 요약 (최근 10건)
 
+### 2026-02-18
+1. **부팅 자동실행 시 메인창 표시 버그 수정** - Program.Main()의 정적 HasSilentFlag가 MSIX StartupTask 활성화를 감지하지 못해, 이미 실행 중인 앱의 메인창을 전면으로 가져오던 문제 수정. StartupTask 감지 로직 추가
+
 ### 2026-02-14
 1. **MSIX VFS 호환을 위한 Groups 폴더 분리** - MS Store 배포를 위해 `unvirtualizedResources` 제거, Shell 접근 필요 파일(.lnk, .ico)을 비가상화 경로(`%USERPROFILE%\AppGroup\Groups`)로 분리, 설정 UI에서 폴더 경로 변경 가능, 아이콘 파일명 안정화(타임스탬프 제거), 백업/복원 경로 대응, 5개 언어 리소스 추가
 2. **코드 리뷰 버그 수정 (Groups 폴더 변경)** - 동일 경로 선택 시 불필요한 복사 방지, 기본 경로 선택 시 설정 리셋 처리, CopyDirectoryRecursive 중복 제거(AppPaths 공유)

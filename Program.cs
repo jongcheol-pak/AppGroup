@@ -117,6 +117,22 @@ namespace AppGroup
                         return true;
                     }
                 }
+
+                // MSIX StartupTask에 의해 시작된 경우도 silent 모드로 처리
+                try
+                {
+                    var activatedArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
+                    if (activatedArgs?.Kind == ExtendedActivationKind.StartupTask)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Program: App started by StartupTask - silent mode");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error checking StartupTask activation: {ex.Message}");
+                }
+
                 return false;
             }
             catch (Exception ex)
