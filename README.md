@@ -180,3 +180,7 @@ dotnet format AppGroup/AppGroup.csproj
 - 작업 후 `notes.md` 기록 및 `README.md` 갱신 필수
 - 요청 범위 외 기능 확장/리팩토링 금지
 - Plan 필요 작업: 기능 추가, 동작 변경, 구조 변경, 복잡한 이슈
+
+## 상세 문서
+
+- [사용자 도움말](docs/readme/help.md) - 전체 기능 사용법 안내
