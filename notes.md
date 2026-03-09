@@ -2,6 +2,9 @@
 
 ## 최근 변경 요약 (최근 10건)
 
+### 2026-03-09
+1. **팝업 위치 오류 수정 (해상도/모니터 변경 시)** - (1) `GetDisplayInformation()`이 윈도우 현재 위치 기준 모니터 DPI를 사용하던 문제를 커서 클릭 위치 기준 모니터로 변경, (2) `DisplayArea.Primary` 대신 대상 모니터 크기 사용, (3) `PositionWindowAboveTaskbar`에 `alwaysAboveTaskbar` 파라미터 추가하여 PopupWindow가 항상 작업 표시줄 바로 위에 배치되도록 변경, (4) `GetWindowRect`로 실제 물리 윈도우 크기를 사용하여 좌표계 불일치 방지
+
 ### 2026-02-19
 1. **사용자 도움말 문서 작성** - 프로젝트 전체 기능에 대한 사용자 도움말(docs/readme/help.md) 신규 작성, README.md에 상세 문서 링크 추가
 

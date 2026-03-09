@@ -614,11 +614,12 @@ namespace AppGroup.View
             _windowHelper.SetSize(finalWidth, finalHeight);
 
             // 파일에서 캡처된 커서 위치 읽기 (아이콘 클릭 위치 기준)
-            var cursorPos = AppPaths.ReadCursorPosition();
-            NativeMethods.POINT? capturedPos = cursorPos.HasValue
-                ? new NativeMethods.POINT { X = cursorPos.Value.X, Y = cursorPos.Value.Y }
+            var cursorPosForPosition = AppPaths.ReadCursorPosition();
+            NativeMethods.POINT? capturedPos = cursorPosForPosition.HasValue
+                ? new NativeMethods.POINT { X = cursorPosForPosition.Value.X, Y = cursorPosForPosition.Value.Y }
                 : null;
-            NativeMethods.PositionWindowAboveTaskbar(this.GetWindowHandle(), capturedPos);
+            // 핀된 항목 클릭 시 항상 작업 표시줄 바로 위에 표시 (GetWindowRect로 실제 물리 크기 사용)
+            NativeMethods.PositionWindowAboveTaskbar(this.GetWindowHandle(), capturedPos, alwaysAboveTaskbar: true);
 
 
 

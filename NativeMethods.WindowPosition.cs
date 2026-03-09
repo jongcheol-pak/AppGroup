@@ -155,16 +155,15 @@ namespace AppGroup
         /// </summary>
         /// <param name="hWnd">윈도우 핸들</param>
         /// <param name="capturedCursorPos">클릭 시점에 캡처된 커서 위치 (null이면 현재 커서 위치 사용)</param>
-        public static void PositionWindowAboveTaskbar(IntPtr hWnd, POINT? capturedCursorPos = null)
+        /// <param name="alwaysAboveTaskbar">true이면 커서 위치와 무관하게 항상 작업 표시줄 바로 위에 배치</param>
+        public static void PositionWindowAboveTaskbar(IntPtr hWnd, POINT? capturedCursorPos = null, bool alwaysAboveTaskbar = false)
         {
             try
             {
-                // 창 크기 가져오기
+                // GetWindowRect로 실제 물리 윈도우 크기 사용
                 RECT windowRect;
                 if (!GetWindowRect(hWnd, out windowRect))
-                {
                     return;
-                }
                 int windowWidth = windowRect.right - windowRect.left;
                 int windowHeight = windowRect.bottom - windowRect.top;
 
@@ -239,10 +238,9 @@ namespace AppGroup
                 {
                     case TaskbarPosition.Top:
                     case TaskbarPosition.Bottom:
-                        // 커서가 작업 표시줄 위에 있는지 확인
-                        if (IsCursorOnTaskbar(cursorPos, monitorInfo, taskbarPosition))
+                        if (alwaysAboveTaskbar || IsCursorOnTaskbar(cursorPos, monitorInfo, taskbarPosition))
                         {
-                            // 작업 표시줄 위/아래에 배치
+                            // 작업 표시줄 바로 위/아래에 배치
                             if (taskbarPosition == TaskbarPosition.Top)
                                 y = monitorInfo.rcWork.top + spacing;
                             else
