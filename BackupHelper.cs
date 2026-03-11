@@ -693,13 +693,13 @@ namespace AppGroup
                 shortcut = wshShell.CreateShortcut(shortcutPath);
 
                 // Set the properties of the shortcut
-                shortcut.TargetPath = Path.Combine(baseDir, "AppGroup.exe");
+                shortcut.TargetPath = AppPaths.GetStableExePath();
                 shortcut.Arguments = $"\"{groupName}\"";
                 shortcut.Description = $"{groupName} - AppGroup Shortcut";
                 shortcut.IconLocation = iconPath;
 
-                // Set working directory to the base directory
-                shortcut.WorkingDirectory = baseDir;
+                // Set working directory
+                shortcut.WorkingDirectory = Path.GetDirectoryName(AppPaths.GetStableExePath());
 
                 // Save the shortcut
                 shortcut.Save();

@@ -96,6 +96,24 @@ namespace AppGroup
         public static bool IsPathVirtualized(string path) => IsVirtualizedPath(path);
 
         /// <summary>
+        /// 앱 업데이트와 무관한 안정적인 exe 경로를 반환합니다.
+        /// MSIX App Execution Alias 경로가 존재하면 사용하고, 없으면 실제 경로를 반환합니다.
+        /// </summary>
+        public static string GetStableExePath()
+        {
+            // App Execution Alias 경로 (MSIX 설치 시 앱 업데이트와 무관하게 고정)
+            string aliasPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Microsoft", "WindowsApps", "AppGroup.exe");
+
+            if (File.Exists(aliasPath))
+                return aliasPath;
+
+            // 개발 환경 등 alias가 없는 경우 실제 경로 사용
+            return Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath;
+        }
+
+        /// <summary>
         /// 마지막으로 편집한 그룹 ID를 파일에 저장합니다.
         /// </summary>
         /// <param name="groupId">저장할 그룹 ID</param>
@@ -171,54 +189,6 @@ namespace AppGroup
                 Debug.WriteLine($"Failed to read group name: {ex.Message}");
             }
             return string.Empty;
-        }
-
-        /// <summary>
-        /// 실행 시 캡처한 커서 위치 파일 경로
-        /// </summary>
-        private static string CursorPosFile => Path.Combine(AppDataFolder, "launch_cursor");
-
-        /// <summary>
-        /// 프로세스 시작 시 캡처한 커서 위치를 파일에 저장합니다.
-        /// </summary>
-        public static void SaveCursorPosition(int x, int y)
-        {
-            try
-            {
-                Directory.CreateDirectory(AppDataFolder);
-                File.WriteAllText(CursorPosFile, $"{x},{y}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to save cursor position: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 저장된 커서 위치를 파일에서 읽어옵니다.
-        /// </summary>
-        /// <returns>커서 위치 (x, y), 파일이 없거나 오류 시 null 반환</returns>
-        public static (int X, int Y)? ReadCursorPosition()
-        {
-            try
-            {
-                if (File.Exists(CursorPosFile))
-                {
-                    string content = File.ReadAllText(CursorPosFile).Trim();
-                    string[] parts = content.Split(',');
-                    if (parts.Length == 2 &&
-                        int.TryParse(parts[0], out int x) &&
-                        int.TryParse(parts[1], out int y))
-                    {
-                        return (x, y);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to read cursor position: {ex.Message}");
-            }
-            return null;
         }
 
         /// <summary>

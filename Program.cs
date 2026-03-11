@@ -49,9 +49,6 @@ namespace AppGroup
             // 프로세스 시작 즉시 커서 위치 캡처 (작업 표시줄 아이콘 클릭 위치)
             NativeMethods.GetCursorPos(out NativeMethods.POINT launchCursorPos);
 
-            // 캡처된 커서 위치를 파일에 저장 (팝업 프로세스에서 읽기 위해)
-            AppPaths.SaveCursorPosition(launchCursorPos.X, launchCursorPos.Y);
-
             IntPtr targetWindow = NativeMethods.FindWindow(null, "Popup Window");
             string[] cmdArgs = Environment.GetCommandLineArgs();
 
@@ -68,13 +65,27 @@ namespace AppGroup
                         NativeMethods.GetWindowThreadProcessId(targetWindow, out uint popupPid);
                         NativeMethods.AllowSetForegroundWindow(popupPid);
 
-                        // 명령 전송 (팝업이 자체적으로 크기 조정 → 위치 설정 → 표시)
+                        // 그룹 ID 저장 (다른 윈도우에서 참조용)
+                        try
+                        {
+                            int groupId = JsonConfigHelper.FindKeyByGroupName(command);
+                            AppPaths.SaveGroupIdToFile(groupId.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Failed to find group ID for '{command}': {ex.Message}");
+                        }
+
+                        // 그룹명만 전송 (커서 위치는 PopupWindow에서 직접 캡처)
                         NativeMethods.SendString(targetWindow, command);
+
+                        // 기존 팝업에 메시지 전달 후 즉시 종료
+                        return;
                     }
                 }
             }
 
-            // 캡처된 커서 위치를 App에서 사용할 수 있도록 저장
+            // 최초 실행 경로: 커서 위치를 App에서 사용할 수 있도록 저장
             LaunchCursorPosition = launchCursorPos;
 
             WinRT.ComWrappersSupport.InitializeComWrappers();

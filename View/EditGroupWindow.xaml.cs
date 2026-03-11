@@ -1497,7 +1497,7 @@ namespace AppGroup.View
 
                 File.SetAttributes(uniqueFolderPath, File.GetAttributes(uniqueFolderPath) | System.IO.FileAttributes.Hidden);
                 string shortcutPath = Path.Combine(groupFolder, $"{newGroupName}.lnk");
-                string targetPath = Process.GetCurrentProcess().MainModule?.FileName ?? Environment.ProcessPath;
+                string targetPath = AppPaths.GetStableExePath();
 
                 // 안정적인 파일명 사용 (VFS 환경에서 .lnk의 IconLocation 수정 불필요)
                 string iconBaseName = $"{newGroupName}_{(regularIcon ? "regular" : (IconGridComboBox.SelectedItem?.ToString() == "3" ? "grid3" : "grid"))}";

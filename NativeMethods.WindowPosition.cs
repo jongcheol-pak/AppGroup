@@ -156,16 +156,26 @@ namespace AppGroup
         /// <param name="hWnd">윈도우 핸들</param>
         /// <param name="capturedCursorPos">클릭 시점에 캡처된 커서 위치 (null이면 현재 커서 위치 사용)</param>
         /// <param name="alwaysAboveTaskbar">true이면 커서 위치와 무관하게 항상 작업 표시줄 바로 위에 배치</param>
-        public static void PositionWindowAboveTaskbar(IntPtr hWnd, POINT? capturedCursorPos = null, bool alwaysAboveTaskbar = false)
+        public static void PositionWindowAboveTaskbar(IntPtr hWnd, POINT? capturedCursorPos = null, bool alwaysAboveTaskbar = false, int explicitWidth = 0, int explicitHeight = 0)
         {
             try
             {
-                // GetWindowRect로 실제 물리 윈도우 크기 사용
-                RECT windowRect;
-                if (!GetWindowRect(hWnd, out windowRect))
-                    return;
-                int windowWidth = windowRect.right - windowRect.left;
-                int windowHeight = windowRect.bottom - windowRect.top;
+                int windowWidth, windowHeight;
+                if (explicitWidth > 0 && explicitHeight > 0)
+                {
+                    // 명시적 크기가 전달된 경우 사용 (Resize 비동기 반영 대기 불필요)
+                    windowWidth = explicitWidth;
+                    windowHeight = explicitHeight;
+                }
+                else
+                {
+                    // GetWindowRect로 실제 물리 윈도우 크기 사용
+                    RECT windowRect;
+                    if (!GetWindowRect(hWnd, out windowRect))
+                        return;
+                    windowWidth = windowRect.right - windowRect.left;
+                    windowHeight = windowRect.bottom - windowRect.top;
+                }
 
                 // 캡처된 커서 위치가 있으면 사용, 없으면 현재 커서 위치 가져오기
                 POINT cursorPos;
@@ -303,12 +313,118 @@ namespace AppGroup
                 Debug.WriteLine($"Final Position (after bounds check): X={x}, Y={y}");
                 Debug.WriteLine($"================================");
 
-                // 창 이동 (크기 유지, 위치만 변경)
-                SetWindowPos(hWnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+                // 명시적 크기가 전달된 경우 위치와 크기를 동시에 설정 (AppWindow.Resize 비동기 문제 방지)
+                if (explicitWidth > 0 && explicitHeight > 0)
+                    SetWindowPos(hWnd, IntPtr.Zero, x, y, windowWidth, windowHeight, SWP_NOZORDER | SWP_SHOWWINDOW);
+                else
+                    SetWindowPos(hWnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error positioning window: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 작업 표시줄 위 윈도우 배치 좌표를 계산합니다 (실제 배치는 하지 않음).
+        /// </summary>
+        /// <returns>계산된 (x, y) 좌표, 실패 시 null</returns>
+        public static (int X, int Y)? CalculatePositionAboveTaskbar(POINT? capturedCursorPos, int windowWidth, int windowHeight, bool alwaysAboveTaskbar = false)
+        {
+            try
+            {
+                POINT cursorPos;
+                if (capturedCursorPos.HasValue)
+                    cursorPos = capturedCursorPos.Value;
+                else if (!GetCursorPos(out cursorPos))
+                    return null;
+
+                IntPtr monitor = MonitorFromPoint(cursorPos, MONITOR_DEFAULTTONEAREST);
+                MONITORINFO monitorInfo = new MONITORINFO();
+                monitorInfo.cbSize = (uint)Marshal.SizeOf(typeof(MONITORINFO));
+                if (!GetMonitorInfo(monitor, ref monitorInfo))
+                    return null;
+
+                float dpiScale = GetDpiScaleForMonitor(monitor);
+                int baseTaskbarHeight = 52;
+                int spacing = 6;
+
+                bool isTaskbarAutoHide = IsTaskbarAutoHide();
+                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo);
+
+                if (isTaskbarAutoHide)
+                {
+                    if (IsCursorOnTaskbar(cursorPos, monitorInfo, taskbarPosition))
+                        spacing = (int)(baseTaskbarHeight * dpiScale);
+                    else
+                        spacing += (int)(5 * dpiScale);
+                }
+                else
+                {
+                    spacing = taskbarPosition == TaskbarPosition.Top
+                        ? (int)(10 * dpiScale)
+                        : (int)(6 * dpiScale);
+                }
+
+                int x = cursorPos.X - (windowWidth / 2);
+                int y;
+                const int TOP_MARGIN = 100;
+
+                switch (taskbarPosition)
+                {
+                    case TaskbarPosition.Top:
+                    case TaskbarPosition.Bottom:
+                        if (alwaysAboveTaskbar || IsCursorOnTaskbar(cursorPos, monitorInfo, taskbarPosition))
+                        {
+                            y = taskbarPosition == TaskbarPosition.Top
+                                ? monitorInfo.rcWork.top + spacing
+                                : monitorInfo.rcWork.bottom - windowHeight - spacing;
+                        }
+                        else
+                        {
+                            y = cursorPos.Y - windowHeight - spacing;
+                            if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                                y = monitorInfo.rcWork.top + TOP_MARGIN;
+                            if (y + windowHeight > monitorInfo.rcWork.bottom - spacing)
+                                y = monitorInfo.rcWork.bottom - windowHeight - spacing;
+                        }
+                        break;
+                    case TaskbarPosition.Left:
+                        x = isTaskbarAutoHide
+                            ? monitorInfo.rcMonitor.left + spacing
+                            : monitorInfo.rcWork.left + spacing;
+                        y = cursorPos.Y - (windowHeight / 2);
+                        if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                            y = monitorInfo.rcWork.top + TOP_MARGIN;
+                        break;
+                    case TaskbarPosition.Right:
+                        x = isTaskbarAutoHide
+                            ? monitorInfo.rcMonitor.right - windowWidth - spacing
+                            : monitorInfo.rcWork.right - windowWidth - spacing;
+                        y = cursorPos.Y - (windowHeight / 2);
+                        if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                            y = monitorInfo.rcWork.top + TOP_MARGIN;
+                        break;
+                    default:
+                        y = isTaskbarAutoHide
+                            ? monitorInfo.rcMonitor.bottom - windowHeight - spacing
+                            : monitorInfo.rcWork.bottom - windowHeight - spacing;
+                        break;
+                }
+
+                if (x < monitorInfo.rcWork.left)
+                    x = monitorInfo.rcWork.left;
+                if (x + windowWidth > monitorInfo.rcWork.right)
+                    x = monitorInfo.rcWork.right - windowWidth;
+                if (y < monitorInfo.rcWork.top + TOP_MARGIN)
+                    y = monitorInfo.rcWork.top + TOP_MARGIN;
+
+                return (x, y);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error calculating position: {ex.Message}");
+                return null;
             }
         }
 

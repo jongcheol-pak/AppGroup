@@ -469,8 +469,8 @@ namespace AppGroup
                 wshShell = new WshShell();
                 shortcut = (IWshShortcut)wshShell.CreateShortcut(shortcutPath);
 
-                string targetPath = shortcut.TargetPath.Replace(originalGroupName, newGroupName);
-                shortcut.TargetPath = targetPath;
+                // 안정적인 alias 경로로 갱신 (기존 MSIX 실제 경로 → alias 경로 전환)
+                shortcut.TargetPath = AppPaths.GetStableExePath();
                 shortcut.Arguments = $"\"{newGroupName}\"";
                 shortcut.Description = $"{newGroupName} - AppGroup Shortcut";
 

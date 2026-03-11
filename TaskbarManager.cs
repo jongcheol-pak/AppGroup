@@ -153,6 +153,7 @@ namespace AppGroup
 
         private static string _cachedTaskbarPath;
         private static string _cachedExePath;
+        private static string _cachedAliasPath;
         private static readonly object _lockObject = new object(); // Thread safety for caching
 
         // Helper method to extract group name from quoted arguments
@@ -201,6 +202,7 @@ namespace AppGroup
                         {
                             _cachedExePath ??= Process.GetCurrentProcess().MainModule?.FileName ??
                                               Path.Combine(Path.GetDirectoryName(Environment.ProcessPath), "AppGroup.exe");
+                            _cachedAliasPath ??= AppPaths.GetStableExePath();
                         }
                     }
 
@@ -225,8 +227,9 @@ namespace AppGroup
                                     string arguments = shortcut.Arguments;
                                     string description = shortcut.Description;
 
-                                    // Check if this is our executable
-                                    if (!targetPath.Equals(_cachedExePath, StringComparison.OrdinalIgnoreCase))
+                                    // Check if this is our executable (실제 경로 또는 alias 경로)
+                                    if (!targetPath.Equals(_cachedExePath, StringComparison.OrdinalIgnoreCase) &&
+                                        !targetPath.Equals(_cachedAliasPath, StringComparison.OrdinalIgnoreCase))
                                         continue;
 
                                     // Extract group name from quoted arguments

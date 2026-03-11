@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.UI.StartScreen;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI.ViewManagement;
@@ -78,6 +79,7 @@ namespace AppGroup.View
         private PopupItem _clickedItem;
         private int _groupId;
         private string _groupFilter = null;
+        private NativeMethods.POINT? _receivedCursorPos = null;
         private string _json = "";
         private bool _anyGroupDisplayed;
         private DataTemplate _itemTemplate;
@@ -229,8 +231,15 @@ namespace AppGroup.View
                     // Check the dwData to identify message type
                     if (cds.dwData == (IntPtr)100)
                     { // Your custom identifier
-                        string groupName = Marshal.PtrToStringUni(cds.lpData);
-                        Debug.WriteLine($"Received WM_COPYDATA message with groupName: {groupName}");
+                        string rawMessage = Marshal.PtrToStringUni(cds.lpData);
+                        Debug.WriteLine($"Received WM_COPYDATA message: {rawMessage}");
+
+                        string groupName = rawMessage;
+
+                        // 현재 프로세스의 DPI 컨텍스트에서 커서 위치 캡처
+                        // Program.cs와 PopupWindow의 DPI 인식 차이로 좌표계가 불일치하므로 직접 캡처
+                        NativeMethods.GetCursorPos(out NativeMethods.POINT localCursorPos);
+                        NativeMethods.POINT? cursorPos = localCursorPos;
 
                         // UI 스레드에서 설정 로드 후 윈도우 표시
                         this.DispatcherQueue.TryEnqueue(() =>
@@ -238,12 +247,15 @@ namespace AppGroup.View
                             try
                             {
                                 _groupFilter = groupName;
-                                Debug.WriteLine($"Updated group filter to: {_groupFilter}");
+                                _receivedCursorPos = cursorPos;
+                                Debug.WriteLine($"Updated group filter to: {_groupFilter}, cursor: {cursorPos?.X},{cursorPos?.Y}");
                                 LoadConfiguration();
-
-                                // LoadConfiguration → InitializeWindow에서 크기/위치 설정 완료 후 표시
-                                NativeMethods.ShowWindow(_hwnd, NativeMethods.SW_SHOW);
+                                // InitializeWindow → PositionWindowAboveTaskbar가 SWP_SHOWWINDOW로
+                                // 위치 설정과 표시를 동시에 처리하므로 별도 ShowWindow 불필요
                                 NativeMethods.ForceForegroundWindow(_hwnd);
+
+                                // 점프 목록 갱신 (백그라운드)
+                                _ = UpdateJumpListAsync(groupName);
                             }
                             catch (Exception ex)
                             {
@@ -590,39 +602,40 @@ namespace AppGroup.View
                 scaledHeight += 40;
             }
 
-            //var iconPath = Path.Combine(AppContext.BaseDirectory, "AppGroup.ico");
-
-            //this.AppWindow.SetIcon(iconPath);
-
             MainGrid.Margin = new Thickness(0, 0, -5, -15);
 
             int finalWidth = scaledWidth + 30;
             int finalHeight = scaledHeight + 20;
 
+            // 커서 위치 기반 모니터의 작업 영역 높이로 최대 높이 제한
+            NativeMethods.POINT cursorPt;
+            // 커서 위치 결정: WM_COPYDATA 커서 우선, 없으면 현재 커서
+            if (_receivedCursorPos.HasValue)
+                cursorPt = _receivedCursorPos.Value;
+            else
+                NativeMethods.GetCursorPos(out cursorPt);
 
-
-            int screenHeight = (int)(DisplayArea.Primary.WorkArea.Height);
-            int maxAllowedHeight = screenHeight - 30; // Reserve space for taskbar and window chrome
+            IntPtr cursorMonitor = NativeMethods.MonitorFromPoint(cursorPt, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            NativeMethods.MONITORINFO cursorMonitorInfo = new NativeMethods.MONITORINFO();
+            cursorMonitorInfo.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
+            int screenHeight;
+            if (NativeMethods.GetMonitorInfo(cursorMonitor, ref cursorMonitorInfo))
+                screenHeight = cursorMonitorInfo.rcWork.bottom - cursorMonitorInfo.rcWork.top;
+            else
+                screenHeight = (int)(DisplayArea.Primary.WorkArea.Height);
+            int maxAllowedHeight = screenHeight - 30;
             if (finalHeight > maxAllowedHeight)
             {
                 finalHeight = maxAllowedHeight;
             }
 
+            // SetWindowPos (Win32)로 직접 배치 (SWP_SHOWWINDOW 포함)
+            NativeMethods.PositionWindowAboveTaskbar(
+                _hwnd, _receivedCursorPos, alwaysAboveTaskbar: true,
+                explicitWidth: finalWidth, explicitHeight: finalHeight);
 
-
-
-            _windowHelper.SetSize(finalWidth, finalHeight);
-
-            // 파일에서 캡처된 커서 위치 읽기 (아이콘 클릭 위치 기준)
-            var cursorPosForPosition = AppPaths.ReadCursorPosition();
-            NativeMethods.POINT? capturedPos = cursorPosForPosition.HasValue
-                ? new NativeMethods.POINT { X = cursorPosForPosition.Value.X, Y = cursorPosForPosition.Value.Y }
-                : null;
-            // 핀된 항목 클릭 시 항상 작업 표시줄 바로 위에 표시 (GetWindowRect로 실제 물리 크기 사용)
-            NativeMethods.PositionWindowAboveTaskbar(this.GetWindowHandle(), capturedPos, alwaysAboveTaskbar: true);
-
-
-
+            // 사용 후 초기화
+            _receivedCursorPos = null;
         }
 
 
@@ -1216,6 +1229,37 @@ namespace AppGroup.View
             catch (Exception ex) { Debug.WriteLine($"UI cleanup error: {ex.Message}"); }
         }
 
+        /// <summary>
+        /// 현재 그룹에 대한 점프 목록을 갱신합니다.
+        /// </summary>
+        private async Task UpdateJumpListAsync(string groupName)
+        {
+            try
+            {
+                var jumpList = await JumpList.LoadCurrentAsync();
+                jumpList.Items.Clear();
+
+                if (JsonConfigHelper.GroupExistsInJson(groupName))
+                {
+                    int groupId = JsonConfigHelper.FindKeyByGroupName(groupName);
+                    var editItem = JumpListItem.CreateWithArguments(
+                        "EditGroupWindow --id=" + groupId, "그룹 편집");
+                    var launchAllItem = JumpListItem.CreateWithArguments(
+                        $"LaunchAll --groupName=\"{groupName}\"", "모두 실행");
+
+                    jumpList.Items.Add(editItem);
+                    jumpList.Items.Add(launchAllItem);
+                }
+
+                await jumpList.SaveAsync();
+                Debug.WriteLine($"Jump list updated for group '{groupName}'");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Jump list update failed: {ex.Message}");
+            }
+        }
+
         private void CleanupCompletedTasks()
         {
             // 완료된 Task 정리
@@ -1701,15 +1745,21 @@ namespace AppGroup.View
 
         private Tuple<float, int, int> GetDisplayInformation()
         {
-            var hwnd = WindowNative.GetWindowHandle(this);
+            // 커서 위치 기준으로 모니터 결정 (윈도우가 화면 밖에 있어도 정확한 모니터 정보 획득)
+            NativeMethods.POINT pt;
+            if (_receivedCursorPos.HasValue)
+                pt = _receivedCursorPos.Value;
+            else
+                NativeMethods.GetCursorPos(out pt);
 
-            uint dpi = NativeMethods.GetDpiForWindow(hwnd);
-            float scaleFactor = (float)dpi / 96.0f;
+            IntPtr monitor = NativeMethods.MonitorFromPoint(pt, NativeMethods.MONITOR_DEFAULTTONEAREST);
 
-            IntPtr monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            // 모니터 기준 DPI 사용 (윈도우 위치 무관)
+            float scaleFactor = NativeMethods.GetDpiScaleForMonitor(monitor);
 
-            NativeMethods.MONITORINFOEX monitorInfo = new NativeMethods.MONITORINFOEX();
-            monitorInfo.cbSize = Marshal.SizeOf(typeof(NativeMethods.MONITORINFOEX));
+            // MONITORINFO 사용 (MONITORINFOEX는 마샬링 문제로 0 반환되는 경우 있음)
+            NativeMethods.MONITORINFO monitorInfo = new NativeMethods.MONITORINFO();
+            monitorInfo.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.MONITORINFO));
             NativeMethods.GetMonitorInfo(monitor, ref monitorInfo);
 
             int screenWidth = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
