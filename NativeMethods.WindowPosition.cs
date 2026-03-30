@@ -210,7 +210,7 @@ namespace AppGroup
                 Debug.WriteLine($"Taskbar Auto-Hide: {isTaskbarAutoHide}");
 
                 // 작업 영역과 모니터 영역을 비교하여 작업 표시줄 위치 결정
-                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo);
+                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo, cursorPos);
                 Debug.WriteLine($"Taskbar Position: {taskbarPosition}");
 
                 if (isTaskbarAutoHide)
@@ -350,7 +350,7 @@ namespace AppGroup
                 int spacing = 6;
 
                 bool isTaskbarAutoHide = IsTaskbarAutoHide();
-                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo);
+                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo, cursorPos);
 
                 if (isTaskbarAutoHide)
                 {
@@ -469,7 +469,7 @@ namespace AppGroup
                 }
 
                 // Taskbar position
-                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo);
+                TaskbarPosition taskbarPosition = GetTaskbarPosition(monitorInfo, cursorPos);
 
                 // Initial x = center horizontally on cursor
                 int x = cursorPos.X - (windowWidth / 2);
@@ -670,9 +670,11 @@ namespace AppGroup
         }
 
         /// <summary>
-        /// 작업 표시줄 위치를 가져옵니다.
+        /// 커서 위치를 고려하여 작업 표시줄 위치를 가져옵니다.
+        /// 상단/하단 또는 좌측/우측에 동시에 작업 표시줄이 존재하는 경우,
+        /// 커서에 가까운 쪽을 반환합니다.
         /// </summary>
-        private static TaskbarPosition GetTaskbarPosition(MONITORINFO monitorInfo)
+        private static TaskbarPosition GetTaskbarPosition(MONITORINFO monitorInfo, POINT cursorPos)
         {
             // 작업 영역이 모니터 영역과 같은 경우 (자동 숨김 작업 표시줄에서 발생 가능),
             // 다른 수단을 통한 작업 표시줄 위치 감지로 폴백
@@ -681,21 +683,36 @@ namespace AppGroup
                 monitorInfo.rcWork.left == monitorInfo.rcMonitor.left &&
                 monitorInfo.rcWork.right == monitorInfo.rcMonitor.right)
             {
-                // 자동 숨김 작업 표시줄의 경우 AppBar 정보를 사용하여 위치 확인 시도
                 return GetTaskbarPositionFromAppBarInfo();
             }
 
-            // 작업 영역과 화면 영역을 비교하여 작업 표시줄 위치 결정
-            if (monitorInfo.rcWork.top > monitorInfo.rcMonitor.top)
-                return TaskbarPosition.Top;
-            else if (monitorInfo.rcWork.bottom < monitorInfo.rcMonitor.bottom)
-                return TaskbarPosition.Bottom;
-            else if (monitorInfo.rcWork.left > monitorInfo.rcMonitor.left)
-                return TaskbarPosition.Left;
-            else if (monitorInfo.rcWork.right < monitorInfo.rcMonitor.right)
-                return TaskbarPosition.Right;
-            else
-                return TaskbarPosition.Bottom; // Default
+            // 각 가장자리에 작업 표시줄이 있는지 확인
+            bool hasTop = monitorInfo.rcWork.top > monitorInfo.rcMonitor.top;
+            bool hasBottom = monitorInfo.rcWork.bottom < monitorInfo.rcMonitor.bottom;
+            bool hasLeft = monitorInfo.rcWork.left > monitorInfo.rcMonitor.left;
+            bool hasRight = monitorInfo.rcWork.right < monitorInfo.rcMonitor.right;
+
+            // 같은 축에 작업 표시줄이 두 개 있으면 커서에 가까운 쪽 선택
+            if (hasTop && hasBottom)
+            {
+                int distToTop = Math.Abs(cursorPos.Y - monitorInfo.rcMonitor.top);
+                int distToBottom = Math.Abs(monitorInfo.rcMonitor.bottom - cursorPos.Y);
+                return distToTop <= distToBottom ? TaskbarPosition.Top : TaskbarPosition.Bottom;
+            }
+            if (hasLeft && hasRight)
+            {
+                int distToLeft = Math.Abs(cursorPos.X - monitorInfo.rcMonitor.left);
+                int distToRight = Math.Abs(monitorInfo.rcMonitor.right - cursorPos.X);
+                return distToLeft <= distToRight ? TaskbarPosition.Left : TaskbarPosition.Right;
+            }
+
+            // 단일 작업 표시줄인 경우 기존 로직 유지
+            if (hasTop) return TaskbarPosition.Top;
+            if (hasBottom) return TaskbarPosition.Bottom;
+            if (hasLeft) return TaskbarPosition.Left;
+            if (hasRight) return TaskbarPosition.Right;
+
+            return TaskbarPosition.Bottom; // 기본값
         }
 
         /// <summary>
