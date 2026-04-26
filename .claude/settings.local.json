@@ -2,14 +2,32 @@
   "permissions": {
     "allow": [
       "Bash(dotnet build:*)",
-      "Bash(dotnet format:*)",
+      "Skill(systematic-debugging)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
       "Bash(powershell -Command:*)",
-      "Bash(Select-String -Pattern \"error|빌드\")",
-      "Bash(Select-Object -Last 20)",
-      "Bash(findstr:*)",
+      "Bash(powershell:*)",
+      "Bash(Select-String -Pattern \"error|Build \\(FAILED|succeeded\\)\" -CaseSensitive)",
+      "Bash(Select-String:*)",
+      "Bash(Select-Object:*)",
       "Bash(dir:*)",
-      "Bash(Select-String -Pattern \"\\(error|Build succeeded|Build FAILED\\)\")",
-      "Bash(Select-String -Pattern \"error|Build succeeded|Build FAILED\")"
+      "Bash(dotnet format:*)",
+      "Bash(test:*)",
+      "Bash(findstr:*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(ls:*)",
+      "Bash(/tmp/analysis.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(cmd.exe /c \"dir /a \\\\\"%LOCALAPPDATA%\\\\\\\\Microsoft\\\\\\\\WindowsApps\\\\\\\\\\\\\" 2>NUL\" | head -30)",
+      "Bash(powershell -NoProfile -Command '[System.IO.File]::Exists\\(\"$env:LOCALAPPDATA\\\\Microsoft\\\\WindowsApps\\\\notepad.exe\"\\)')",
+      "Bash(tee /tmp/build.txt)",
+      "Read(//d//**)",
+      "Bash(sed 's/.*warning //')",
+      "Bash(sed 's/:.*//')",
+      "Bash(sed 's/\\(.*//')",
+      "Bash(sed 's/.*\\\\\\\\//')",
+      "Bash(grep -oP '[^\\\\\\\\]+\\\\.cs')"
     ]
   }
 }
