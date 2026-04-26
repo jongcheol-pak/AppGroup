@@ -1,0 +1,15 @@
+# 루트 레벨 .gitignore
+# 솔루션 하위 코드(AppGroup/)에 대한 상세 무시 규칙은 AppGroup/.gitignore 참조
+
+# Visual Studio 작업 영역 캐시
+.vs/
+
+# Claude Code 로컬 설정 (사용자별 환경)
+.claude/
+
+# Windows 예약 파일명으로 우발적으로 생성된 빈 파일
+nul
+
+# 빌드 산출물 (혹시 루트에 생성되는 경우 대비)
+[Bb]in/
+[Oo]bj/
